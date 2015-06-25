@@ -20,14 +20,15 @@ class NotifFactory
      */
     public function make(array $input)
     {
-        $notification           = new Notif();
-        $notification->appid    = $input['appid'];
-        $notification->snsid    = $input['snsid'];
-        $notification->fireTime = $input['fireTime'];
-        $notification->feature  = $input['feature'];
-        $notification->trackRef = $input['trackRef'];
+        $notif = new Notif();
 
-        return $notification;
+        $keys = array_keys(get_object_vars($notif));
+
+        array_map(function ($key) use ($notif, $input) {
+            $notif->$key = $input[$key];
+        }, $keys);
+
+        return $notif;
     }
 
     /**
@@ -40,12 +41,12 @@ class NotifFactory
     }
 
     /**
-     * @param Notif $notification
+     * @param Notif $notif
      * @return Notif
      */
-    public function markFired(Notif $notification)
+    public function markFired(Notif $notif)
     {
-        $notification->fired = true;
-        return $notification;
+        $notif->fired = true;
+        return $notif;
     }
 }

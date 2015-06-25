@@ -17,17 +17,20 @@ use BusinessEntity\Notif;
 class FBNotifFactory
 {
     /**
-     * @param Notif $notification
+     * @param Notif $notif
      * @return FBNotif
      */
-    public function make(Notif $notification)
+    public function make(Notif $notif)
     {
-        $fbNotification           = new FBNotif();
-        $fbNotification->snsid    = $notification->snsid;
-        $fbNotification->template = $notification->template;
-        $fbNotification->trackRef = $notification->trackRef;
+        $fbNotif = new FBNotif();
 
-        return $fbNotification;
+        $keys = array_keys(get_object_vars($fbNotif));
+
+        array_map(function ($key) use ($fbNotif, $notif) {
+            $fbNotif->$key = $notif->$key;
+        }, $keys);
+
+        return $fbNotif;
     }
 
     /**

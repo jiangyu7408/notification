@@ -6,13 +6,13 @@
  * Time: 7:35 PM
  */
 
-namespace Persistency;
+namespace Persistency\Storage;
 
 /**
  * Class InMemNotifListPersist
  * @package Persistency
  */
-class InMemNotifListPersist implements IPersistency
+class InMemNotifListPersist extends AbstractStorage
 {
     /**
      * @return array

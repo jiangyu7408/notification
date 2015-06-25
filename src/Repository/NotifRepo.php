@@ -10,7 +10,7 @@ namespace Repository;
 
 use BusinessEntity\Notif;
 use BusinessEntity\NotifFactory;
-use Persistency\IPersistency;
+use Persistency\Storage\AbstractStorage;
 
 /**
  * Class NotifRepo
@@ -18,14 +18,14 @@ use Persistency\IPersistency;
  */
 class NotifRepo
 {
-    public function __construct(IPersistency $persistency, NotifFactory $factory)
+    public function __construct(AbstractStorage $storage, NotifFactory $factory)
     {
-        $this->persistency = $persistency;
-        $this->factory     = $factory;
+        $this->storage = $storage;
+        $this->factory = $factory;
     }
 
     public function register(Notif $notification)
     {
-        $this->persistency->persist($this->factory->toArray($notification));
+        $this->storage->persist($this->factory->toArray($notification));
     }
 }

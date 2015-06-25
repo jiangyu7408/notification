@@ -9,7 +9,7 @@
 namespace Repository;
 
 use BusinessEntity\NotifFactory;
-use Persistency\InMemNotifListPersist;
+use Persistency\Storage\InMemNotifListPersist;
 
 /**
  * Class NotifListRepoBuilder
@@ -22,9 +22,9 @@ class NotifListRepoBuilder
      */
     public function buildRepo()
     {
-        $persistency = new InMemNotifListPersist();
-        $factory     = new NotifFactory();
-        $repo        = new NotifListRepo($persistency, $factory);
+        $storage = new InMemNotifListPersist();
+        $factory = new NotifFactory();
+        $repo    = new NotifListRepo($storage, $factory);
         return $repo;
     }
 }

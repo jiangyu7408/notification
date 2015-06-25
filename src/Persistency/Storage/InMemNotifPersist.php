@@ -6,13 +6,13 @@
  * Time: 5:50 PM
  */
 
-namespace Persistency;
+namespace Persistency\Storage;
 
 /**
  * Class InMemNotifPersist
  * @package Persistency
  */
-class InMemNotifPersist implements IPersistency
+class InMemNotifPersist extends AbstractStorage
 {
     protected $payload;
 

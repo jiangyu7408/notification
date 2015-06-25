@@ -10,7 +10,7 @@ namespace Repository;
 
 use BusinessEntity\Notif;
 use BusinessEntity\NotifFactory;
-use Persistency\InMemNotifListPersist;
+use Persistency\Storage\AbstractStorage;
 
 /**
  * Class NotifListRepo
@@ -18,10 +18,10 @@ use Persistency\InMemNotifListPersist;
  */
 class NotifListRepo
 {
-    public function __construct(InMemNotifListPersist $persistency, NotifFactory $factory)
+    public function __construct(AbstractStorage $storage, NotifFactory $factory)
     {
-        $this->persistency = $persistency;
-        $this->factory     = $factory;
+        $this->storage = $storage;
+        $this->factory = $factory;
     }
 
     /**
@@ -29,7 +29,7 @@ class NotifListRepo
      */
     public function getPending()
     {
-        $rawList = $this->persistency->retrieve();
+        $rawList = $this->storage->retrieve();
         return array_map(array($this, 'makeEntity'), $rawList);
     }
 
@@ -48,7 +48,7 @@ class NotifListRepo
     public function markFired(array $notifications)
     {
         $rawList = array_map(array($this, 'fromEntity'), $notifications);
-        $this->persistency->persist($rawList);
+        $this->storage->persist($rawList);
     }
 
     /**

@@ -41,14 +41,42 @@ class FBNotifFactoryTest extends \PHPUnit_Framework_TestCase
         );
         $notif        = $notifFactory->make($rawData);
 
-        $factory = new FBNotifFactory();
-        $fbNotif = $factory->make($notif);
+        $fbNotifFactory = new FBNotifFactory();
+        $fbNotif        = $fbNotifFactory->make($notif);
         static::assertInstanceOf('FBGateway\FBNotif', $fbNotif);
 
         $expectedArray = array();
         foreach ($fbNotif as $key => $value) {
             $expectedArray[$key] = $rawData[$key];
         }
-        static::assertEquals($expectedArray, $factory->toArray($fbNotif));
+        static::assertEquals($expectedArray, $fbNotifFactory->toArray($fbNotif));
+    }
+
+    public function testList()
+    {
+        $notifFactory = new NotifFactory();
+        $notifList    = array();
+        for ($i = 0; $i < 3; $i++) {
+            $rawData     = array(
+                'appid'    => 111,
+                'snsid'    => '675097095878591' . '_' . $i,
+                'feature'  => 'feature111',
+                'template' => 'template111',
+                'trackRef' => 'ref111',
+                'fireTime' => time() + 100,
+                'fired'    => false,
+            );
+            $notifList[] = $notifFactory->make($rawData);
+        }
+
+        $fbNotifFactory = new FBNotifFactory();
+        $fbNotifList = $fbNotifFactory->makeList($notifList);
+        static::assertTrue(is_array($fbNotifList) && count($fbNotifList) === count($notifList));
+
+        $fbNotifList2 = array();
+        foreach ($notifList as $notif) {
+            $fbNotifList2[] = $fbNotifFactory->make($notif);
+        }
+        static::assertEquals($fbNotifList, $fbNotifList2);
     }
 }

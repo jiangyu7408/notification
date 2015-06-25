@@ -11,18 +11,18 @@ namespace Persistency;
 use FBGateway\FBGatewayBuilder;
 
 /**
- * Class FireGunBuilder
+ * Class FBGatewayPersistBuilder
  * @package Persistency
  */
-class FireGunBuilder
+class FBGatewayPersistBuilder
 {
     /**
      * @param string $appid
-     * @return FireGun
+     * @return FBGatewayPersist
      */
-    public function buildFireGun($appid)
+    public function build($appid)
     {
         $fbGatewayFactory = (new FBGatewayBuilder())->buildFactory($appid);
-        return new FireGun($fbGatewayFactory);
+        return new FBGatewayPersist($fbGatewayFactory);
     }
 }

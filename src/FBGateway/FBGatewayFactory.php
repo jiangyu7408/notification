@@ -16,8 +16,9 @@ class FBGatewayFactory
 {
     public function __construct(FBGatewayParam $param)
     {
+        $this->param = $param;
+
         $this->accessToken = "{$param->appid}|{$param->secretKey}";
-        $this->param       = $param;
     }
 
     public function package(array $payload)

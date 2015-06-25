@@ -5,7 +5,7 @@
  * Date: 2015/06/24
  * Time: 7:16 PM
  */
-use BusinessEntity\NotificationFactory;
+use BusinessEntity\NotifFactory;
 use Repository\NotifRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
@@ -26,7 +26,7 @@ $feature  = 'feature' . mt_rand(1, 2);
 $trackRef = $feature . '_' . mt_rand(1, 10);
 $fireTime = time() + mt_rand(1, 10);
 
-$notification = (new NotificationFactory())->make(array(
+$notification = (new NotifFactory())->make(array(
     'appid'    => $appid,
     'snsid'    => $snsid,
     'feature'  => $feature,

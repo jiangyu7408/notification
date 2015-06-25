@@ -5,30 +5,27 @@
  * Date: 2015/06/24
  * Time: 7:45 PM
  */
-use BusinessEntity\Notification;
-use FBGateway\FBNotificationFactory;
-use Persistency\FireGunBuilder;
-use Repository\FireMachine;
+use FBGateway\FBNotifFactory;
+use Persistency\FBGatewayPersistBuilder;
+use Repository\FBGatewayRepo;
 use Repository\NotifListRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
 $appid = 111;
 
-$notifListRepo = (new NotifListRepoBuilder())->buildRepo($appid);
+$notifListRepo = (new NotifListRepoBuilder())->buildRepo();
 
 $pendingNotifications = $notifListRepo->getPending();
 if (count($pendingNotifications) === 0) {
     return;
 }
 
-$gunner      = (new FireGunBuilder())->buildFireGun($appid);
-$fireMachine = new FireMachine($gunner);
+$fbNotifFactory = new FBNotifFactory();
+$fbNotifList    = $fbNotifFactory->makeList($pendingNotifications);
 
-$fbNotifFactory = new FBNotificationFactory();
-
-array_map(function (Notification $notification) use ($fbNotifFactory, $fireMachine) {
-    $fireMachine->fire($fbNotifFactory->make($notification));
-}, $pendingNotifications);
+$gunner      = (new FBGatewayPersistBuilder())->build($appid);
+$fireMachine = new FBGatewayRepo($gunner, $fbNotifFactory);
+$fireMachine->burst($fbNotifList);
 
 $notifListRepo->markFired($pendingNotifications);

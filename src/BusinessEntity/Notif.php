@@ -9,10 +9,10 @@
 namespace BusinessEntity;
 
 /**
- * Class Notification
+ * Class Notif
  * @package BusinessEntity
  */
-class Notification
+class Notif
 {
     /**
      * @var string

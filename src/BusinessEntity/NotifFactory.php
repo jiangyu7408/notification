@@ -9,18 +9,18 @@
 namespace BusinessEntity;
 
 /**
- * Class NotificationFactory
+ * Class NotifFactory
  * @package BusinessEntity
  */
-class NotificationFactory
+class NotifFactory
 {
     /**
      * @param array $input
-     * @return Notification
+     * @return Notif
      */
     public function make(array $input)
     {
-        $notification           = new Notification();
+        $notification           = new Notif();
         $notification->appid    = $input['appid'];
         $notification->snsid    = $input['snsid'];
         $notification->fireTime = $input['fireTime'];
@@ -31,25 +31,26 @@ class NotificationFactory
     }
 
     /**
-     * @param Notification $notification
+     * @param Notif $notification
      * @return array
      */
-    public function parse(Notification $notification)
+    public function toArray(Notif $notification)
     {
         return array(
             'appid'    => $notification->appid,
             'snsid'    => $notification->snsid,
             'fireTime' => $notification->fireTime,
+            'fired'    => $notification->fired,
             'feature'  => $notification->feature,
             'trackRef' => $notification->trackRef,
         );
     }
 
     /**
-     * @param Notification $notification
-     * @return Notification
+     * @param Notif $notification
+     * @return Notif
      */
-    public function markFired(Notification $notification)
+    public function markFired(Notif $notification)
     {
         $notification->fired = true;
         return $notification;

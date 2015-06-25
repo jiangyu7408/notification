@@ -19,8 +19,10 @@ class InMemNotifListPersist implements IPersistency
      */
     public function retrieve()
     {
-        // TODO: fetch and return matched Notification objects
-        return array();
+        // TODO: fetch and return matched Notif objects
+        return array(
+            json_decode('{"appid":111,"snsid":"675097095878591","fireTime":1435215053,"feature":"feature2","trackRef":"feature2_8"}', true)
+        );
     }
 
     /**
@@ -30,5 +32,6 @@ class InMemNotifListPersist implements IPersistency
     public function persist(array $payload)
     {
         // TODO: traverse whole payload to find out those notifications of changed state, and do persist job.
+        error_log(__METHOD__ . ': ' . json_encode($payload));
     }
 }

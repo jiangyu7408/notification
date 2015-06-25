@@ -8,8 +8,8 @@
 
 namespace Repository;
 
-use BusinessEntity\Notification;
-use BusinessEntity\NotificationFactory;
+use BusinessEntity\Notif;
+use BusinessEntity\NotifFactory;
 use Persistency\InMemNotifListPersist;
 
 /**
@@ -18,29 +18,46 @@ use Persistency\InMemNotifListPersist;
  */
 class NotifListRepo
 {
-    public function __construct($appid, InMemNotifListPersist $persistency, NotificationFactory $factory)
+    public function __construct(InMemNotifListPersist $persistency, NotifFactory $factory)
     {
         $this->persistency = $persistency;
         $this->factory     = $factory;
     }
 
     /**
-     * @return Notification[]
+     * @return Notif[]
      */
     public function getPending()
     {
-        return $this->persistency->retrieve();
+        $rawList = $this->persistency->retrieve();
+        return array_map(array($this, 'makeEntity'), $rawList);
     }
 
     /**
-     * @param Notification[] $notifications
+     * @param array $rawData
+     * @return Notif
+     */
+    private function makeEntity(array $rawData)
+    {
+        return $this->factory->make($rawData);
+    }
+
+    /**
+     * @param Notif[] $notifications
      */
     public function markFired(array $notifications)
     {
-        foreach ($notifications as $notification) {
-            $this->factory->markFired($notification);
-        }
+        $rawList = array_map(array($this, 'fromEntity'), $notifications);
+        $this->persistency->persist($rawList);
+    }
 
-        $this->persistency->persist($notifications);
+    /**
+     * @param Notif $notification
+     * @return array
+     */
+    private function fromEntity(Notif $notification)
+    {
+        $this->factory->markFired($notification);
+        return $this->factory->toArray($notification);
     }
 }

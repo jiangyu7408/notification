@@ -43,7 +43,8 @@ class FBGatewayBuilder
      */
     protected function injectConfig(FBGatewayParam $param)
     {
-        $param->secretKey = 'secretKey from facebook.php';
+        // @TODO load secret key from config file according to appid
+        $param->secretKey = 'secretKey from facebook.php according to appid: ' . $param->appid;
         return $param;
     }
 }

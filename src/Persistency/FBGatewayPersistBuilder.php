@@ -9,6 +9,7 @@
 namespace Persistency;
 
 use FBGateway\FBGatewayBuilder;
+use Persistency\Audit\AuditStorage;
 
 /**
  * Class FBGatewayPersistBuilder
@@ -23,6 +24,7 @@ class FBGatewayPersistBuilder
     public function build($appid)
     {
         $fbGatewayFactory = (new FBGatewayBuilder())->buildFactory($appid);
-        return new FBGatewayPersist($fbGatewayFactory);
+        $auditStorage     = new AuditStorage();
+        return new FBGatewayPersist($fbGatewayFactory, $auditStorage);
     }
 }

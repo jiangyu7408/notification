@@ -24,9 +24,9 @@ class FBGatewayFactory
     public function package(array $payload)
     {
         $package = array(
-            'template'     => $payload['template'],
-            'href'         => '?ref_notif=' . $payload['trackRef'],
             'access_token' => $this->accessToken,
+            'href'         => '?ref_notif=' . $payload['trackRef'],
+            'template'     => $payload['template'],
         );
 
         return $package;

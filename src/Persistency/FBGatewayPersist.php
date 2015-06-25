@@ -9,6 +9,7 @@
 namespace Persistency;
 
 use FBGateway\FBGatewayFactory;
+use Persistency\Audit\AuditStorage;
 
 /**
  * Class FBGatewayPersist
@@ -20,10 +21,35 @@ class FBGatewayPersist implements IPersistency
      * @var resource
      */
     protected $channel;
+    /**
+     * @var FBGatewayFactory
+     */
+    protected $factory;
+    /**
+     * @var AuditStorage
+     */
+    protected $audit;
 
-    public function __construct(FBGatewayFactory $factory)
+    public function __construct(FBGatewayFactory $factory, AuditStorage $audit)
     {
         $this->factory = $factory;
+        $this->audit   = $audit;
+    }
+
+    /**
+     * @return FBGatewayFactory
+     */
+    public function getFactory()
+    {
+        return $this->factory;
+    }
+
+    /**
+     * @return AuditStorage
+     */
+    public function getAuditStorage()
+    {
+        return $this->audit;
     }
 
     /**
@@ -54,16 +80,17 @@ class FBGatewayPersist implements IPersistency
         );
         curl_setopt_array($this->channel, $options);
 
-//        $response = curl_exec($this->channel);
-        $response = '{"success":true}';
+        $response = curl_exec($this->channel);
         curl_close($this->channel);
 
         $responseArray = json_decode($response, true);
-        if (!is_array($responseArray)) {
+        if (!is_array($responseArray) || array_key_exists('error', $responseArray)) {
             $this->handleError($response, $payload);
+            return false;
         }
 
         $this->handleSuccess($payload);
+        return true;
     }
 
     /**
@@ -72,7 +99,11 @@ class FBGatewayPersist implements IPersistency
      */
     private function handleError($response, array $payload)
     {
-        error_log('failed with [' . json_encode($response) . ']: ' . json_encode($payload));
+        $this->audit->persist(array(
+            'success'  => false,
+            'response' => $response,
+            'payload'  => $payload
+        ));
     }
 
     /**
@@ -80,6 +111,9 @@ class FBGatewayPersist implements IPersistency
      */
     private function handleSuccess(array $payload)
     {
-        error_log('success: ' . json_encode($payload));
+        $this->audit->persist(array(
+            'success' => true,
+            'payload' => $payload
+        ));
     }
 }

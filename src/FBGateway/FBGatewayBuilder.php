@@ -20,9 +20,17 @@ class FBGatewayBuilder
      */
     public function buildFactory($appid)
     {
-        $param   = $this->buildParam($appid);
-        $factory = new FBGatewayFactory($param);
-        return $factory;
+        $param = $this->buildParam($appid);
+        return new FBGatewayFactory($param);;
+    }
+
+    /**
+     * @param FBGatewayParam $param
+     * @return FBGatewayFactory
+     */
+    public function buildFactoryWithParam(FBGatewayParam $param)
+    {
+        return new FBGatewayFactory($param);
     }
 
     /**

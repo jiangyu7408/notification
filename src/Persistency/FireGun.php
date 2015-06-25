@@ -8,15 +8,22 @@
 
 namespace Persistency;
 
+use FBGateway\FBGatewayFactory;
+
 /**
  * Class FireGun
  * @package Persistency
  */
 class FireGun implements IPersistency
 {
-    public function __construct()
+    /**
+     * @var resource
+     */
+    protected $channel;
+
+    public function __construct(FBGatewayFactory $factory)
     {
-        // @TODO: init connections with FB gateway
+        $this->factory = $factory;
     }
 
     /**
@@ -34,6 +41,44 @@ class FireGun implements IPersistency
      */
     public function persist(array $payload)
     {
-        // TODO: send notification to FB gateway
+        $snsid   = $payload['snsid'];
+        $package = $this->factory->package($payload);
+
+        $this->channel = curl_init();
+
+        $options = array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POSTFIELDS     => http_build_query($package, null, '&'),
+            CURLOPT_HTTPHEADER     => array('Expect:'),
+            CURLOPT_URL            => $this->factory->makeUrl($snsid)
+        );
+        curl_setopt_array($this->channel, $options);
+
+        $response = curl_exec($this->channel);
+        curl_close($this->channel);
+
+        $responseArray = json_decode($response, true);
+        if (!is_array($responseArray)) {
+            $this->handleError($response, $payload);
+        }
+
+        $this->handleSuccess($payload);
+    }
+
+    /**
+     * @param mixed $response
+     * @param array $payload
+     */
+    private function handleError($response, array $payload)
+    {
+        error_log('failed with [' . json_encode($response) . ']: ' . json_encode($payload));
+    }
+
+    /**
+     * @param array $payload
+     */
+    private function handleSuccess(array $payload)
+    {
+        error_log('success: ' . json_encode($payload));
     }
 }

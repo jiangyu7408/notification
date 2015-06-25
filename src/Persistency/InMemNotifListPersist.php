@@ -20,6 +20,7 @@ class InMemNotifListPersist implements IPersistency
     public function retrieve()
     {
         // TODO: fetch and return matched Notification objects
+        return array();
     }
 
     /**

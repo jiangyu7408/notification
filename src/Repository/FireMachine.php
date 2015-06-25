@@ -8,8 +8,7 @@
 
 namespace Repository;
 
-use BusinessEntity\Notification;
-use BusinessEntity\NotificationFactory;
+use FBGateway\FBNotification;
 use Persistency\IPersistency;
 
 /**
@@ -18,19 +17,13 @@ use Persistency\IPersistency;
  */
 class FireMachine
 {
-    public function __construct(IPersistency $persistency, NotificationFactory $factory)
+    public function __construct(IPersistency $persistency)
     {
         $this->persistency = $persistency;
-        $this->factory     = $factory;
     }
 
-    public function fire(Notification $notification)
+    public function fire(FBNotification $notification)
     {
-        $this->persistency->persist($this->loadBullet($notification));
-    }
-
-    private function loadBullet(Notification $notification)
-    {
-        return $this->factory->parse($notification);
+        $this->persistency->persist($notification->toArray());
     }
 }

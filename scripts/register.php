@@ -6,7 +6,7 @@
  * Time: 7:16 PM
  */
 use BusinessEntity\NotificationFactory;
-use Repository\NotifRepoFactory;
+use Repository\NotifRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
@@ -15,14 +15,23 @@ $options = getopt('', array(
     'snsid:'
 ));
 
-$appid = trim($options['app']);
+//$appid = trim($options['app']);
+//$snsid = trim($options['snsid']);
+$appid = 111;
+$snsid = '675097095878591';
 
-$repo = (new NotifRepoFactory())->getRepo($appid);
+$repo = (new NotifRepoBuilder())->getRepo();
 
-$notification = (new NotificationFactory($appid))->make(array(
-    'snsid'    => $options['snsid'],
-    'feature'  => 'feature' . mt_rand(1, 2),
-    'trackRef' => time(),
+$feature  = 'feature' . mt_rand(1, 2);
+$trackRef = $feature . '_' . mt_rand(1, 10);
+$fireTime = time() + mt_rand(1, 10);
+
+$notification = (new NotificationFactory())->make(array(
+    'appid'    => $appid,
+    'snsid'    => $snsid,
+    'feature'  => $feature,
+    'fireTime' => $fireTime,
+    'trackRef' => $trackRef,
 ));
 
 $repo->register($notification);

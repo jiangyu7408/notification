@@ -18,10 +18,10 @@ use Persistency\IPersistency;
  */
 class NotificationRepository
 {
-    public function __construct($appid, IPersistency $persistency, NotificationFactory $factory)
+    public function __construct(IPersistency $persistency, NotificationFactory $factory)
     {
         $this->persistency = $persistency;
-        $this->factory = $factory;
+        $this->factory     = $factory;
     }
 
     public function register(Notification $notification)

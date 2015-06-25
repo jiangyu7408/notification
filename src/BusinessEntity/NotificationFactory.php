@@ -14,11 +14,6 @@ namespace BusinessEntity;
  */
 class NotificationFactory
 {
-    public function __construct($appid)
-    {
-        $this->appid = $appid;
-    }
-
     /**
      * @param array $input
      * @return Notification
@@ -26,11 +21,12 @@ class NotificationFactory
     public function make(array $input)
     {
         $notification           = new Notification();
-        $notification->appid    = $this->appid;
+        $notification->appid    = $input['appid'];
         $notification->snsid    = $input['snsid'];
         $notification->fireTime = $input['fireTime'];
         $notification->feature  = $input['feature'];
         $notification->trackRef = $input['trackRef'];
+
         return $notification;
     }
 
@@ -49,8 +45,13 @@ class NotificationFactory
         );
     }
 
+    /**
+     * @param Notification $notification
+     * @return Notification
+     */
     public function markFired(Notification $notification)
     {
         $notification->fired = true;
+        return $notification;
     }
 }

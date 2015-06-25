@@ -21,7 +21,8 @@ class InMemNotifPersist implements IPersistency
      */
     public function retrieve()
     {
-        return $this->payload;
+        // no calling on this method is a supposed manner.
+        return array();
     }
 
     /**
@@ -31,5 +32,6 @@ class InMemNotifPersist implements IPersistency
     public function persist(array $payload)
     {
         $this->payload = $payload;
+        echo __METHOD__ . ': ' . json_encode($payload);
     }
 }

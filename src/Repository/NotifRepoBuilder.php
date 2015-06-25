@@ -12,17 +12,17 @@ use BusinessEntity\NotificationFactory;
 use Persistency\InMemNotifPersist;
 
 /**
- * Class NotifRepoFactory
+ * Class NotifRepoBuilder
  * @package Repository
  */
-class NotifRepoFactory
+class NotifRepoBuilder
 {
-    public function getRepo($appid)
+    public function getRepo()
     {
         $persistency = new InMemNotifPersist();
-        $factory     = new NotificationFactory($appid);
+        $factory     = new NotificationFactory();
 
-        $repo = new NotificationRepository($appid, $persistency, $factory);
+        $repo = new NotificationRepository($persistency, $factory);
 
         return $repo;
     }

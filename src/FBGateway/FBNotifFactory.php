@@ -36,11 +36,7 @@ class FBNotifFactory
      */
     public function toArray(FBNotif $fbNotif)
     {
-        return array(
-            'snsid'    => $fbNotif->snsid,
-            'template' => $fbNotif->template,
-            'trackRef' => $fbNotif->trackRef,
-        );
+        return get_object_vars($fbNotif);
     }
 
     /**

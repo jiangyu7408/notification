@@ -31,19 +31,12 @@ class NotifFactory
     }
 
     /**
-     * @param Notif $notification
+     * @param Notif $notif
      * @return array
      */
-    public function toArray(Notif $notification)
+    public function toArray(Notif $notif)
     {
-        return array(
-            'appid'    => $notification->appid,
-            'snsid'    => $notification->snsid,
-            'fireTime' => $notification->fireTime,
-            'fired'    => $notification->fired,
-            'feature'  => $notification->feature,
-            'trackRef' => $notification->trackRef,
-        );
+        return get_object_vars($notif);
     }
 
     /**

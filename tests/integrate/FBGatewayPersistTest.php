@@ -34,9 +34,7 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         /*
          * comes from https://apps.facebook.com/farm_test_jy/
          */
-        $this->snsid     = '100001349218797';
-        $this->appid     = '611186132271595';
-        $this->secretKey = '8c43357c9a0425192f9af574d8c9fa06';
+
     }
 
     /**
@@ -103,7 +101,7 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         );
 
         $auditStorage = $gateway->getAuditStorage();
-        static::assertInstanceOf('Persistency\IPersistency', $auditStorage);
+        static::assertInstanceOf(IPersistency::class, $auditStorage);
 
         $success = $gateway->persist($payload);
 
@@ -128,7 +126,7 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
 
         $auditStorage = new AuditStorage();
         $gateway      = new FBGatewayPersist($factory, $auditStorage);
-        static::assertInstanceOf('Persistency\FBGatewayPersist', $gateway);
+        static::assertInstanceOf(FBGatewayPersist::class, $gateway);
 
         $snsid   = $this->snsid;
         $payload = array(
@@ -138,7 +136,7 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         );
 
         $auditStorage = $gateway->getAuditStorage();
-        static::assertInstanceOf('Persistency\IPersistency', $auditStorage);
+        static::assertInstanceOf(IPersistency::class, $auditStorage);
 
         $success = $gateway->persist($payload);
         static::assertNotTrue($success);

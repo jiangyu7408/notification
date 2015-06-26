@@ -64,9 +64,13 @@ class FBGatewayPersist implements IPersistency
     /**
      * @param array $payload
      * @return bool
+     * @throws \InvalidArgumentException
      */
     public function persist(array $payload)
     {
+        if (!array_key_exists('snsid', $payload) || empty($payload['snsid'])) {
+            throw new \InvalidArgumentException('snsid not found');
+        }
         $snsid   = $payload['snsid'];
         $package = $this->factory->package($payload);
 

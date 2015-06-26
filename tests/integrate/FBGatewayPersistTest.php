@@ -7,15 +7,19 @@
  */
 namespace Persistency;
 
-use FBGateway\FBGatewayFactory;
-use FBGateway\FBGatewayParam;
+use FBGateway\FBGatewayBuilder;
 use Persistency\Audit\AuditStorage;
 
 class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
 {
-    protected $snsid;
-    protected $appid;
-    protected $secretKey;
+    /**
+     * @var FBGatewayPersist
+     */
+    protected $gateway;
+    /**
+     * @var array
+     */
+    protected $config;
 
     public static function setUpBeforeClass()
     {
@@ -29,50 +33,42 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
     {
     }
 
+    /**
+     *
+     */
     protected function setUp()
     {
-        /*
-         * comes from https://apps.facebook.com/farm_test_jy/
-         */
-
+        $this->config = require __DIR__ . '/../_fixture/fb.php';
     }
 
     /**
+     * @param string $type
      * @return FBGatewayPersist
      */
-    public function testBuilder()
+    protected function getPersistInstance($type)
     {
-        $param            = new FBGatewayParam();
-        $param->appid     = $this->appid;
-        $param->secretKey = $this->secretKey;
+        static::assertTrue(is_string($type));
+        static::assertTrue($type === 'good' || $type === 'bad');
 
-        $factory = new FBGatewayFactory($param);
+        $factory = (new FBGatewayBuilder())->buildFactory($this->config[$type]);
 
-        $auditStorage = new AuditStorage();
-        $gateway      = new FBGatewayPersist($factory, $auditStorage);
+        $auditStorage    = new AuditStorage();
+        $persistInstance = new FBGatewayPersist($factory, $auditStorage);
 
-        return $gateway;
+        return $persistInstance;
     }
 
-    /**
-     * @depends testBuilder
-     * @param FBGatewayPersist $gateway
-     */
-    public function testRetrieve(FBGatewayPersist $gateway)
+    public function testRetrieve()
     {
-        $retrieve = $gateway->retrieve();
-        static::assertTrue(is_array($retrieve));
-        static::assertCount(0, $retrieve);
+        $balance = $this->getPersistInstance('good')->retrieve();
+        static::assertTrue(is_array($balance));
+        static::assertCount(0, $balance);
     }
 
-    /**
-     * @depends testBuilder
-     * @param FBGatewayPersist $gateway
-     */
-    public function testFactory(FBGatewayPersist $gateway)
+    public function testFactory()
     {
-        $factory = $gateway->getFactory();
-        $snsid   = $this->snsid;
+        $factory = $this->getPersistInstance('good')->getFactory();
+        $snsid   = $this->config['good']['snsid'];
         $url     = $factory->makeUrl($snsid);
         static::assertTrue(is_string($url));
         static::assertTrue(strpos($url, $snsid) !== false);
@@ -87,48 +83,37 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         static::assertTrue(is_array($package));
     }
 
-    /**
-     * @depends testBuilder
-     * @param FBGatewayPersist $gateway
-     */
-    public function testPersist(FBGatewayPersist $gateway)
+    public function testGoodPersist()
     {
-        $snsid   = $this->snsid;
+        $snsid   = $this->config['good']['snsid'];
         $payload = array(
             'snsid'    => $snsid,
             'template' => "@[{$snsid}] your submarine has arrived!",
             'trackRef' => 'sub_back',
         );
 
-        $auditStorage = $gateway->getAuditStorage();
+        $persistInstance = $this->getPersistInstance('good');
+
+        $auditStorage = $persistInstance->getAuditStorage();
         static::assertInstanceOf(IPersistency::class, $auditStorage);
 
-        $success = $gateway->persist($payload);
+        $success = $persistInstance->persist($payload);
+        static::assertTrue($success, 'persist failed');
 
         $auditItems = $auditStorage->retrieve();
         static::assertTrue(is_array($auditItems));
         static::assertCount(1, $auditItems);
         $auditItem = array_pop($auditItems);
         static::assertArrayHasKey('success', $auditItem);
-
-        static::assertTrue($success, 'persist failed');
         static::assertTrue($auditItem['success']);
     }
 
-    public function testFailedPersist()
+    public function testBadPersist()
     {
-        $param            = new FBGatewayParam();
-        $param->appid     = $this->appid;
-        $param->endpoint  = 'http://nowhere';
-        $param->secretKey = $this->secretKey;
-
-        $factory = new FBGatewayFactory($param);
-
-        $auditStorage = new AuditStorage();
-        $gateway      = new FBGatewayPersist($factory, $auditStorage);
+        $snsid   = $this->config['bad']['snsid'];
+        $gateway = $this->getPersistInstance('bad');
         static::assertInstanceOf(FBGatewayPersist::class, $gateway);
 
-        $snsid   = $this->snsid;
         $payload = array(
             'snsid'    => $snsid,
             'template' => "@[{$snsid}] your submarine has arrived!",

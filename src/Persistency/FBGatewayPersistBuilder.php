@@ -9,6 +9,7 @@
 namespace Persistency;
 
 use FBGateway\FBGatewayBuilder;
+use InvalidArgumentException;
 use Persistency\Audit\AuditStorage;
 
 /**
@@ -18,13 +19,18 @@ use Persistency\Audit\AuditStorage;
 class FBGatewayPersistBuilder
 {
     /**
-     * @param string $appid
-     * @return FBGatewayPersist
+     * @param array $config
+     * @return null|FBGatewayPersist
      */
-    public function build($appid)
+    public function build(array $config)
     {
-        $fbGatewayFactory = (new FBGatewayBuilder())->buildFactory($appid);
-        $auditStorage     = new AuditStorage();
-        return new FBGatewayPersist($fbGatewayFactory, $auditStorage);
+        try {
+            $fbGatewayFactory = (new FBGatewayBuilder())->buildFactory($config);
+            $auditStorage     = new AuditStorage();
+            return new FBGatewayPersist($fbGatewayFactory, $auditStorage);
+        } catch (InvalidArgumentException $e) {
+            // @todo error report
+            return null;
+        }
     }
 }

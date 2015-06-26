@@ -8,6 +8,8 @@
 
 namespace FBGateway;
 
+use InvalidArgumentException;
+
 /**
  * Class FBGatewayBuilder
  * @package Builder
@@ -15,44 +17,33 @@ namespace FBGateway;
 class FBGatewayBuilder
 {
     /**
-     * @param string $appid
+     * @param array $config
      * @return FBGatewayFactory
+     * @throws InvalidArgumentException
      */
-    public function buildFactory($appid)
+    public function buildFactory(array $config)
     {
-        $param = $this->buildParam($appid);
-        return new FBGatewayFactory($param);;
-    }
-
-    /**
-     * @param FBGatewayParam $param
-     * @return FBGatewayFactory
-     */
-    public function buildFactoryWithParam(FBGatewayParam $param)
-    {
+        $param = $this->buildParam($config);
         return new FBGatewayFactory($param);
     }
 
     /**
-     * @param string $appid
+     * @param array $config
      * @return FBGatewayParam
+     * @throws InvalidArgumentException
      */
-    public function buildParam($appid)
+    public function buildParam(array $config)
     {
-        $param        = new FBGatewayParam();
-        $param->appid = $appid;
+        if (!array_key_exists('appId', $config) || !array_key_exists('secretKey', $config)) {
+            throw new InvalidArgumentException('bad config file');
+        }
+        $param            = new FBGatewayParam();
+        $param->appid     = $config['appId'];
+        $param->secretKey = $config['secretKey'];
+        if (array_key_exists('openGraphEndpoint', $config)) {
+            $param->endpoint = $config['openGraphEndpoint'];
+        }
 
-        return $this->injectConfig($param);
-    }
-
-    /**
-     * @param FBGatewayParam $param
-     * @return FBGatewayParam
-     */
-    protected function injectConfig(FBGatewayParam $param)
-    {
-        // @TODO load secret key from config file according to appid
-        $param->secretKey = 'secretKey from facebook.php according to appid: ' . $param->appid;
         return $param;
     }
 }

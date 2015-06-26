@@ -8,15 +8,15 @@
 
 return array(
     'good' => array(
-        'snsid'     => '100001349218797',
-        'appId'     => '611186132271595',
-        'secretKey' => '8c43357c9a0425192f9af574d8c9fa06',
-        'endpoint'  => 'https://graph.facebook.com/UID/notifications'
+        'snsid'             => '100001349218797',
+        'appId'             => '611186132271595',
+        'secretKey'         => '8c43357c9a0425192f9af574d8c9fa06',
+        'openGraphEndpoint' => 'https://graph.facebook.com/UID/notifications'
     ),
     'bad'  => array(
-        'snsid'     => '100001349218797',
-        'appId'     => 'appId',
-        'secretKey' => 'secretKey',
-        'endpoint'  => 'bad://graph.facebook.com/UID/notifications'
+        'snsid'             => '100001349218797',
+        'appId'             => 'appId',
+        'secretKey'         => 'secretKey',
+        'openGraphEndpoint' => 'bad://graph.facebook.com/UID/notifications'
     )
 );

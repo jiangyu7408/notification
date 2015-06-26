@@ -133,4 +133,22 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         static::assertArrayHasKey('success', $auditItem);
         static::assertNotTrue($auditItem['success']);
     }
+
+    public function testNoSnsid()
+    {
+        $gateway = $this->getPersistInstance('bad');
+        static::assertInstanceOf(FBGatewayPersist::class, $gateway);
+
+        $payload = array(
+            'template' => 'test no snsid',
+            'trackRef' => 'trackRef123',
+        );
+
+        try {
+            $success = $gateway->persist($payload);
+            static::assertNotTrue($success);
+        } catch (\Exception $e) {
+            static::assertInstanceOf(\InvalidArgumentException::class, $e);
+        }
+    }
 }

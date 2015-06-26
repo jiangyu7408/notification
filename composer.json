@@ -8,7 +8,8 @@
         ]
     },
     "require": {
-        "php": ">=5.5"
+        "php": ">=5.5",
+        "recoil/recoil": "*"
     },
     "require-dev": {
         "phpunit/php-timer": ">=1.0.6",

@@ -19,7 +19,7 @@ class AuditStorage implements IPersistency
     /**
      * @var array
      */
-    protected $items = array();
+    protected $items = [];
 
     /**
      * @return array

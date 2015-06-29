@@ -58,7 +58,7 @@ class FBGatewayPersist implements IPersistency
     public function retrieve()
     {
         // no logical retrieve in this context.
-        return array();
+        return [];
     }
 
     /**
@@ -76,12 +76,12 @@ class FBGatewayPersist implements IPersistency
 
         $this->channel = curl_init();
 
-        $options = array(
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS     => http_build_query($package, null, '&'),
-            CURLOPT_HTTPHEADER     => array('Expect:'),
+            CURLOPT_HTTPHEADER => ['Expect:'],
             CURLOPT_URL            => $this->factory->makeUrl($snsid)
-        );
+        ];
         curl_setopt_array($this->channel, $options);
 
         $response = curl_exec($this->channel);
@@ -103,11 +103,13 @@ class FBGatewayPersist implements IPersistency
      */
     private function handleError($response, array $payload)
     {
-        $this->audit->persist(array(
-            'success'  => false,
-            'response' => $response,
-            'payload'  => $payload
-        ));
+        $this->audit->persist(
+            [
+                'success'  => false,
+                'response' => $response,
+                'payload'  => $payload
+            ]
+        );
     }
 
     /**
@@ -115,9 +117,11 @@ class FBGatewayPersist implements IPersistency
      */
     private function handleSuccess(array $payload)
     {
-        $this->audit->persist(array(
-            'success' => true,
-            'payload' => $payload
-        ));
+        $this->audit->persist(
+            [
+                'success' => true,
+                'payload' => $payload
+            ]
+        );
     }
 }

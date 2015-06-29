@@ -22,7 +22,7 @@ class InMemNotifPersist extends AbstractStorage
     public function retrieve()
     {
         // no calling on this method is a supposed manner.
-        return array();
+        return [];
     }
 
     /**

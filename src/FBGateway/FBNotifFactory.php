@@ -48,6 +48,6 @@ class FBNotifFactory
      */
     public function makeList(array $notifications)
     {
-        return array_map(array($this, 'make'), $notifications);
+        return array_map([$this, 'make'], $notifications);
     }
 }

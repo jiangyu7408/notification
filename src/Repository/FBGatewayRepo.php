@@ -41,6 +41,6 @@ class FBGatewayRepo
      */
     public function burst(array $list)
     {
-        array_map(array($this, 'fire'), $list);
+        array_map([$this, 'fire'], $list);
     }
 }

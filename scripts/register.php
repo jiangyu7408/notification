@@ -5,33 +5,33 @@
  * Date: 2015/06/24
  * Time: 7:16 PM
  */
-use BusinessEntity\NotifFactory;
 use Repository\NotifRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
-$options = getopt('', array(
-    'app:',
-    'snsid:'
-));
+$options = getopt('', [
+    'fireTime:'
+]);
 
-//$appid = trim($options['app']);
-//$snsid = trim($options['snsid']);
-$appid = 111;
-$snsid = '675097095878591';
+$fireTime = isset($options['fireTime']) ? (int)$options['fireTime'] : time();
 
 $repo = (new NotifRepoBuilder())->getRepo();
 
 $feature  = 'feature' . mt_rand(1, 2);
 $trackRef = $feature . '_' . mt_rand(1, 10);
-$fireTime = time() + mt_rand(1, 10);
+$template = 'test only';
 
-$notification = (new NotifFactory())->make(array(
-    'appid'    => $appid,
-    'snsid'    => $snsid,
-    'feature'  => $feature,
-    'fireTime' => $fireTime,
-    'trackRef' => $trackRef,
-));
+$config = require __DIR__ . '/../tests/_fixture/fb.php';
+$snsid  = $config['bad']['snsid'];
+$appid  = $config['bad']['appId'];
+
+$notification           = new \BusinessEntity\Notif();
+$notification->snsid    = $snsid;
+$notification->appid    = $appid;
+$notification->feature  = $feature;
+$notification->fired    = false;
+$notification->fireTime = $fireTime;
+$notification->template = $template;
+$notification->trackRef = $trackRef;
 
 $repo->register($notification);

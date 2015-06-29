@@ -37,6 +37,7 @@ class RedisStorage
 
     /**
      * @param array $payload
+     * @return int
      */
     public function add(array $payload)
     {
@@ -44,12 +45,15 @@ class RedisStorage
             trigger_error('payload should has key: fireTime, and >0');
         }
         $fireTime = $payload['fireTime'];
-        unset($payload['fireTime']);
 
         $key   = $this->makeKey($fireTime);
         $value = json_encode($payload);
         $field = md5($value);
-        $this->client->hset($key, $field, $value);
+
+        echo __METHOD__ . ": key[$key] field[$field] value[$value]" . PHP_EOL;
+
+        $ret = $this->client->hset($key, $field, $value);
+        return $ret;
     }
 
     /**
@@ -69,18 +73,17 @@ class RedisStorage
     {
         $list = $this->client->hgetall($this->makeKey($fireTime));
 
-        $result = [];
-        foreach ($list as $each) {
-            $result[] = json_decode($each, true);
-        }
-        return $result;
+        return array_map(function ($value) {
+            return json_decode($value, true);
+        }, $list);
     }
 
     /**
      * @param int $fireTime
+     * @return bool
      */
     public function purgeList($fireTime)
     {
-        $this->client->del([$fireTime]);
+        return (bool)$this->client->del([$this->makeKey($fireTime)]);
     }
 }

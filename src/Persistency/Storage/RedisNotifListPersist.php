@@ -31,11 +31,18 @@ class RedisNotifListPersist extends AbstractStorage
      */
     protected $fireTime;
 
-    public function __construct(RedisStorage $storage, $fireTime, NotifArchiveStorage $archiveStorage)
+    public function __construct(RedisStorage $storage, NotifArchiveStorage $archiveStorage)
     {
         $this->storage        = $storage;
-        $this->fireTime       = $fireTime;
         $this->archiveStorage = $archiveStorage;
+    }
+
+    /**
+     * @param $fireTime
+     */
+    public function setFireTime($fireTime)
+    {
+        $this->fireTime = $fireTime;
     }
 
     /**
@@ -52,7 +59,7 @@ class RedisNotifListPersist extends AbstractStorage
      */
     public function persist(array $payload)
     {
-        $this->archiveStorage->append($payload);
+        $this->archiveStorage->append($this->fireTime, $payload);
         $this->storage->purgeList($this->fireTime);
     }
 }

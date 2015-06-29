@@ -23,11 +23,11 @@ class FBGatewayFactory
 
     public function package(array $payload)
     {
-        $package = array(
+        $package = [
             'access_token' => $this->accessToken,
             'href'         => '?ref_notif=' . $payload['trackRef'],
             'template'     => $payload['template'],
-        );
+        ];
 
         return $package;
     }

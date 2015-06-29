@@ -26,6 +26,7 @@ class NotifRepo
 
     public function register(Notif $notification)
     {
-        $this->storage->persist($this->factory->toArray($notification));
+        $dataArray = $this->factory->toArray($notification);
+        $this->storage->persist($dataArray);
     }
 }

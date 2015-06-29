@@ -9,7 +9,9 @@
 namespace Repository;
 
 use BusinessEntity\NotifFactory;
-use Persistency\Storage\InMemNotifListPersist;
+use Persistency\Storage\NotifArchiveStorage;
+use Persistency\Storage\RedisNotifListPersist;
+use Persistency\Storage\RedisStorageFactory;
 
 /**
  * Class NotifListRepoBuilder
@@ -18,11 +20,15 @@ use Persistency\Storage\InMemNotifListPersist;
 class NotifListRepoBuilder
 {
     /**
+     * @param int $fireTime
      * @return NotifListRepo
      */
-    public function buildRepo()
+    public function buildRepo($fireTime)
     {
-        $storage = new InMemNotifListPersist();
+        $redisStorage = (new RedisStorageFactory())->create();
+        $storage      = new RedisNotifListPersist($redisStorage, new NotifArchiveStorage());
+        $storage->setFireTime($fireTime);
+
         $factory = new NotifFactory();
         $repo    = new NotifListRepo($storage, $factory);
         return $repo;

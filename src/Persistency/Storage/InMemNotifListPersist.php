@@ -20,9 +20,9 @@ class InMemNotifListPersist extends AbstractStorage
     public function retrieve()
     {
         // TODO: fetch and return matched Notif objects
-        return array(
+        return [
             json_decode('{"appid":111,"snsid":"675097095878591","fireTime":1435215053,"feature":"feature2","trackRef":"feature2_8"}', true)
-        );
+        ];
     }
 
     /**

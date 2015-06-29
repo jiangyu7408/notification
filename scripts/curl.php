@@ -11,8 +11,8 @@ function newRequest($url)
     curl_setopt($request, CURLOPT_URL, $url);
     curl_setopt($request, CURLOPT_HTTPHEADER, ['Host: ' . $host]);
     curl_setopt($request, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($request, CURLOPT_TIMEOUT, 1);
-    curl_setopt($request, CURLOPT_CONNECTTIMEOUT, 1);
+    curl_setopt($request, CURLOPT_TIMEOUT, 5);
+    curl_setopt($request, CURLOPT_CONNECTTIMEOUT, 2);
     curl_setopt($request, CURLOPT_HEADER, 0); // no headers in the output
 
     return $request;
@@ -94,11 +94,14 @@ function multi($size, $concurrencyLevel, $verbose)
         $concurrentRequests[$url] = $request;
     }
 
+    $retry   = 0;
     $fail    = 0;
     $success = 0;
     $running = null;
 
     $noMoreTasks = false;
+
+    $retryQueue = [];
 
     do {
         while (($ret = curl_multi_exec($multiHandle, $running)) === CURLM_CALL_MULTI_PERFORM) {
@@ -143,21 +146,31 @@ function multi($size, $concurrencyLevel, $verbose)
 
 //                echo 'add new request: ' . $url . PHP_EOL;
 //                print_r($concurrentRequests);
+            } else {
+                // on complete failed
+                if (!array_key_exists($doneUrl, $retryQueue)) {
+                    $retryQueue[$doneUrl] = 0;
+                    echo 'error[' . curl_errno($doneHandle) . '] on ' . $doneUrl
+                         . ' => ' . curl_error($doneHandle) . PHP_EOL;
+                }
+                $retryQueue[$doneUrl]++;
 
-                continue;
+                if ($retryQueue[$doneUrl] < 3) {
+                    refillQueue($multiHandle, $concurrentRequests, $doneUrl);
+                    $running++;
+                    $retry++;
+                    curl_multi_remove_handle($multiHandle, $doneHandle);
+                    usleep(100000);
+                } else {
+                    $fail++;
+                }
             }
-
-            // on complete failed
-            echo 'error[' . curl_errno($doneHandle) . '] on ' . $doneUrl . ' => ' . curl_error($doneHandle) . PHP_EOL;
-            refillQueue($multiHandle, $concurrentRequests, $doneUrl);
-            $running++;
-            curl_multi_remove_handle($multiHandle, $doneHandle);
         }
     } while ($running);
 
     curl_multi_close($multiHandle);
 
-    echo PHP_EOL . "success: {$success}, fail: {$fail}" . PHP_EOL;
+    echo PHP_EOL . "success: {$success}, retry: {$retry}, fail: {$fail}" . PHP_EOL;
 }
 
 function single()

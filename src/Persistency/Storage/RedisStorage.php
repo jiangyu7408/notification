@@ -45,7 +45,20 @@ class RedisStorage
         }
         $fireTime = $payload['fireTime'];
         unset($payload['fireTime']);
-        $this->client->hset($this->name, $fireTime, json_encode($payload));
+
+        $key   = $this->makeKey($fireTime);
+        $value = json_encode($payload);
+        $field = md5($value);
+        $this->client->hset($key, $field, $value);
+    }
+
+    /**
+     * @param int $fireTime
+     * @return string
+     */
+    private function makeKey($fireTime)
+    {
+        return $this->name . '_' . $fireTime;
     }
 
     /**
@@ -54,7 +67,7 @@ class RedisStorage
      */
     public function getList($fireTime)
     {
-        $list = $this->client->hgetall($this->name, $fireTime);
+        $list = $this->client->hgetall($this->makeKey($fireTime));
 
         $result = [];
         foreach ($list as $each) {
@@ -63,6 +76,9 @@ class RedisStorage
         return $result;
     }
 
+    /**
+     * @param int $fireTime
+     */
     public function purgeList($fireTime)
     {
         $this->client->del([$fireTime]);

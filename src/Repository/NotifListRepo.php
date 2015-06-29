@@ -30,7 +30,7 @@ class NotifListRepo
     public function getPending()
     {
         $rawList = $this->storage->retrieve();
-        return array_map(array($this, 'makeEntity'), $rawList);
+        return array_map([$this, 'makeEntity'], $rawList);
     }
 
     /**
@@ -47,7 +47,7 @@ class NotifListRepo
      */
     public function markFired(array $notifications)
     {
-        $rawList = array_map(array($this, 'fromEntity'), $notifications);
+        $rawList = array_map([$this, 'fromEntity'], $notifications);
         $this->storage->persist($rawList);
     }
 

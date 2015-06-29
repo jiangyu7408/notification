@@ -6,28 +6,28 @@
  * Time: 11:48 AM
  */
 
-namespace Persistency;
+namespace Persistency\Facebook;
 
 use FBGateway\FBGatewayBuilder;
 use InvalidArgumentException;
 use Persistency\Audit\AuditStorage;
 
 /**
- * Class FBGatewayPersistBuilder
+ * Class GatewayBuilder
  * @package Persistency
  */
-class FBGatewayPersistBuilder
+class GatewayBuilder
 {
     /**
      * @param array $config
-     * @return null|FBGatewayPersist
+     * @return null|GatewayPersist
      */
     public function build(array $config)
     {
         try {
             $fbGatewayFactory = (new FBGatewayBuilder())->buildFactory($config);
             $auditStorage     = new AuditStorage();
-            return new FBGatewayPersist($fbGatewayFactory, $auditStorage);
+            return new GatewayQueue($fbGatewayFactory, $auditStorage);
         } catch (InvalidArgumentException $e) {
             // @todo error report
             return null;

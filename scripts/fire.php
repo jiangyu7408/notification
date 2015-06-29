@@ -6,7 +6,7 @@
  * Time: 7:45 PM
  */
 use FBGateway\FBNotifFactory;
-use Persistency\FBGatewayPersistBuilder;
+use Persistency\Facebook\GatewayBuilder;
 use Repository\FBGatewayRepo;
 use Repository\NotifListRepoBuilder;
 
@@ -35,7 +35,7 @@ $fbNotifList    = $fbNotifFactory->makeList($pendingNotifications);
 
 $config = require __DIR__ . '/../tests/_fixture/fb.php';
 
-$gunner = (new FBGatewayPersistBuilder())->build($config['bad']);
+$gunner = (new GatewayBuilder())->build($config['bad']);
 $fireMachine = new FBGatewayRepo($gunner, $fbNotifFactory);
 $fireMachine->burst($fbNotifList);
 

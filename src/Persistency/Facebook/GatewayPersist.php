@@ -6,16 +6,17 @@
  * Time: 7:58 PM
  */
 
-namespace Persistency;
+namespace Persistency\Facebook;
 
 use FBGateway\FBGatewayFactory;
 use Persistency\Audit\AuditStorage;
+use Persistency\IPersistency;
 
 /**
- * Class FBGatewayPersist
+ * Class GatewayPersist
  * @package Persistency
  */
-class FBGatewayPersist implements IPersistency
+class GatewayPersist implements IPersistency
 {
     /**
      * @var resource
@@ -87,6 +88,11 @@ class FBGatewayPersist implements IPersistency
         $response = curl_exec($this->channel);
         curl_close($this->channel);
 
+        if ($response === false) {
+            $this->handleError($response, $payload);
+            return false;
+        }
+
         $responseArray = json_decode($response, true);
         if (!is_array($responseArray) || array_key_exists('error', $responseArray)) {
             $this->handleError($response, $payload);
@@ -101,7 +107,7 @@ class FBGatewayPersist implements IPersistency
      * @param mixed $response
      * @param array $payload
      */
-    private function handleError($response, array $payload)
+    protected function handleError($response, array $payload)
     {
         $this->audit->persist(
             [
@@ -115,7 +121,7 @@ class FBGatewayPersist implements IPersistency
     /**
      * @param array $payload
      */
-    private function handleSuccess(array $payload)
+    protected function handleSuccess(array $payload)
     {
         $this->audit->persist(
             [

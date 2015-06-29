@@ -6,61 +6,32 @@
  * Time: 4:29 PM
  */
 
+use Queue\RedisQueue;
+
 require __DIR__ . '/../vendor/autoload.php';
 
-use React\Dns\Resolver\Factory as ResolverFactory;
-use React\HttpClient\Client;
-use Recoil\Recoil;
+$redis = \Persistency\Storage\RedisFactory::create([
+    'scheme'  => 'tcp',
+    'host'    => '10.0.64.56',
+    'port'    => 6379,
+    'timeout' => 5.0,
+]);
 
-date_default_timezone_set('PRC');
+$queue = new RedisQueue($redis, 'test');
 
-/**
- * @param Client $client
- * @param string $url
- * @return Generator
- */
-function fetchHtml(Client $client, $url)
-{
-    /** @var \React\Http\Response $request */
-    $request = $client->request('GET', $url);
-    $request->on('response', function (React\HttpClient\Response $response) {
-        $buffer = '';
+$payload = [
+    'snsid'     => '675097095878591',
+    'appid'     => '111111111111111',
+    'timestamp' => microtime(true)
+];
 
-        $response->on('data', function ($data) use (&$buffer) {
-            $buffer .= $data;
-        });
+$msg = json_encode($payload);
 
-        $response->on('end', function () use (&$buffer, $response) {
-            echo $response->getCode() . ': ' . strlen($buffer) . PHP_EOL;
-        });
-    });
+$currentQueueLength = $queue->push($msg);
+echo 'queue length: ' . $currentQueueLength . PHP_EOL;
 
-    $request->on('end', function ($error) {
-        echo $error;
-    });
-    $request->end();
+while (($msg = $queue->pop())) {
+    $payload = json_decode($msg, true);
+    assert(is_array($payload));
+    print_r($payload);
 }
-
-$options = getopt('', array('size:'));
-
-$size = array_key_exists('size', $options) ? (int)$options['size'] : 1;
-
-Recoil::run(
-    function () use ($size) {
-
-        $eventLoop   = (yield Recoil::eventLoop());
-        $dnsResolver = (new ResolverFactory)->create(
-            '8.8.8.8',
-            $eventLoop
-        );
-
-        $httpClient = (new React\HttpClient\Factory())->create($eventLoop, $dnsResolver);
-
-        $requests = [];
-        for ($i = 0; $i < $size; $i++) {
-            $requests[] = fetchHtml($httpClient, 'http://wiki.ifunplus.cn/');
-        }
-
-        yield $requests;
-    }
-);

@@ -9,7 +9,7 @@
     },
     "require": {
         "php": ">=5.5",
-        "recoil/recoil": "*"
+        "predis/predis": "*"
     },
     "require-dev": {
         "phpunit/php-timer": ">=1.0.6",

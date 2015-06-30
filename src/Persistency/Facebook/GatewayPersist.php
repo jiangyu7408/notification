@@ -8,7 +8,7 @@
 
 namespace Persistency\Facebook;
 
-use FBGateway\FBGatewayFactory;
+use FBGateway\Factory;
 use Persistency\Audit\AuditStorage;
 use Persistency\IPersistency;
 
@@ -23,7 +23,7 @@ class GatewayPersist implements IPersistency
      */
     protected $channel;
     /**
-     * @var FBGatewayFactory
+     * @var Factory
      */
     protected $factory;
     /**
@@ -31,14 +31,14 @@ class GatewayPersist implements IPersistency
      */
     protected $audit;
 
-    public function __construct(FBGatewayFactory $factory, AuditStorage $audit)
+    public function __construct(Factory $factory, AuditStorage $audit)
     {
         $this->factory = $factory;
         $this->audit   = $audit;
     }
 
     /**
-     * @return FBGatewayFactory
+     * @return Factory
      */
     public function getFactory()
     {

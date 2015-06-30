@@ -14,7 +14,7 @@ class RedisStorageTest extends \PHPUnit_Framework_TestCase
     /**
      * @var Client
      */
-    protected $redis;
+    protected $redisClient;
     /**
      * @var int
      */
@@ -60,7 +60,7 @@ class RedisStorageTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->redis = RedisFactory::create([
+        $this->redisClient = RedisClientFactory::create([
             'scheme'  => 'tcp',
             'host'    => '10.0.64.56',
             'port'    => 6379,
@@ -69,6 +69,6 @@ class RedisStorageTest extends \PHPUnit_Framework_TestCase
 
         $this->fireTime = time();
 
-        $this->storage = new RedisStorage($this->redis, 'test');
+        $this->storage = new RedisStorage($this->redisClient, 'test');
     }
 }

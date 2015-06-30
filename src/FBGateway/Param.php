@@ -9,10 +9,10 @@
 namespace FBGateway;
 
 /**
- * Class FBGatewayParam
+ * Class Param
  * @package BusinessEntity
  */
-class FBGatewayParam
+class Param
 {
     public $endpoint = 'https://graph.facebook.com/UID/notifications';
     public $appid;

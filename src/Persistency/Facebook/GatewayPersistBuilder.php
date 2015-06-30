@@ -8,15 +8,15 @@
 
 namespace Persistency\Facebook;
 
-use FBGateway\FBGatewayBuilder;
+use FBGateway\FactoryBuilder;
 use InvalidArgumentException;
 use Persistency\Audit\AuditStorage;
 
 /**
- * Class GatewayBuilder
+ * Class GatewayPersistBuilder
  * @package Persistency
  */
-class GatewayBuilder
+class GatewayPersistBuilder
 {
     /**
      * @param array $config
@@ -25,7 +25,7 @@ class GatewayBuilder
     public function build(array $config)
     {
         try {
-            $fbGatewayFactory = (new FBGatewayBuilder())->buildFactory($config);
+            $fbGatewayFactory = (new FactoryBuilder())->create($config);
             $auditStorage     = new AuditStorage();
             return new GatewayQueue($fbGatewayFactory, $auditStorage);
         } catch (InvalidArgumentException $e) {

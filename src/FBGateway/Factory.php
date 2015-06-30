@@ -9,12 +9,12 @@
 namespace FBGateway;
 
 /**
- * Class FBGatewayFactory
+ * Class Factory
  * @package BusinessEntity
  */
-class FBGatewayFactory
+class Factory
 {
-    public function __construct(FBGatewayParam $param)
+    public function __construct(Param $param)
     {
         $this->param = $param;
 

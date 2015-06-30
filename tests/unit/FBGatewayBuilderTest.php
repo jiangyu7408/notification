@@ -17,14 +17,6 @@ class FBGatewayBuilderTest extends \PHPUnit_Framework_TestCase
     {
     }
 
-    protected function tearDown()
-    {
-    }
-
-    protected function setUp()
-    {
-    }
-
     /**
      * @expectedException \InvalidArgumentException
      * @expectedExceptionMessage bad config file
@@ -32,13 +24,21 @@ class FBGatewayBuilderTest extends \PHPUnit_Framework_TestCase
     public function testBadConfig()
     {
         $config = array();
-        (new FBGatewayBuilder())->buildParam($config);
+        (new FactoryBuilder())->buildParam($config);
     }
 
     public function testGoodConfig()
     {
         $config = require __DIR__ . '/../_fixture/fb.php';
-        $factory = (new FBGatewayBuilder())->buildFactory($config['good']);
-        static::assertInstanceOf(FBGatewayFactory::class, $factory);
+        $factory = (new FactoryBuilder())->create($config['good']);
+        static::assertInstanceOf(Factory::class, $factory);
+    }
+
+    protected function tearDown()
+    {
+    }
+
+    protected function setUp()
+    {
     }
 }

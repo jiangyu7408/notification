@@ -7,15 +7,16 @@
  */
 namespace Persistency;
 
-use FBGateway\FBGatewayBuilder;
+use FBGateway\FactoryBuilder;
 use Persistency\Audit\AuditStorage;
+use Persistency\Facebook\GatewayPersist;
 
 class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var FBGatewayPersist
+     * @var GatewayPersist
      */
-    protected $gateway;
+    protected $persist;
     /**
      * @var array
      */
@@ -29,40 +30,28 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
     {
     }
 
-    protected function tearDown()
+    public function testRetrieve()
     {
-    }
-
-    /**
-     *
-     */
-    protected function setUp()
-    {
-        $this->config = require __DIR__ . '/../_fixture/fb.php';
+        $balance = $this->getPersistInstance('good')->retrieve();
+        static::assertTrue(is_array($balance));
+        static::assertCount(0, $balance);
     }
 
     /**
      * @param string $type
-     * @return FBGatewayPersist
+     * @return GatewayPersist
      */
     protected function getPersistInstance($type)
     {
         static::assertTrue(is_string($type));
         static::assertTrue($type === 'good' || $type === 'bad');
 
-        $factory = (new FBGatewayBuilder())->buildFactory($this->config[$type]);
+        $factory         = (new FactoryBuilder())->create($this->config[$type]);
 
         $auditStorage    = new AuditStorage();
-        $persistInstance = new FBGatewayPersist($factory, $auditStorage);
+        $persistInstance = new GatewayPersist($factory, $auditStorage);
 
         return $persistInstance;
-    }
-
-    public function testRetrieve()
-    {
-        $balance = $this->getPersistInstance('good')->retrieve();
-        static::assertTrue(is_array($balance));
-        static::assertCount(0, $balance);
     }
 
     public function testFactory()
@@ -73,11 +62,11 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         static::assertTrue(is_string($url));
         static::assertTrue(strpos($url, $snsid) !== false);
 
-        $payload = array(
+        $payload = [
             'snsid'    => $snsid,
             'template' => 'template123',
             'trackRef' => 'trackRef123',
-        );
+        ];
 
         $package = $factory->package($payload);
         static::assertTrue(is_array($package));
@@ -86,11 +75,11 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
     public function testGoodPersist()
     {
         $snsid   = $this->config['good']['snsid'];
-        $payload = array(
+        $payload = [
             'snsid'    => $snsid,
             'template' => "@[{$snsid}] your submarine has arrived!",
             'trackRef' => 'sub_back',
-        );
+        ];
 
         $persistInstance = $this->getPersistInstance('good');
 
@@ -112,13 +101,13 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
     {
         $snsid   = $this->config['bad']['snsid'];
         $gateway = $this->getPersistInstance('bad');
-        static::assertInstanceOf(FBGatewayPersist::class, $gateway);
+        static::assertInstanceOf(GatewayPersist::class, $gateway);
 
-        $payload = array(
+        $payload = [
             'snsid'    => $snsid,
             'template' => "@[{$snsid}] your submarine has arrived!",
             'trackRef' => 'trackRef123',
-        );
+        ];
 
         $auditStorage = $gateway->getAuditStorage();
         static::assertInstanceOf(IPersistency::class, $auditStorage);
@@ -137,12 +126,12 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
     public function testNoSnsid()
     {
         $gateway = $this->getPersistInstance('bad');
-        static::assertInstanceOf(FBGatewayPersist::class, $gateway);
+        static::assertInstanceOf(GatewayPersist::class, $gateway);
 
-        $payload = array(
+        $payload = [
             'template' => 'test no snsid',
             'trackRef' => 'trackRef123',
-        );
+        ];
 
         try {
             $success = $gateway->persist($payload);
@@ -150,5 +139,17 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         } catch (\Exception $e) {
             static::assertInstanceOf(\InvalidArgumentException::class, $e);
         }
+    }
+
+    protected function tearDown()
+    {
+    }
+
+    /**
+     *
+     */
+    protected function setUp()
+    {
+        $this->config = require __DIR__ . '/../_fixture/fb.php';
     }
 }

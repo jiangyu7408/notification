@@ -31,6 +31,10 @@ class RedisNotifListPersist extends AbstractStorage
      */
     protected $fireTime;
 
+    /**
+     * @param RedisStorage $storage
+     * @param NotifArchiveStorage $archiveStorage
+     */
     public function __construct(RedisStorage $storage, NotifArchiveStorage $archiveStorage)
     {
         $this->storage        = $storage;

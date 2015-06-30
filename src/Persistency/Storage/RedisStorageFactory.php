@@ -19,13 +19,13 @@ class RedisStorageFactory
      */
     public function create()
     {
-        $redis = RedisFactory::create([
+        $redisClient = RedisClientFactory::create([
             'scheme'  => 'tcp',
             'host'    => '10.0.64.56',
             'port'    => 6379,
             'timeout' => 5.0,
         ]);
 
-        return new RedisStorage($redis, 'notif');
+        return new RedisStorage($redisClient, 'notif');
     }
 }

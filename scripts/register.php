@@ -6,6 +6,8 @@
  * Time: 7:16 PM
  */
 use BusinessEntity\Notif;
+use Persistency\Storage\RedisClientFactory;
+use Queue\RedisQueue;
 use Repository\NotifRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
@@ -41,7 +43,6 @@ function getRequest($verbose = false)
     static $queue = null;
 
     if ($queue === null) {
-        $factory             = new \Persistency\Storage\RedisFactory();
         $requestQueueSetting = [
             'scheme'  => 'tcp',
             'host'    => '10.0.64.56',
@@ -49,9 +50,8 @@ function getRequest($verbose = false)
             'timeout' => 5.0,
         ];
 
-        $redis = $factory->create($requestQueueSetting);
-
-        $queue = (new \Queue\RedisQueue($redis, 'request'))->setBlockTimeout(5);
+        $redis = (new RedisClientFactory())->create($requestQueueSetting);
+        $queue = (new RedisQueue($redis, 'request'))->setBlockTimeout(5);
     }
 
     while (true) {

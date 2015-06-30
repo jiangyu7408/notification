@@ -25,9 +25,12 @@ class NotifListRepoBuilder
      */
     public function buildRepo($fireTime)
     {
-        $redisStorage = (new RedisStorageFactory())->create();
-        $storage      = new RedisNotifListPersist($redisStorage, new NotifArchiveStorage());
+        $redisStorage   = (new RedisStorageFactory())->create();
+        $archiveStorage = new NotifArchiveStorage();
+        $storage        = new RedisNotifListPersist($redisStorage, $archiveStorage);
         $storage->setFireTime($fireTime);
+        $archiveLocation = $archiveStorage->getLocation($fireTime);
+        var_dump('archive location: ' . $archiveLocation);
 
         $factory = new NotifFactory();
         $repo    = new NotifListRepo($storage, $factory);

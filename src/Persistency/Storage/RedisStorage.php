@@ -50,9 +50,9 @@ class RedisStorage
         $value = json_encode($payload);
         $field = md5($value);
 
-        echo __METHOD__ . ": key[$key] field[$field] value[$value]" . PHP_EOL;
-
         $ret = $this->client->hset($key, $field, $value);
+//        var_dump(__METHOD__ . ": key[$key] field[$field] value[$value] hset return " . var_export($ret, true));
+
         return $ret;
     }
 

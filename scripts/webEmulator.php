@@ -6,13 +6,14 @@
  * Time: 12:00 PM
  */
 
+use Persistency\Storage\RedisClientFactory;
+use Queue\RedisQueue;
+
 require __DIR__ . '/../vendor/autoload.php';
 
 $options   = getopt('v', ['fireTime:']);
 $verbose   = array_key_exists('v', $options);
 $queueName = 'request';
-
-$factory = new \Persistency\Storage\RedisFactory();
 
 $requestQueueSetting = [
     'scheme'  => 'tcp',
@@ -24,7 +25,7 @@ if ($verbose) {
     echo "Queue[$queueName] DSN: " . implode('/', $requestQueueSetting) . PHP_EOL;
 }
 
-$redis = $factory->create($requestQueueSetting);
+$redis = (new RedisClientFactory())->create($requestQueueSetting);
 
 $msg = [
     'appid'    => 'appid',
@@ -35,6 +36,6 @@ $msg = [
     'fireTime' => isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 10,
 ];
 
-$queue       = new \Queue\RedisQueue($redis, $queueName);
+$queue = new RedisQueue($redis, $queueName);
 $queueLength = $queue->push(json_encode($msg));
 echo 'current request queue length = ' . $queueLength . PHP_EOL;

@@ -15,6 +15,22 @@ namespace Persistency\Storage;
 class NotifArchiveStorage
 {
     /**
+     * @param $fireTime
+     * @param array $list
+     */
+    public function append($fireTime, array $list)
+    {
+        $filename = $this->mapToFile($fireTime);
+        $handle   = fopen($filename, 'w');
+
+        foreach ($list as $each) {
+            fwrite($handle, json_encode($each));
+        }
+
+        fclose($handle);
+    }
+
+    /**
      * @param int $fireTime
      * @return string
      */
@@ -31,22 +47,6 @@ class NotifArchiveStorage
             mkdir($dir, 0777, true);
         }
         return $filename;
-    }
-
-    /**
-     * @param $fireTime
-     * @param array $list
-     */
-    public function append($fireTime, array $list)
-    {
-        $filename = $this->mapToFile($fireTime);
-        $handle   = fopen($filename, 'w');
-
-        foreach ($list as $each) {
-            fwrite($handle, json_encode($each));
-        }
-
-        fclose($handle);
     }
 
     /**
@@ -69,5 +69,14 @@ class NotifArchiveStorage
         }
 
         return $result;
+    }
+
+    /**
+     * @param int $fireTime
+     * @return string
+     */
+    public function getLocation($fireTime)
+    {
+        return $this->mapToFile($fireTime);
     }
 }

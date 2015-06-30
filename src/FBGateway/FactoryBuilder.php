@@ -11,25 +11,25 @@ namespace FBGateway;
 use InvalidArgumentException;
 
 /**
- * Class FBGatewayBuilder
+ * Class FactoryBuilder
  * @package Builder
  */
-class FBGatewayBuilder
+class FactoryBuilder
 {
     /**
      * @param array $config
-     * @return FBGatewayFactory
+     * @return Factory
      * @throws InvalidArgumentException
      */
-    public function buildFactory(array $config)
+    public function create(array $config)
     {
         $param = $this->buildParam($config);
-        return new FBGatewayFactory($param);
+        return new Factory($param);
     }
 
     /**
      * @param array $config
-     * @return FBGatewayParam
+     * @return Param
      * @throws InvalidArgumentException
      */
     public function buildParam(array $config)
@@ -37,7 +37,7 @@ class FBGatewayBuilder
         if (!array_key_exists('appId', $config) || !array_key_exists('secretKey', $config)) {
             throw new InvalidArgumentException('bad config file');
         }
-        $param            = new FBGatewayParam();
+        $param = new Param();
         $param->appid     = $config['appId'];
         $param->secretKey = $config['secretKey'];
         if (array_key_exists('openGraphEndpoint', $config)) {

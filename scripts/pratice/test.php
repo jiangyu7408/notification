@@ -6,18 +6,19 @@
  * Time: 4:29 PM
  */
 
+use Persistency\Storage\RedisClientFactory;
 use Queue\RedisQueue;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$redis = \Persistency\Storage\RedisFactory::create([
+$redisClient = RedisClientFactory::create([
     'scheme'  => 'tcp',
     'host'    => '10.0.64.56',
     'port'    => 6379,
     'timeout' => 5.0,
 ]);
 
-$queue = new RedisQueue($redis, 'test');
+$queue = new RedisQueue($redisClient, 'test');
 
 $payload = [
     'snsid'     => '675097095878591',

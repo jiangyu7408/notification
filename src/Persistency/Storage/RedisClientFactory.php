@@ -12,10 +12,10 @@ use Predis\Client;
 use Predis\Connection\Parameters;
 
 /**
- * Class RedisFactory
+ * Class RedisClientFactory
  * @package Persistency\Storage
  */
-class RedisFactory
+class RedisClientFactory
 {
     protected static $instances = [];
 
@@ -23,7 +23,7 @@ class RedisFactory
      * @param array $params
      * @return \Predis\Client
      */
-    public static function create(array $params)
+    public static function create(array $params = [])
     {
         $key = md5(json_encode($params));
         if (!array_key_exists($key, self::$instances)) {

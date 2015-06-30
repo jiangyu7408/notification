@@ -62,7 +62,6 @@ class FileQueue implements IQueue
     public function push($msg)
     {
         $filename = $this->location . '/' . date('His') . '_' . microtime(true);
-        xdebug_debug_zval('filename');
         if (is_string($msg)) {
             return $this->writeFile($filename, $msg);
         }

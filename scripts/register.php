@@ -12,7 +12,7 @@ require __DIR__ . '/../bootstrap.php';
 
 $options = getopt('v');
 
-$requestList = getRequest();
+$requestList = getRequest(array_key_exists('v', $options));
 foreach ($requestList as $request) {
     $notif = makeNotif($request);
     if ($notif instanceof Notif) {

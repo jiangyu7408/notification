@@ -14,11 +14,13 @@ require __DIR__ . '/../bootstrap.php';
 
 $options = getopt('v');
 
-$requestList = getRequest(array_key_exists('v', $options));
+$verbose = array_key_exists('v', $options);
+
+$requestList = getRequest();
 foreach ($requestList as $request) {
     $notif = makeNotif($request);
     if ($notif instanceof Notif) {
-        registerRequest($notif);
+        registerRequest($notif, $verbose);
     }
 }
 
@@ -38,7 +40,7 @@ function makeNotif($request)
     return $notif;
 }
 
-function getRequest($verbose = false)
+function getRequest()
 {
     static $queue = null;
 
@@ -55,9 +57,6 @@ function getRequest($verbose = false)
     }
 
     while (true) {
-        if ($verbose) {
-            echo time() . ' wait for de-queue' . PHP_EOL;
-        }
         $request = $queue->pop();
         if ($request) {
             yield $request;
@@ -65,12 +64,16 @@ function getRequest($verbose = false)
     }
 }
 
-function registerRequest(Notif $notif)
+function registerRequest(Notif $notif, $verbose = false)
 {
     static $repo = null;
 
     if ($repo === null) {
         $repo = (new NotifRepoBuilder())->getRepo();
+    }
+
+    if ($verbose) {
+        print_r(time() . ' register: ' . json_encode($notif) . PHP_EOL);
     }
     $repo->register($notif);
 }

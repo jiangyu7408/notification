@@ -8,9 +8,11 @@
 
 namespace Persistency\Facebook;
 
-use FBGateway\FactoryBuilder;
+use FBGateway\FactoryBuilder as FBGatewayFactoryBuilder;
 use InvalidArgumentException;
 use Persistency\Audit\AuditStorage;
+use Persistency\IPersistency;
+use Queue\FileQueue;
 
 /**
  * Class GatewayPersistBuilder
@@ -20,17 +22,24 @@ class GatewayPersistBuilder
 {
     /**
      * @param array $config
-     * @return null|GatewayPersist
+     * @return null|IPersistency
+     * @throws InvalidArgumentException
      */
     public function build(array $config)
     {
+        if (!isset($config['queueLocation'])) {
+            throw new InvalidArgumentException('queueLocation not found in config: ' . print_r($config, true));
+        }
+
         try {
-            $fbGatewayFactory = (new FactoryBuilder())->create($config);
+            $fbGatewayFactory = (new FBGatewayFactoryBuilder())->create($config);
             $auditStorage     = new AuditStorage();
-            return new GatewayQueue($fbGatewayFactory, $auditStorage);
+            $queue            = new FileQueue($config['queueLocation']);
+            return new GatewayQueue($queue, $fbGatewayFactory, $auditStorage);
         } catch (InvalidArgumentException $e) {
             // @todo error report
-            return null;
+            print_r($e);
+            throw $e;
         }
     }
 }

@@ -8,18 +8,41 @@
 
 namespace Persistency\Facebook;
 
+use FBGateway\Factory;
+use Persistency\Audit\AuditStorage;
+use Queue\IQueue;
+
 /**
  * Class GatewayQueue
  * @package Persistency\Facebook
  */
-class GatewayQueue extends GatewayPersist
+class GatewayQueue extends AbstractPersist
 {
     /**
-     * @inheritdoc
+     * @var IQueue
+     */
+    protected $queue;
+
+    /**
+     * @param IQueue $queue
+     * @param Factory $factory
+     * @param AuditStorage $audit
+     */
+    public function __construct(IQueue $queue, Factory $factory, AuditStorage $audit)
+    {
+        $this->queue   = $queue;
+        $this->factory = $factory;
+        $this->audit   = $audit;
+    }
+
+    /**
+     * @param array $payload
+     * @return bool
+     * @throws \InvalidArgumentException
      */
     public function persist(array $payload)
     {
-        if (!array_key_exists('snsid', $payload) || empty($payload['snsid'])) {
+        if (!isset($payload['snsid'])) {
             throw new \InvalidArgumentException('snsid not found');
         }
         $snsid   = $payload['snsid'];
@@ -32,6 +55,9 @@ class GatewayQueue extends GatewayPersist
             CURLOPT_URL            => $this->factory->makeUrl($snsid)
         ];
         print_r($options);
+
+        $ret = $this->queue->push(json_encode($options));
+        xdebug_debug_zval('ret');
 
         return true;
     }

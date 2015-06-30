@@ -13,6 +13,11 @@ use Predis\Client;
 class RedisQueue implements IQueue
 {
     /**
+     * @var int
+     */
+    protected $timeout;
+
+    /**
      * @param Client $client
      * @param string $name
      */
@@ -20,6 +25,16 @@ class RedisQueue implements IQueue
     {
         $this->redis = $client;
         $this->name  = $name;
+    }
+
+    /**
+     * @param $timeout
+     * @return $this
+     */
+    public function setBlockTimeout($timeout)
+    {
+        $this->timeout = $timeout;
+        return $this;
     }
 
     /**
@@ -33,11 +48,26 @@ class RedisQueue implements IQueue
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function pop()
     {
-        $msg = $this->redis->lpop($this->name);
-        return $msg;
+        $msgList = $this->redis->blpop([$this->name], $this->timeout);
+        if ($msgList === null) {
+            return null;
+        }
+
+        if (extension_loaded('xdebug')) {
+            assert(count($msgList) === 2);
+            assert($msgList[0] === $this->name);
+        }
+
+        $result = $msgList[1];
+
+        if (extension_loaded('xdebug')) {
+            assert(is_string($result));
+        }
+
+        return $result;
     }
 }

@@ -10,12 +10,12 @@ namespace Queue;
 
 use Predis\Client;
 
-/**
- * Class RedisQueue
- * @package Queue
- */
-class RedisQueue
+class RedisQueue implements IQueue
 {
+    /**
+     * @param Client $client
+     * @param string $name
+     */
     public function __construct(Client $client, $name = 'queue')
     {
         $this->redis = $client;

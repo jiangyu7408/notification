@@ -86,8 +86,10 @@ class RunningQueue
      */
     protected function createResponse(array $input)
     {
-        $info            = curl_getinfo($input['handle']);
-        $info['content'] = curl_multi_getcontent($this->curl);
+        $curlHandle      = $input['handle'];
+        $info            = curl_getinfo($curlHandle);
+        $info['content'] = curl_multi_getcontent($curlHandle);
+        print_r($info);
 
         $request = $this->get($info['url']);
 
@@ -98,6 +100,10 @@ class RunningQueue
 
     public function get($url)
     {
+        if (!array_key_exists($url, $this->queue)) {
+            print_r($this->queue);
+            die;
+        }
         return $this->queue[$url];
     }
 }

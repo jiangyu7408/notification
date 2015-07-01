@@ -21,9 +21,9 @@ class TaskProvider extends \SplQueue
      */
     public function __construct(array $tasks)
     {
-        array_map(function (Task $task) use ($this) {
+        foreach ($tasks as $task) {
             $this->push($task);
-        }, $tasks);
+        }
     }
 
     /**

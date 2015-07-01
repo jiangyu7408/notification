@@ -28,13 +28,21 @@ if ($verbose) {
 $redis = (new RedisClientFactory())->create($requestQueueSetting);
 $queue = new RedisQueue($redis, $queueName);
 
+$fixture = require __DIR__ . '/../tests/_fixture/fb.php';
+$config  = $fixture['good'];
+
+$appid     = $config['appId'];
+$snsid     = $config['snsid'];
+$secretKey = $config['secretKey'];
+$endpoint  = $config['openGraphEndpoint'];
+
 $cnt = isset($options['n']) ? abs($options['n']) : 3;
 for ($i = 0; $i < $cnt; $i++) {
     $msg = [
-        'appid'    => 'appid',
-        'snsid'    => '675097095878591',
+        'appid'    => $appid,
+        'snsid'    => $snsid,
         'feature'  => 'debug',
-        'template' => 'This is a notif test message',
+        'template' => 'This is a notif test message at ' . date('His'),
         'trackRef' => 'track_' . microtime(true),
         'fireTime' => isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 10,
     ];

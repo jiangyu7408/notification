@@ -40,7 +40,7 @@ class CurlWorker
     }
 
     /**
-     * @param array $tasks
+     * @param Task[] $tasks
      * @param int $concurrency
      * @return bool
      */
@@ -70,23 +70,23 @@ class CurlWorker
 
     public function run()
     {
-        $retry   = 0;
-        $fail    = 0;
-        $success = 0;
+        $retryCounter   = 0;
+        $failCounter    = 0;
+        $successCounter = 0;
 
         $pendingResponseList = $this->runningQueue->run();
         /** @var Response $pendingResponse */
         foreach ($pendingResponseList as $pendingResponse) {
             $success = $this->handleResponseIfSuccess($pendingResponse);
             if ($success) {
-                $success++;
+                $successCounter++;
                 continue;
             }
 
-            $this->handleResponseIfFail($pendingResponse, $fail, $retry);
+            $this->handleResponseIfFail($pendingResponse, $failCounter, $retryCounter);
         }
 
-        echo PHP_EOL . "success: {$success}, retry: {$retry}, fail: {$fail}" . PHP_EOL;
+        echo PHP_EOL . "success: {$successCounter}, retry: {$retryCounter}, fail: {$failCounter}" . PHP_EOL;
     }
 
     /**

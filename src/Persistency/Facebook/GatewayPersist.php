@@ -42,6 +42,7 @@ class GatewayPersist extends AbstractPersist
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS     => http_build_query($package, null, '&'),
             CURLOPT_HTTPHEADER => ['Expect:'],
+            CURLOPT_HEADER     => false,
             CURLOPT_URL            => $this->factory->makeUrl($snsid)
         ];
         curl_setopt_array($this->channel, $options);

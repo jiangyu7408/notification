@@ -21,7 +21,7 @@ $debugEnabled = !isset($options['no-debug']);
 
 $config = require __DIR__ . '/../tests/_fixture/fb.php';
 
-$fbGatewayConfig                  = $config['bad'];
+$fbGatewayConfig = $config['good'];
 $fbGatewayConfig['queueLocation'] = getQueueLocation();
 
 $gunner         = (new GatewayPersistBuilder())->build($fbGatewayConfig);

@@ -26,6 +26,7 @@ class TaskFactory
      */
     public function create($url, array $options)
     {
+        assert(is_string($url) && strlen($url) > 0);
         $task = clone $this->prototype;
         $task->setUrl($url)
              ->setOptions($options);

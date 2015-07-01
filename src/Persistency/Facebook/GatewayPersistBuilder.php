@@ -36,6 +36,7 @@ class GatewayPersistBuilder
             $auditStorage     = new AuditStorage();
             $queue            = new FileQueue($config['queueLocation']);
             return new GatewayQueue($queue, $fbGatewayFactory, $auditStorage);
+//            return new GatewayPersist($fbGatewayFactory, $auditStorage);
         } catch (InvalidArgumentException $e) {
             // @todo error report
             print_r($e);

@@ -71,15 +71,24 @@ class EndlessTasks
     }
 }
 
-function fireNotifications($tasks)
+function fireNotifications($jsonArray)
 {
-    $requests = array_map(function ($task) {
-        return json_decode($task, true);
-    }, $tasks);
+    $requestFactory = new \Worker\Model\TaskFactory();
 
-//    print_r($requests);
+    $tasks = [];
+
+    foreach ($jsonArray as $jsonString) {
+        $options = json_decode($jsonString, true);
+        if (!is_array($options)) {
+            continue;
+        }
+
+        xdebug_debug_zval('options');
+        $tasks[] = $requestFactory->create($options[CURLOPT_URL], $options);
+    }
+
     $worker = new \Worker\CurlWorker();
-    $worker->addTasks($requests);
+    $worker->addTasks($tasks);
     $worker->run();
 }
 

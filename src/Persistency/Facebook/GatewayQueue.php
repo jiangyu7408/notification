@@ -54,10 +54,8 @@ class GatewayQueue extends AbstractPersist
             CURLOPT_HTTPHEADER     => ['Expect:'],
             CURLOPT_URL            => $this->factory->makeUrl($snsid)
         ];
-        print_r($options);
 
-        $ret = $this->queue->push(json_encode($options));
-        xdebug_debug_zval('ret');
+        $this->queue->push(json_encode($options));
 
         return true;
     }

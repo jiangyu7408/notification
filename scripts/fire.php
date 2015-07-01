@@ -15,18 +15,9 @@ use Repository\NotifListRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
-$options = getopt('', ['fireTime:']);
-$fireTime = isset($options['fireTime']) ? (int)$options['fireTime'] : time();
-
-$notifListRepo = (new NotifListRepoBuilder())->buildRepo($fireTime);
-
-$pendingNotifications = $notifListRepo->getPending();
-if (count($pendingNotifications) === 0) {
-    echo 'no pending notifications at fire time: ' . $fireTime . PHP_EOL;
-    return;
-}
-
-echo 'pending notifications = ' . count($pendingNotifications) . PHP_EOL;
+$options      = getopt('', ['fireTime:', 'no-debug']);
+$fireTime     = isset($options['fireTime']) ? (int)$options['fireTime'] : time();
+$debugEnabled = !isset($options['no-debug']);
 
 $config = require __DIR__ . '/../tests/_fixture/fb.php';
 
@@ -37,7 +28,38 @@ $gunner         = (new GatewayPersistBuilder())->build($fbGatewayConfig);
 $fbNotifFactory = new FBNotifFactory();
 $fireMachine    = new FBGatewayRepo($gunner, $fbNotifFactory);
 
-$fbNotifList = $fbNotifFactory->makeList($pendingNotifications);
-$fireMachine->burst($fbNotifList);
+$noPendingEventHandler = function () use ($fireTime, $debugEnabled) {
+    if ($debugEnabled) {
+        echo 'no pending notifications at fire time: ' . $fireTime . PHP_EOL;
+    }
+    sleep(1);
+};
 
-$notifListRepo->markFired($pendingNotifications);
+$pendingNotifList = pendingNotifLists($fireTime, $noPendingEventHandler);
+
+/** @var array $pendingList */
+foreach ($pendingNotifList as $pendingList) {
+    echo 'pending notifications = ' . count($pendingList) . PHP_EOL;
+    $fbNotifList = $fbNotifFactory->makeList($pendingList);
+    $fireMachine->burst($fbNotifList);
+}
+
+function pendingNotifLists($fireTime, callable $noPendingEventHandler)
+{
+    while (true) {
+        $notifListRepo = (new NotifListRepoBuilder())->buildRepo($fireTime);
+
+        $pendingNotifications = $notifListRepo->getPending();
+        if (count($pendingNotifications) === 0) {
+            $noPendingEventHandler();
+            continue;
+        }
+
+        /*
+         * yield cpu to outside, and once got running again,
+         * the pending notifications are considered as fired successfully
+         */
+        yield $pendingNotifications;
+        $notifListRepo->markFired($pendingNotifications);
+    }
+}

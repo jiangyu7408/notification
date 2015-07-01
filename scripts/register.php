@@ -43,6 +43,7 @@ function makeNotif($request)
 function getRequest()
 {
     static $queue = null;
+    static $redis;
 
     if ($queue === null) {
         $requestQueueSetting = [
@@ -56,8 +57,21 @@ function getRequest()
         $queue = (new RedisQueue($redis, 'request'))->setBlockTimeout(5);
     }
 
+    $retryMax = 3;
+    $retry    = 0;
     while (true) {
-        $request = $queue->pop();
+        $request = null;
+        try {
+            $request = $queue->pop();
+        } catch (Predis\Connection\ConnectionException $e) {
+            echo time() . ' ' . $e->getMessage() . PHP_EOL;
+            $redis->connect();
+            $retry++;
+            if ($retry > $retryMax) {
+                echo time() . ' redis connect retry fail' . PHP_EOL;
+                break;
+            }
+        }
         if ($request) {
             yield $request;
         }

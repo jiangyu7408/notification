@@ -75,7 +75,6 @@ class FileQueue implements IQueue
      */
     private function writeFile($filename, $msgString)
     {
-        var_dump(__METHOD__, $filename, $msgString);
         $ret = file_put_contents($filename, $msgString);
         return ($ret !== false);
     }
@@ -97,7 +96,6 @@ class FileQueue implements IQueue
 
         $content = file_get_contents($file);
         unlink($file);
-        var_dump('unlink ' . $file);
         return $content;
     }
 

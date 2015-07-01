@@ -11,7 +11,7 @@ use Queue\RedisQueue;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$options   = getopt('v', ['fireTime:']);
+$options = getopt('vn:', ['fireTime:']);
 $verbose   = array_key_exists('v', $options);
 $queueName = 'request';
 
@@ -26,16 +26,19 @@ if ($verbose) {
 }
 
 $redis = (new RedisClientFactory())->create($requestQueueSetting);
-
-$msg = [
-    'appid'    => 'appid',
-    'snsid'    => '675097095878591',
-    'feature'  => 'debug',
-    'template' => 'This is a notif test message',
-    'trackRef' => 'debug',
-    'fireTime' => isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 10,
-];
-
 $queue = new RedisQueue($redis, $queueName);
-$queueLength = $queue->push(json_encode($msg));
-echo 'current request queue length = ' . $queueLength . PHP_EOL;
+
+$cnt = isset($options['n']) ? abs($options['n']) : 3;
+for ($i = 0; $i < $cnt; $i++) {
+    $msg = [
+        'appid'    => 'appid',
+        'snsid'    => '675097095878591',
+        'feature'  => 'debug',
+        'template' => 'This is a notif test message',
+        'trackRef' => 'track_' . microtime(true),
+        'fireTime' => isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 10,
+    ];
+
+    $queueLength = $queue->push(json_encode($msg));
+    echo 'current request queue length = ' . $queueLength . PHP_EOL;
+}

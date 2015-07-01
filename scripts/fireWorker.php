@@ -73,11 +73,11 @@ class EndlessTasks
 
 function fireNotifications($tasks)
 {
-    array_map(function ($task) {
-        $options = json_decode($task, true);
-        echo __FUNCTION__ . ': ';
-        print_r($options);
+    $requests = array_map(function ($task) {
+        return json_decode($task, true);
     }, $tasks);
+
+    print_r($requests);
 }
 
 $queueLocation = getQueueLocation();

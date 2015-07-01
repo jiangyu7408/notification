@@ -77,7 +77,10 @@ function fireNotifications($tasks)
         return json_decode($task, true);
     }, $tasks);
 
-    print_r($requests);
+//    print_r($requests);
+    $worker = new \Worker\CurlWorker();
+    $worker->addTasks($requests);
+    $worker->run();
 }
 
 $queueLocation = getQueueLocation();

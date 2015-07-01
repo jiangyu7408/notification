@@ -83,13 +83,15 @@ function fireNotifications($jsonArray)
             continue;
         }
 
-        xdebug_debug_zval('options');
         $tasks[] = $requestFactory->create($options[CURLOPT_URL], $options);
     }
 
+    PHP_Timer::start();
     $worker = new \Worker\CurlWorker();
     $worker->addTasks($tasks);
     $worker->run();
+    $delta = PHP_Timer::stop();
+    echo PHP_Timer::resourceUsage() . ' fire notif cost: ' . PHP_Timer::secondsToTimeString($delta) . PHP_EOL;
 }
 
 $queueLocation = getQueueLocation();

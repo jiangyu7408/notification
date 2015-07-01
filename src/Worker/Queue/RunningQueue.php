@@ -9,6 +9,7 @@
 namespace Worker\Queue;
 
 use Worker\Model\Request;
+use Worker\Model\Response;
 use Worker\Model\ResponseFactory;
 
 /**
@@ -100,5 +101,18 @@ class RunningQueue
     public function get($url)
     {
         return $this->queue[$url];
+    }
+
+    protected function cleanUp(Response $response)
+    {
+        $ret = curl_multi_remove_handle($this->curl, $response->request->handle);
+        if ($ret !== 0) {
+            $this->handleCurlError($response);
+        }
+    }
+
+    private function handleCurlError(Response $response)
+    {
+        // TODO handle error
     }
 }

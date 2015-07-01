@@ -77,6 +77,7 @@ class CurlWorker
         $pendingResponseList = $this->runningQueue->run();
         /** @var Response $pendingResponse */
         foreach ($pendingResponseList as $pendingResponse) {
+            echo '*';
             $success = $this->handleResponseIfSuccess($pendingResponse);
             if ($success) {
                 $successCounter++;

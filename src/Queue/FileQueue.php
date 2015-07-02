@@ -62,7 +62,6 @@ class FileQueue implements IQueue
     public function push($msg)
     {
         $filename = $this->location . '/' . uniqid(date('His'), true);
-        echo $filename . PHP_EOL;
         if (is_string($msg)) {
             return $this->writeFile($filename, $msg);
         }

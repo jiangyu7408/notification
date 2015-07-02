@@ -60,12 +60,10 @@ class RedisStorageTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->redisClient = RedisClientFactory::create([
-            'scheme'  => 'tcp',
-            'host'    => '10.0.64.56',
-            'port'    => 6379,
-            'timeout' => 5.0,
-        ]);
+        $redisConfig = require __DIR__ . '/../_fixture/redisConfig.php';
+        static::assertTrue(is_array($redisConfig), 'redisConfig.php not working');
+
+        $this->redisClient = RedisClientFactory::create($redisConfig);
 
         $this->fireTime = time();
 

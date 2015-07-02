@@ -28,13 +28,14 @@ class FileQueueTest extends \PHPUnit_Framework_TestCase
     {
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testBogus()
     {
-        $queue = new FileQueue('__fixture_bogus');
-        static::assertNull($queue);
+        try {
+            $queue = new FileQueue('__fixture_bogus');
+            static::assertNull($queue);
+        } catch (\Exception $e) {
+            static::assertInstanceOf(\InvalidArgumentException::class, $e);
+        }
     }
 
     public function testSingle()

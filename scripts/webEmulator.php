@@ -9,18 +9,13 @@
 use Persistency\Storage\RedisClientFactory;
 use Queue\RedisQueue;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../bootstrap.php';
 
 $options = getopt('vn:', ['fireTime:']);
 $verbose   = array_key_exists('v', $options);
-$queueName = 'request';
 
-$requestQueueSetting = [
-    'scheme'  => 'tcp',
-    'host'    => '10.0.64.56',
-    'port'    => 6379,
-    'timeout' => 5.0,
-];
+$requestQueueSetting = \Application\Facade::getInstance()->getParam('redisQueue');
+$queueName           = $requestQueueSetting['queueName'];
 if ($verbose) {
     echo "Queue[$queueName] DSN: " . implode('/', $requestQueueSetting) . PHP_EOL;
 }

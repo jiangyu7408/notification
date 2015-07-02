@@ -9,7 +9,8 @@
     },
     "require": {
         "php": ">=5.5",
-        "predis/predis": "*"
+        "predis/predis": "*",
+        "raulfraile/ladybug": "^1.0"
     },
     "require-dev": {
         "phpunit/php-timer": ">=1.0.6",

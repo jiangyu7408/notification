@@ -9,7 +9,7 @@
 namespace FBGateway;
 
 /**
- * Class Factory
+ * Class Builder
  * @package BusinessEntity
  */
 class Factory

@@ -12,19 +12,6 @@ use Repository\NotifRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
-$options = getopt('v');
-
-$verbose = array_key_exists('v', $options);
-
-$requestList = getRequest();
-foreach ($requestList as $request) {
-    $notif = makeNotif($request);
-    echo '.';
-    if ($notif instanceof Notif) {
-        registerRequest($notif, $verbose);
-    }
-}
-
 function makeNotif($request)
 {
     $reqArr = json_decode($request, true);
@@ -41,21 +28,14 @@ function makeNotif($request)
     return $notif;
 }
 
-function getRequest()
+function getRequest(array $config)
 {
     static $queue = null;
     static $redis;
 
     if ($queue === null) {
-        $requestQueueSetting = [
-            'scheme'  => 'tcp',
-            'host'    => '10.0.64.56',
-            'port'    => 6379,
-            'timeout' => 5.0,
-        ];
-
-        $redis = (new RedisClientFactory())->create($requestQueueSetting);
-        $queue = (new RedisQueue($redis, 'request'))->setBlockTimeout(5);
+        $redis = (new RedisClientFactory())->create($config);
+        $queue = (new RedisQueue($redis, $config['queueName']))->setBlockTimeout(5);
     }
 
     $retryMax = 3;
@@ -92,3 +72,34 @@ function registerRequest(Notif $notif, $verbose = false)
     }
     $repo->register($notif);
 }
+
+function main()
+{
+    $options = getopt('v');
+
+    $verbose = array_key_exists('v', $options);
+
+    $queueFactory      = \Application\Facade::getInstance()->getRedisQueueConfigFactory();
+    $queueConfigObject = \Application\Facade::getInstance()->getRedisQueueConfig();
+
+    $queueConfig = $queueFactory->toArray($queueConfigObject);
+
+    $dsn = $queueFactory->toString($queueConfigObject);
+
+    if ($verbose) {
+        echo 'queueName[' . $queueConfig['queueName'] . '] '
+             . $dsn . ' timeout=' . $queueConfig['timeout']
+             . PHP_EOL;
+    }
+
+    $requestList = getRequest($queueConfig);
+    foreach ($requestList as $request) {
+        $notif = makeNotif($request);
+        echo '.';
+        if ($notif instanceof Notif) {
+            registerRequest($notif, $verbose);
+        }
+    }
+}
+
+main();

@@ -17,13 +17,14 @@ class FBGatewayBuilderTest extends \PHPUnit_Framework_TestCase
     {
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage bad config file
-     */
     public function testBadConfig()
     {
-        (new FactoryBuilder())->buildParam([]);
+        try {
+            (new FactoryBuilder())->buildParam([]);
+        } catch (\InvalidArgumentException $e) {
+            static::assertInstanceOf(\Exception::class, $e);
+            static::assertEquals('bad config file', $e->getMessage());
+        }
     }
 
     public function testGoodConfig()

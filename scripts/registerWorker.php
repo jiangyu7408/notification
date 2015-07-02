@@ -19,6 +19,7 @@ $verbose = array_key_exists('v', $options);
 $requestList = getRequest();
 foreach ($requestList as $request) {
     $notif = makeNotif($request);
+    echo time() . PHP_EOL;
     if ($notif instanceof Notif) {
         registerRequest($notif, $verbose);
     }

@@ -15,7 +15,8 @@ use Repository\NotifListRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
-$options      = getopt('', ['fireTime:', 'no-debug']);
+$options = getopt('v', ['fireTime:', 'no-debug']);
+$verbose = isset($options['v']);
 $fireTime     = isset($options['fireTime']) ? (int)$options['fireTime'] : time();
 $debugEnabled = !isset($options['no-debug']);
 
@@ -39,7 +40,9 @@ $pendingNotifList = pendingNotifLists($fireTime, $noPendingEventHandler);
 
 /** @var array $pendingList */
 foreach ($pendingNotifList as $pendingList) {
-    echo 'pending notifications = ' . count($pendingList) . PHP_EOL;
+    if ($verbose) {
+        echo time() . ' pending notifications = ' . count($pendingList) . PHP_EOL;
+    }
     $fbNotifList = $fbNotifFactory->makeList($pendingList);
     $fireMachine->burst($fbNotifList);
 }

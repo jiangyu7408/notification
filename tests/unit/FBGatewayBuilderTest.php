@@ -23,8 +23,7 @@ class FBGatewayBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function testBadConfig()
     {
-        $config = array();
-        (new FactoryBuilder())->buildParam($config);
+        (new FactoryBuilder())->buildParam([]);
     }
 
     public function testGoodConfig()

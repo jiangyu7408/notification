@@ -7,6 +7,8 @@
  */
 namespace Queue;
 
+use InvalidArgumentException;
+
 class FileQueueTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -27,7 +29,7 @@ class FileQueueTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException \InvalidArgumentException
+     * @expectedException InvalidArgumentException
      */
     public function testBogus()
     {

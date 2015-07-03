@@ -1,0 +1,17 @@
+language: php
+
+install:
+  - travis_retry composer install --no-interaction --prefer-source
+
+php:
+  - 5.5
+  - hhvm
+
+script: phpunit --configuration ./build/travis-ci.xml
+
+matrix:
+  allow_failures:
+    - php: hhvm
+
+notifications:
+  email: false

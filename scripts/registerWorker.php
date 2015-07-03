@@ -80,7 +80,7 @@ function main()
     $verbose = array_key_exists('v', $options);
 
     $queueFactory      = \Application\Facade::getInstance()->getRedisQueueConfigFactory();
-    $queueConfigObject = \Application\Facade::getInstance()->getRedisQueueConfig();
+    $queueConfigObject = \Application\Facade::getInstance()->getRegisterQueueConfig();
 
     $queueConfig = $queueFactory->toArray($queueConfigObject);
 

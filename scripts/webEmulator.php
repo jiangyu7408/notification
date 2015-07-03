@@ -11,37 +11,38 @@ use Queue\RedisQueue;
 
 require __DIR__ . '/../bootstrap.php';
 
-$options = getopt('vn:', ['fireTime:']);
-$verbose   = array_key_exists('v', $options);
+$options = getopt('vn:', ['fireTime:', 'snsid:']);
+$verbose = array_key_exists('v', $options);
 
-$requestQueueSetting = \Application\Facade::getInstance()->getParam('redisQueue');
-$queueName           = $requestQueueSetting['queueName'];
+$requestQueueConfig = \Application\Facade::getInstance()->getRegisterQueueConfig();
+
+$queueName = $requestQueueConfig->queueName;
 if ($verbose) {
-    echo "Queue[$queueName] DSN: " . implode('/', $requestQueueSetting) . PHP_EOL;
+    dump("Queue[$queueName] DSN: " . $requestQueueConfig->toString());
 }
 
-$redis = (new RedisClientFactory())->create($requestQueueSetting);
-$queue = new RedisQueue($redis, $queueName);
+$registerEntry = new RedisQueue(
+    (new RedisClientFactory())->create($requestQueueConfig),
+    $queueName
+);
 
-$fixture = require __DIR__ . '/../tests/_fixture/fb.php';
-$config  = $fixture['good'];
+$snsid    = isset($options['snsid']) ? trim($options['snsid']) : '100001349218797';
+$fireTime = isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 10;
+dump('snsid: ' . $snsid . ', fireTime: ' . date('Y-m-d H:i:s', $fireTime));
 
-$appid     = $config['appId'];
-$snsid     = $config['snsid'];
-$secretKey = $config['secretKey'];
-$endpoint  = $config['openGraphEndpoint'];
+$facebookOptions = \Application\Facade::getInstance()->getParam('facebook');
 
 $cnt = isset($options['n']) ? abs($options['n']) : 3;
 for ($i = 0; $i < $cnt; $i++) {
     $msg = [
-        'appid'    => $appid,
+        'appid'    => $facebookOptions['appId'],
         'snsid'    => $snsid,
-        'feature'  => 'debug',
+        'feature'  => 'debug', // TODO route to correct appid
         'template' => 'This is a notif test message at ' . date('His'),
         'trackRef' => 'track_' . microtime(true),
-        'fireTime' => isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 10,
+        'fireTime' => $fireTime,
     ];
 
-    $queueLength = $queue->push(json_encode($msg));
-    echo 'current request queue length = ' . $queueLength . PHP_EOL;
+    $queueLength = $registerEntry->push(json_encode($msg));
+    dump('current request queue length = ' . $queueLength);
 }

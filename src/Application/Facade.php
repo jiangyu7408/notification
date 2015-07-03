@@ -82,7 +82,7 @@ class Facade
     /**
      * @return null|RedisQueueConfig
      */
-    public function getRedisQueueConfig()
+    public function getRegisterQueueConfig()
     {
         return $this->getService(RedisQueueConfig::class);
     }

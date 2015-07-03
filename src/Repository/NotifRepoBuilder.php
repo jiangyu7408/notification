@@ -9,6 +9,7 @@
 namespace Repository;
 
 use BusinessEntity\NotifFactory;
+use Config\RedisNotifConfig;
 use Persistency\Storage\RedisNotifPersist;
 use Persistency\Storage\RedisStorageFactory;
 
@@ -18,11 +19,10 @@ use Persistency\Storage\RedisStorageFactory;
  */
 class NotifRepoBuilder
 {
-    public function getRepo()
+    public function getRepo(RedisNotifConfig $config)
     {
-//        $storage = new InMemNotifPersist();
         $storage = new RedisNotifPersist(
-            (new RedisStorageFactory())->create()
+            (new RedisStorageFactory())->create($config, $config->prefix)
         );
         $factory = new NotifFactory();
 

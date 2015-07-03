@@ -10,7 +10,7 @@ namespace Repository;
 
 use BusinessEntity\Notif;
 use BusinessEntity\NotifFactory;
-use Persistency\Storage\AbstractStorage;
+use Persistency\Storage\RedisNotifListPersist;
 
 /**
  * Class NotifListRepo
@@ -18,28 +18,21 @@ use Persistency\Storage\AbstractStorage;
  */
 class NotifListRepo
 {
-    public function __construct(AbstractStorage $storage, NotifFactory $factory)
+    public function __construct(RedisNotifListPersist $storage, NotifFactory $factory)
     {
         $this->storage = $storage;
         $this->factory = $factory;
     }
 
     /**
-     * @return Notif[]
+     * @param int $fireTime
+     * @return \BusinessEntity\Notif[]
      */
-    public function getPending()
+    public function getPending($fireTime)
     {
+        $this->storage->setFireTime($fireTime);
         $rawList = $this->storage->retrieve();
         return array_map([$this, 'makeEntity'], $rawList);
-    }
-
-    /**
-     * @param array $rawData
-     * @return Notif
-     */
-    private function makeEntity(array $rawData)
-    {
-        return $this->factory->make($rawData);
     }
 
     /**
@@ -49,6 +42,15 @@ class NotifListRepo
     {
         $rawList = array_map([$this, 'fromEntity'], $notifications);
         $this->storage->persist($rawList);
+    }
+
+    /**
+     * @param array $rawData
+     * @return Notif
+     */
+    private function makeEntity(array $rawData)
+    {
+        return $this->factory->make($rawData);
     }
 
     /**

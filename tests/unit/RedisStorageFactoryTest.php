@@ -7,8 +7,6 @@
  */
 namespace Persistency\Storage;
 
-use Config\RedisConfigFactory;
-
 class RedisStorageFactoryTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -18,11 +16,11 @@ class RedisStorageFactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testFactory()
     {
-        $configObject = (new RedisConfigFactory())->create($this->options);
-
+        $prefix       = 'test';
         $factory      = new RedisStorageFactory();
-        $redisStorage = $factory->create($configObject);
+        $redisStorage = $factory->create($this->options, $prefix);
         static::assertInstanceOf(RedisStorage::class, $redisStorage);
+        static::assertEquals($prefix, $redisStorage->getPrefix());
     }
 
     protected function setUp()

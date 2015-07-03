@@ -8,7 +8,8 @@
 
 namespace Persistency\Storage;
 
-use Config\RedisConfig;
+use Config\RedisConfigFactory;
+use Config\RedisNotifConfigFactory;
 
 /**
  * Class RedisStorageFactory
@@ -17,13 +18,17 @@ use Config\RedisConfig;
 class RedisStorageFactory
 {
     /**
-     * @param RedisConfig $config
+     * @param array $redisOptions
+     * @param string $prefix
      * @return RedisStorage
+     * @throws \InvalidArgumentException
      */
-    public function create(RedisConfig $config)
+    public function create(array $redisOptions, $prefix)
     {
-        $redisClient = RedisClientFactory::create($config);
+        $redisConfig = (new RedisConfigFactory())->create($redisOptions);
+        $notifConfig = (new RedisNotifConfigFactory())->create($redisConfig, $prefix);
 
-        return new RedisStorage($redisClient, 'notif');
+        $redisClient = RedisClientFactory::create($notifConfig);
+        return new RedisStorage($redisClient, $prefix);
     }
 }

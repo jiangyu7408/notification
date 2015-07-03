@@ -11,7 +11,7 @@ namespace Repository;
 use BusinessEntity\NotifFactory;
 use Persistency\Storage\NotifArchiveStorage;
 use Persistency\Storage\RedisNotifListPersist;
-use Persistency\Storage\RedisStorageFactory;
+use Persistency\Storage\RedisStorage;
 
 /**
  * Class NotifListRepoBuilder
@@ -20,20 +20,16 @@ use Persistency\Storage\RedisStorageFactory;
 class NotifListRepoBuilder
 {
     /**
-     * @param int $fireTime
+     * @param RedisStorage $redisStorage
+     * @param NotifArchiveStorage $archiveStorage
      * @return NotifListRepo
      */
-    public function buildRepo($fireTime)
+    public function buildRepo(RedisStorage $redisStorage, NotifArchiveStorage $archiveStorage)
     {
-        $redisStorage   = (new RedisStorageFactory())->create();
-        $archiveStorage = new NotifArchiveStorage();
-        $storage        = new RedisNotifListPersist($redisStorage, $archiveStorage);
-        $storage->setFireTime($fireTime);
-//        $archiveLocation = $archiveStorage->getLocation($fireTime);
-//        var_dump('archive location: ' . $archiveLocation);
-
-        $factory = new NotifFactory();
-        $repo    = new NotifListRepo($storage, $factory);
+        $repo = new NotifListRepo(
+            new RedisNotifListPersist($redisStorage, $archiveStorage),
+            new NotifFactory()
+        );
         return $repo;
     }
 }

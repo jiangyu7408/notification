@@ -23,16 +23,16 @@ class RedisStorage
     /**
      * @var string
      */
-    protected $name;
+    protected $prefix;
 
     /**
      * @param Client $client
-     * @param string $name
+     * @param string $prefix
      */
-    public function __construct(Client $client, $name)
+    public function __construct(Client $client, $prefix)
     {
         $this->client = $client;
-        $this->name   = $name;
+        $this->prefix = $prefix;
     }
 
     /**
@@ -62,7 +62,7 @@ class RedisStorage
      */
     private function makeKey($fireTime)
     {
-        return $this->name . '_' . $fireTime;
+        return $this->prefix . '_' . $fireTime;
     }
 
     /**
@@ -85,5 +85,13 @@ class RedisStorage
     public function purgeList($fireTime)
     {
         return (bool)$this->client->del([$this->makeKey($fireTime)]);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrefix()
+    {
+        return $this->prefix;
     }
 }

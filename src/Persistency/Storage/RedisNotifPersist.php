@@ -24,7 +24,7 @@ class RedisNotifPersist extends AbstractStorage
      */
     public function retrieve()
     {
-        trigger_error('no retrieve action allowed');
+        trigger_error('no retrieve action allowed', E_USER_WARNING);
     }
 
     /**
@@ -33,6 +33,6 @@ class RedisNotifPersist extends AbstractStorage
      */
     public function persist(array $payload)
     {
-        $this->storage->add($payload);
+        return (bool)$this->storage->add($payload);
     }
 }

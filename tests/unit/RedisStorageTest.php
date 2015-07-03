@@ -7,7 +7,6 @@
  */
 namespace Persistency\Storage;
 
-use Config\RedisConfigFactory;
 use Predis\Client;
 
 class RedisStorageTest extends \PHPUnit_Framework_TestCase
@@ -24,6 +23,10 @@ class RedisStorageTest extends \PHPUnit_Framework_TestCase
      * @var RedisStorage
      */
     protected $storage;
+    /**
+     * @var string
+     */
+    protected $prefix;
 
     public function test()
     {
@@ -53,13 +56,13 @@ class RedisStorageTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $options = require __DIR__ . '/../_fixture/redisConfig.php';
+        $options      = require __DIR__ . '/../../redis.php';
         static::assertTrue(is_array($options), 'redisConfig.php not working');
-        $configObject = (new RedisConfigFactory())->create($options);
 
         $this->fireTime = time();
+        $this->prefix = 'test';
 
-        $this->storage = (new RedisStorageFactory())->create($configObject);
+        $this->storage = (new RedisStorageFactory())->create($options, $this->prefix);
         static::assertInstanceOf(RedisStorage::class, $this->storage);
     }
 }

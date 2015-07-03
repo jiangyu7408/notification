@@ -10,6 +10,8 @@
  */
 use FBGateway\FBNotifFactory;
 use Persistency\Facebook\GatewayPersistBuilder;
+use Persistency\Storage\NotifArchiveStorage;
+use Persistency\Storage\RedisStorageFactory;
 use Repository\FBGatewayRepo;
 use Repository\NotifListRepoBuilder;
 
@@ -49,10 +51,20 @@ foreach ($pendingNotifList as $pendingList) {
 
 function pendingNotifLists($fireTime, callable $noPendingEventHandler)
 {
-    while (true) {
-        $notifListRepo = (new NotifListRepoBuilder())->buildRepo($fireTime);
+    static $notifListRepo = null;
 
-        $pendingNotifications = $notifListRepo->getPending();
+    if ($notifListRepo === null) {
+        $redisOptions = require CONFIG_DIR . '/redis_notif.php';
+        $redisStorage = (new RedisStorageFactory())->create($redisOptions, $redisOptions['prefix']);
+
+        $notifListRepo = (new NotifListRepoBuilder())->buildRepo(
+            $redisStorage,
+            new NotifArchiveStorage()
+        );
+    }
+
+    while (true) {
+        $pendingNotifications = $notifListRepo->getPending($fireTime);
         if (count($pendingNotifications) === 0) {
             $noPendingEventHandler();
             continue;

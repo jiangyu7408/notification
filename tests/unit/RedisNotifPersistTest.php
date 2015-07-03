@@ -36,6 +36,7 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
         static::assertTrue($errno === E_USER_WARNING);
     }
 
+    /*
     public function testPersist()
     {
         static::markTestSkipped();
@@ -55,6 +56,7 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
             static::assertEquals($payload, $each);
         }
     }
+    */
 
     protected function setup()
     {

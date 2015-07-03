@@ -9,12 +9,13 @@
     },
     "require": {
         "php": ">=5.5",
-        "predis/predis": "*",
-        "raulfraile/ladybug": "^1.0"
+        "predis/predis": "^1.0",
+        "symfony/console": "^2.7",
+        "symfony/var-dumper": "^2.7",
+        "symfony/dependency-injection": "^2.7"
     },
     "require-dev": {
         "phpunit/php-timer": ">=1.0.6",
-        "phpunit/phpunit": "4.6.*",
-        "sebastian/phpcpd": "*"
+        "phpunit/phpunit": "4.6.*"
     }
 }

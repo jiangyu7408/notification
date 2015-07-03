@@ -12,6 +12,7 @@ use Config\RedisConfig;
 use Config\RedisConfigFactory;
 use Config\RedisQueueConfig;
 use Config\RedisQueueConfigFactory;
+use Repository\NotifListRepo;
 
 /**
  * Class Facade
@@ -23,6 +24,7 @@ class Facade
 
     protected function __construct(Builder $builder)
     {
+        $this->builder = $builder;
         $this->container = $builder->create();
     }
 
@@ -34,8 +36,11 @@ class Facade
         if (static::$instance === null) {
             $builder = new Builder(
                 [
-                    'redis'      => require CONFIG_DIR . '/redis.php',
-                    'redisQueue' => require CONFIG_DIR . '/redis_queue.php'
+                    'facebook'       => require CONFIG_DIR . '/facebook.php',
+                    'facebook_queue' => require CONFIG_DIR . '/facebook_queue.php',
+                    'redis'          => require CONFIG_DIR . '/redis.php',
+                    'redis_queue'    => require CONFIG_DIR . '/redis_queue.php',
+                    'redis_notif'    => require CONFIG_DIR . '/redis_notif.php'
                 ]
             );
 
@@ -43,19 +48,6 @@ class Facade
         }
 
         return static::$instance;
-    }
-
-    /**
-     * @param $name
-     * @return mixed|null
-     */
-    public function getParam($name)
-    {
-        try {
-            return $this->container->getParameter($name);
-        } catch (\Exception $e) {
-            return null;
-        }
     }
 
     /**
@@ -101,5 +93,41 @@ class Facade
     public function getRedisQueueConfigFactory()
     {
         return $this->getService(RedisQueueConfigFactory::class);
+    }
+
+    /**
+     * @return NotifListRepo
+     */
+    public function getNotifListRepo()
+    {
+        $loaded = $this->container->has(NotifListRepo::class);
+        if (!$loaded) {
+            $this->builder->buildNotifList();
+        }
+        return $this->getService(NotifListRepo::class);
+    }
+
+    /**
+     * @return array
+     */
+    public function getFBGatewayOptions()
+    {
+        assert($this->container->hasParameter('facebook'));
+        assert($this->container->hasParameter('facebook_queue'));
+
+        return array_merge($this->getParam('facebook'), $this->getParam('facebook_queue'));
+    }
+
+    /**
+     * @param $name
+     * @return mixed|null
+     */
+    public function getParam($name)
+    {
+        try {
+            return $this->container->getParameter($name);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

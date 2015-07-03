@@ -12,6 +12,10 @@ use Config\RedisConfig;
 use Config\RedisConfigFactory;
 use Config\RedisQueueConfig;
 use Config\RedisQueueConfigFactory;
+use Persistency\Storage\NotifArchiveStorage;
+use Persistency\Storage\RedisStorageFactory;
+use Repository\NotifListRepo;
+use Repository\NotifListRepoBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
@@ -71,6 +75,24 @@ class Builder
         $container->setDefinition(RedisQueueConfigFactory::class, (new Definition())->setSynthetic(true));
         $container->set(RedisQueueConfigFactory::class, $factory);
         $container->setDefinition(RedisQueueConfig::class, (new Definition())->setSynthetic(true));
-        $container->set(RedisQueueConfig::class, $factory->create($container->getParameter('redisQueue')));
+        $container->set(RedisQueueConfig::class, $factory->create($container->getParameter('redis_queue')));
+    }
+
+    public function buildNotifList()
+    {
+        $container = $this->container;
+
+        $redisOptions = $container->getParameter('redis_notif');
+        assert(is_array($redisOptions));
+
+        $redisStorage = (new RedisStorageFactory())->create($redisOptions, $redisOptions['prefix']);
+
+        $notifListRepo = (new NotifListRepoBuilder())->buildRepo(
+            $redisStorage,
+            new NotifArchiveStorage()
+        );
+
+        $container->setDefinition(NotifListRepo::class, (new Definition())->setSynthetic(true));
+        $container->set(NotifListRepo::class, $notifListRepo);
     }
 }

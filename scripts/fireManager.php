@@ -8,12 +8,10 @@
  * Date: 2015/06/24
  * Time: 7:45 PM
  */
+use Application\Facade;
 use FBGateway\FBNotifFactory;
 use Persistency\Facebook\GatewayPersistBuilder;
-use Persistency\Storage\NotifArchiveStorage;
-use Persistency\Storage\RedisStorageFactory;
 use Repository\FBGatewayRepo;
-use Repository\NotifListRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
@@ -22,59 +20,31 @@ $verbose = isset($options['v']);
 $fireTime     = isset($options['fireTime']) ? (int)$options['fireTime'] : time();
 $debugEnabled = !isset($options['no-debug']);
 
-$config = require __DIR__ . '/../tests/_fixture/fb.php';
+$timer = (new \Timer\Generator())->shootThenGo($fireTime, time() + 3600);
 
-$fbGatewayConfig = $config['good'];
-$fbGatewayConfig['queueLocation'] = getQueueLocation();
+$fbGatewayConfig = Facade::getInstance()->getFBGatewayOptions();
 
 $gunner         = (new GatewayPersistBuilder())->build($fbGatewayConfig);
 $fbNotifFactory = new FBNotifFactory();
 $fireMachine    = new FBGatewayRepo($gunner, $fbNotifFactory);
 
-$noPendingEventHandler = function () use ($fireTime, $debugEnabled) {
-    if ($debugEnabled) {
-        echo 'no pending notifications at fire time: ' . $fireTime . PHP_EOL;
+$notifListRepo = Facade::getInstance()->getNotifListRepo();
+
+foreach ($timer as $timestamp) {
+    dump(date('Ymd H:i:s', $timestamp));
+
+    $pendingList = $notifListRepo->getPending($timestamp);
+
+    if (count($pendingList) === 0) {
+        continue;
     }
-    sleep(1);
-};
 
-$pendingNotifList = pendingNotifLists($fireTime, $noPendingEventHandler);
-
-/** @var array $pendingList */
-foreach ($pendingNotifList as $pendingList) {
     if ($verbose) {
         echo time() . ' pending notifications = ' . count($pendingList) . PHP_EOL;
     }
+
     $fbNotifList = $fbNotifFactory->makeList($pendingList);
     $fireMachine->burst($fbNotifList);
-}
 
-function pendingNotifLists($fireTime, callable $noPendingEventHandler)
-{
-    static $notifListRepo = null;
-
-    if ($notifListRepo === null) {
-        $redisOptions = require CONFIG_DIR . '/redis_notif.php';
-        $redisStorage = (new RedisStorageFactory())->create($redisOptions, $redisOptions['prefix']);
-
-        $notifListRepo = (new NotifListRepoBuilder())->buildRepo(
-            $redisStorage,
-            new NotifArchiveStorage()
-        );
-    }
-
-    while (true) {
-        $pendingNotifications = $notifListRepo->getPending($fireTime);
-        if (count($pendingNotifications) === 0) {
-            $noPendingEventHandler();
-            continue;
-        }
-
-        /*
-         * yield cpu to outside, and once got running again,
-         * the pending notifications are considered as fired successfully
-         */
-        yield $pendingNotifications;
-        $notifListRepo->markFired($pendingNotifications);
-    }
+    $notifListRepo->markFired($pendingList);
 }

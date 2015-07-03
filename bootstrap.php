@@ -16,13 +16,3 @@ ini_set('assert.bail', '1');
 require __DIR__ . '/vendor/autoload.php';
 
 define('CONFIG_DIR', __DIR__);
-
-function getQueueLocation()
-{
-    $header = require 'scripts/fireHeader.php';
-
-    if (!isset($header['queueLocation'])) {
-        trigger_error('check fireHeader.php of queueLocation');
-    }
-    return trim($header['queueLocation']);
-}

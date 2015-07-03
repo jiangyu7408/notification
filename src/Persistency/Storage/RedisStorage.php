@@ -31,6 +31,7 @@ class RedisStorage
      */
     public function __construct(Client $client, $prefix)
     {
+        assert(is_string($prefix));
         $this->client = $client;
         $this->prefix = $prefix;
     }

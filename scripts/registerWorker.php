@@ -6,15 +6,21 @@
  * Time: 7:16 PM
  */
 use BusinessEntity\Notif;
+use BusinessEntity\NotifFactory;
+use Config\RedisQueueConfig;
 use Persistency\Storage\RedisClientFactory;
 use Queue\RedisQueue;
-use Repository\NotifRepoBuilder;
 
 require __DIR__ . '/../bootstrap.php';
 
-function makeNotif($request)
+/**
+ * @param NotifFactory $factory
+ * @param string $registerRequestString
+ * @return Notif|null
+ */
+function makeNotif(NotifFactory $factory, $registerRequestString)
 {
-    $reqArr = json_decode($request, true);
+    $reqArr = json_decode($registerRequestString, true);
     if (!is_array($reqArr)) {
         // TODO: add error handling
         return null;
@@ -24,18 +30,18 @@ function makeNotif($request)
         $reqArr['fired'] = false;
     }
 
-    $notif = (new \BusinessEntity\NotifFactory())->make($reqArr);
+    $notif = $factory->make($reqArr);
     return $notif;
 }
 
-function getRequest(array $config)
+function getRequest(RedisQueueConfig $config)
 {
     static $queue = null;
     static $redis;
 
     if ($queue === null) {
         $redis = (new RedisClientFactory())->create($config);
-        $queue = (new RedisQueue($redis, $config['queueName']))->setBlockTimeout(5);
+        $queue = (new RedisQueue($redis, $config->queueName))->setBlockTimeout(5);
     }
 
     $retryMax = 3;
@@ -59,46 +65,34 @@ function getRequest(array $config)
     }
 }
 
-function registerRequest(Notif $notif, $verbose = false)
-{
-    static $repo = null;
-
-    if ($repo === null) {
-        $repo = (new NotifRepoBuilder())->getRepo();
-    }
-
-    if ($verbose) {
-        print_r(time() . ' register: ' . json_encode($notif) . PHP_EOL);
-    }
-    $repo->register($notif);
-}
-
 function main()
 {
     $options = getopt('v');
 
     $verbose = array_key_exists('v', $options);
 
-    $queueFactory      = \Application\Facade::getInstance()->getRedisQueueConfigFactory();
-    $queueConfigObject = \Application\Facade::getInstance()->getRegisterQueueConfig();
+    $queueConfig = \Application\Facade::getInstance()->getRegisterQueueConfig();
 
-    $queueConfig = $queueFactory->toArray($queueConfigObject);
-
-    $dsn = $queueFactory->toString($queueConfigObject);
+    $notifRepo = \Application\Facade::getInstance()->getNotifRepo();
 
     if ($verbose) {
-        echo 'queueName[' . $queueConfig['queueName'] . '] '
-             . $dsn . ' timeout=' . $queueConfig['timeout']
-             . PHP_EOL;
+        $dsn = $queueConfig->toString();
+        dump('queueName[' . $queueConfig->queueName . '] ' . $dsn . ' timeout=' . $queueConfig->timeout);
     }
 
-    $requestList = getRequest($queueConfig);
-    foreach ($requestList as $request) {
-        $notif = makeNotif($request);
+    $notifFactory = new NotifFactory();
+
+    foreach (getRequest($queueConfig) as $request) {
+        $notif = makeNotif($notifFactory, $request);
         echo '.';
-        if ($notif instanceof Notif) {
-            registerRequest($notif, $verbose);
+        if (!($notif instanceof Notif)) {
+            continue;
         }
+
+        if ($verbose) {
+            dump(time() . ' register: ' . json_encode($notif));
+        }
+        $notifRepo->register($notif);
     }
 }
 

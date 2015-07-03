@@ -16,11 +16,14 @@ class RedisNotifConfigFactory
 {
     /**
      * @param RedisConfig $config
-     * @param $prefix
+     * @param string $prefix
      * @return RedisNotifConfig
      */
     public function create(RedisConfig $config, $prefix)
     {
+        if (!is_string($prefix)) {
+            trigger_error('prefix should be a string', E_USER_ERROR);
+        }
         $options = array_merge($config->toArray(), ['prefix' => $prefix]);
 
         $configObject = new RedisNotifConfig();

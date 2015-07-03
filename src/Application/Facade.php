@@ -13,6 +13,7 @@ use Config\RedisConfigFactory;
 use Config\RedisQueueConfig;
 use Config\RedisQueueConfigFactory;
 use Repository\NotifListRepo;
+use Repository\NotifRepo;
 
 /**
  * Class Facade
@@ -93,6 +94,18 @@ class Facade
     public function getRedisQueueConfigFactory()
     {
         return $this->getService(RedisQueueConfigFactory::class);
+    }
+
+    /**
+     * @return NotifRepo
+     */
+    public function getNotifRepo()
+    {
+        $loaded = $this->container->has(NotifRepo::class);
+        if (!$loaded) {
+            $this->builder->buildNotif();
+        }
+        return $this->getService(NotifRepo::class);
     }
 
     /**

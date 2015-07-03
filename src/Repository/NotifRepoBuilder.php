@@ -22,7 +22,7 @@ class NotifRepoBuilder
     public function getRepo(RedisNotifConfig $config)
     {
         $storage = new RedisNotifPersist(
-            (new RedisStorageFactory())->create($config, $config->prefix)
+            (new RedisStorageFactory())->create($config->toArray(), $config->prefix)
         );
         $factory = new NotifFactory();
 

@@ -10,12 +10,15 @@ namespace Application;
 
 use Config\RedisConfig;
 use Config\RedisConfigFactory;
+use Config\RedisNotifConfigFactory;
 use Config\RedisQueueConfig;
 use Config\RedisQueueConfigFactory;
 use Persistency\Storage\NotifArchiveStorage;
 use Persistency\Storage\RedisStorageFactory;
 use Repository\NotifListRepo;
 use Repository\NotifListRepoBuilder;
+use Repository\NotifRepo;
+use Repository\NotifRepoBuilder;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
@@ -94,5 +97,23 @@ class Builder
 
         $container->setDefinition(NotifListRepo::class, (new Definition())->setSynthetic(true));
         $container->set(NotifListRepo::class, $notifListRepo);
+    }
+
+    public function buildNotif()
+    {
+        $container = $this->container;
+
+        /** @var array $redisOptions */
+        $redisOptions = $container->getParameter('redis_notif');
+        assert(is_array($redisOptions));
+
+        $redisConfig = (new RedisConfigFactory())->create($redisOptions);
+
+        $redisNotifConfig = (new RedisNotifConfigFactory())->create($redisConfig, $redisOptions['prefix']);
+
+        $notifRepo = (new NotifRepoBuilder())->getRepo($redisNotifConfig);
+
+        $container->setDefinition(NotifRepo::class, (new Definition())->setSynthetic(true));
+        $container->set(NotifRepo::class, $notifRepo);
     }
 }

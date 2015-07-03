@@ -38,6 +38,6 @@ class RedisStorageFactory
             'timeout' => 5.0,
         ];
 
-        return array_merge($defaultConfig, $config);
+        return array_replace($defaultConfig, $config);
     }
 }

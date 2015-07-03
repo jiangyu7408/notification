@@ -23,13 +23,4 @@ class RedisQueueConfigFactory extends RedisConfigFactory
     {
         return $this->setParam(new RedisQueueConfig(), $config);
     }
-
-    /**
-     * @param RedisQueueConfig $config
-     * @return array
-     */
-    public function toArray(RedisQueueConfig $config)
-    {
-        return get_object_vars($config);
-    }
 }

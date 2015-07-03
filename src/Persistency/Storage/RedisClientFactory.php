@@ -8,6 +8,7 @@
 
 namespace Persistency\Storage;
 
+use Config\RedisConfig;
 use Predis\Client;
 use Predis\Connection\Parameters;
 
@@ -20,28 +21,16 @@ class RedisClientFactory
     protected static $instances = [];
 
     /**
-     * @param array $params
-     * @return \Predis\Client
+     * @param RedisConfig $config
+     * @return Client
      */
-    public static function create(array $params = [])
+    public static function create(RedisConfig $config)
     {
-        $key = md5(json_encode($params));
-        if (!array_key_exists($key, self::$instances)) {
-
-            $defaultParams = [
-                'scheme'  => 'tcp',
-                'host'    => '10.0.64.56',
-                'port'    => 6379,
-                'timeout' => 5.0,
-            ];
-
-            if (count($params) === 0) {
-                $params = $defaultParams;
-            }
-
-            self::$instances[$key] = new Client(new Parameters($params));
+        $hash = $config->hash();
+        if (!array_key_exists($hash, self::$instances)) {
+            self::$instances[$hash] = new Client(new Parameters($config->toArray()));
         }
 
-        return self::$instances[$key];
+        return self::$instances[$hash];
     }
 }

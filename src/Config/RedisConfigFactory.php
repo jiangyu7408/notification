@@ -42,22 +42,4 @@ class RedisConfigFactory
 
         return $redisConfig;
     }
-
-    /**
-     * @param RedisConfig $config
-     * @return string
-     */
-    public function toString(RedisConfig $config)
-    {
-        return $config->scheme . '://' . $config->host . ':' . $config->port;
-    }
-
-    /**
-     * @param RedisConfig $config
-     * @return array
-     */
-    public function toArray(RedisConfig $config)
-    {
-        return get_object_vars($config);
-    }
 }

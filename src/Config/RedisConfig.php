@@ -30,4 +30,28 @@ class RedisConfig
      * @var int
      */
     public $timeout;
+
+    /**
+     * @return string
+     */
+    public function toString()
+    {
+        return $this->scheme . '://' . $this->host . ':' . $this->port;
+    }
+
+    /**
+     * @return string
+     */
+    public function hash()
+    {
+        return md5(json_encode($this->toArray()));
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray()
+    {
+        return get_object_vars($this);
+    }
 }

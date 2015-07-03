@@ -8,6 +8,8 @@
 
 namespace Persistency\Storage;
 
+use Config\RedisConfig;
+
 /**
  * Class RedisStorageFactory
  * @package Persistency\Storage
@@ -15,29 +17,13 @@ namespace Persistency\Storage;
 class RedisStorageFactory
 {
     /**
-     * @param array $config
+     * @param RedisConfig $config
      * @return RedisStorage
      */
-    public function create(array $config = [])
+    public function create(RedisConfig $config)
     {
-        $redisClient = RedisClientFactory::create($this->buildConfig($config));
+        $redisClient = RedisClientFactory::create($config);
 
         return new RedisStorage($redisClient, 'notif');
-    }
-
-    /**
-     * @param array $config
-     * @return array
-     */
-    public function buildConfig(array $config)
-    {
-        $defaultConfig = [
-            'scheme'  => 'tcp',
-            'host'    => '127.0.0.1',
-            'port'    => 6379,
-            'timeout' => 5.0,
-        ];
-
-        return array_replace($defaultConfig, $config);
     }
 }

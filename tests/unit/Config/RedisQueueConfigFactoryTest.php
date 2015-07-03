@@ -22,10 +22,10 @@ class RedisQueueConfigFactoryTest extends \PHPUnit_Framework_TestCase
         $configObject = $factory->create($this->options);
         static::assertInstanceOf(RedisQueueConfig::class, $configObject);
 
-        $configString = $factory->toString($configObject);
+        $configString = $configObject->toString();
         static::assertRegExp('#^tcp://.+:[1-9][0-9]+$#', $configString);
 
-        $array = $factory->toArray($configObject);
+        $array = $configObject->toArray();
         static::assertEquals($this->options, $array);
     }
 

@@ -31,8 +31,6 @@ $fireMachine    = new FBGatewayRepo($gunner, $fbNotifFactory);
 $notifListRepo = Facade::getInstance()->getNotifListRepo();
 
 foreach ($timer as $timestamp) {
-    dump(date('Ymd H:i:s', $timestamp));
-
     $pendingList = $notifListRepo->getPending($timestamp);
 
     if (count($pendingList) === 0) {
@@ -40,7 +38,7 @@ foreach ($timer as $timestamp) {
     }
 
     if ($verbose) {
-        echo time() . ' pending notifications = ' . count($pendingList) . PHP_EOL;
+        dump(date('Ymd H:i:s') . ' pending notifications = ' . count($pendingList));
     }
 
     $fbNotifList = $fbNotifFactory->makeList($pendingList);

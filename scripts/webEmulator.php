@@ -27,7 +27,7 @@ $registerEntry = new RedisQueue(
 );
 
 $snsid    = isset($options['snsid']) ? trim($options['snsid']) : '100001349218797';
-$fireTime = isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 10;
+$fireTime = isset($options['fireTime']) ? (int)$options['fireTime'] : time() + 3;
 dump('snsid: ' . $snsid . ', fireTime: ' . date('Y-m-d H:i:s', $fireTime));
 
 $facebookOptions = \Application\Facade::getInstance()->getParam('facebook');
@@ -38,7 +38,7 @@ for ($i = 0; $i < $cnt; $i++) {
         'appid'    => $facebookOptions['appId'],
         'snsid'    => $snsid,
         'feature'  => 'debug', // TODO route to correct appid
-        'template' => 'This is a notif test message at ' . date('His'),
+        'template' => 'This is a notif test message at ' . date('H:i:s', $fireTime),
         'trackRef' => 'track_' . microtime(true),
         'fireTime' => $fireTime,
     ];

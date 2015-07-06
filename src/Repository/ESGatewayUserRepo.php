@@ -29,6 +29,14 @@ class ESGatewayUserRepo
     }
 
     /**
+     * @return Factory
+     */
+    public function getFactory()
+    {
+        return $this->factory;
+    }
+
+    /**
      * @param User $user
      */
     public function fire(User $user)

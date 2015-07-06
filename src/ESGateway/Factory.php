@@ -17,6 +17,50 @@ use Elasticsearch\Client;
 class Factory
 {
     /**
+     * @var callable
+     */
+    protected $intValidator;
+    protected $fieldMapping = [
+        'int' => [
+            'addtime',
+            'coins',
+            'continuous_day',
+            'experience',
+            'gas',
+            'greenery',
+            'level',
+            'loginnum',
+            'logintime',
+            'new_cash1',
+            'new_cash2',
+            'new_cash3',
+            'op',
+            'pay_times',
+            'reward_points',
+            'sign_points',
+            'size_x',
+            'status',
+            'top_map_size',
+            'water_exp',
+            'water_level',
+        ],
+    ];
+
+    public function __construct()
+    {
+        $intValidator = function ($input) {
+            if ($input > 2 ^ 31) {
+                return (2 ^ 31 - 1);
+            }
+            return $input;
+        };
+
+        foreach ($this->fieldMapping['int'] as $field) {
+            $this->fieldMapping[$field] = $intValidator;
+        }
+    }
+
+    /**
      * @param string $dsn
      * @return Client
      */
@@ -80,11 +124,15 @@ class Factory
         $user = new User();
         $keys = array_keys(get_object_vars($user));
 
-//        $dbEntity['country'] = Ip2Country::get($dbEntity['loginip']);
         $dbEntity['country'] = 'todo';
+        $dbEntity['addtime'] = date_create($dbEntity['addtime'])->getTimestamp();
 
         foreach ($keys as $key) {
-            $user->$key = $dbEntity[$key];
+            if (!isset($this->fieldMapping[$key])) {
+                $user->$key = $dbEntity[$key];
+                continue;
+            }
+            $user->$key = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);
         }
         return $user;
     }

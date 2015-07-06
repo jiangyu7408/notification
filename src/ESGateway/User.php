@@ -24,7 +24,7 @@ class User
     public $track_ref;
     /** @var string */
     public $country;
-    /** @var string */
+    /** @var int */
     public $addtime;
     /** @var int */
     public $coins;

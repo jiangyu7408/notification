@@ -124,9 +124,9 @@ function readUserInfo(PDO $pdo, array $uidList)
 
         dump($statement->queryString);
 
-        $allRows = $statement->fetchAll(PDO::FETCH_CLASS);
+        $allRows = $statement->fetchAll(PDO::FETCH_ASSOC);
         foreach ($allRows as $row) {
-            $result[$row->uid] = $row;
+            $result[$row['uid']] = $row;
         }
     }
 
@@ -157,6 +157,32 @@ function onShard(array $mysqlOptions, $lastActiveTimestamp)
     return $details;
 }
 
+function getTestRepo()
+{
+    $builder = new \Application\ESGatewayBuilder();
+    return $builder->buildUserRepo([
+        'host'  => '127.0.0.1',
+        'port'  => 9200,
+        'index' => 'farm',
+        'type'  => 'user:tw'
+    ]);
+}
+
+function batchUpdateES(array $users)
+{
+    $repo = getTestRepo();
+    assert($repo instanceof \Repository\ESGatewayUserRepo);
+    $factory = $repo->getFactory();
+    assert($factory instanceof ESGateway\Factory);
+
+    $esUserList = [];
+    foreach ($users as $user) {
+        $esUserList[] = $factory->makeUser($user);
+    }
+
+    $repo->burst($esUserList);
+}
+
 function main()
 {
     $lastActiveTimestamp = time() - 3600;
@@ -164,9 +190,11 @@ function main()
     /** @var array $allShards */
     foreach ($dsnList as $allShards) {
         foreach ($allShards as $dbKey => $mysqlOptions) {
-            $uids = onShard($mysqlOptions, $lastActiveTimestamp);
-            $user = array_pop($uids);
-            dump(json_encode($user));
+            $userList = onShard($mysqlOptions, $lastActiveTimestamp);
+
+            PHP_Timer::start();
+            batchUpdateES($userList);
+            dump('ES update cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
         }
     }
 }

@@ -93,12 +93,10 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
         $dsn          = $this->factory->makeDsn($ip, $port);
         $this->client = $this->factory->makeClient($dsn);
 
-        $index    = 'test';
+        $index = 'farm';
         $typeName = 'user:tw';
 
         $this->type = $this->factory->makeType($index, $typeName);
-
-        $this->persist = new GatewayUserPersist($this->client, $this->type);
 
         $this->persist = new GatewayUserPersist($this->client, $this->type);
 

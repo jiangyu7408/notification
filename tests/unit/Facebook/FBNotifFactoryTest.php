@@ -19,14 +19,6 @@ class FBNotifFactoryTest extends \PHPUnit_Framework_TestCase
     {
     }
 
-    protected function tearDown()
-    {
-    }
-
-    protected function setUp()
-    {
-    }
-
     public function test()
     {
         $notifFactory = new NotifFactory();
@@ -78,5 +70,13 @@ class FBNotifFactoryTest extends \PHPUnit_Framework_TestCase
             $fbNotifList2[] = $fbNotifFactory->make($notif);
         }
         static::assertEquals($fbNotifList, $fbNotifList2);
+    }
+
+    protected function tearDown()
+    {
+    }
+
+    protected function setUp()
+    {
     }
 }

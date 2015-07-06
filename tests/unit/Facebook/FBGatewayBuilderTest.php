@@ -29,7 +29,7 @@ class FBGatewayBuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testGoodConfig()
     {
-        $config = require __DIR__ . '/../_fixture/fb.php';
+        $config = require __DIR__ . '/../../_fixture/fb.php';
         $factory = (new FactoryBuilder())->create($config['good']);
         static::assertInstanceOf(Factory::class, $factory);
     }

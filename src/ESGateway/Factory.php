@@ -49,8 +49,8 @@ class Factory
     public function __construct()
     {
         $intValidator = function ($input) {
-            if ($input > 2 ^ 31) {
-                return (2 ^ 31 - 1);
+            if ($input > 2147483647) {
+                return 2147483647;
             }
             return $input;
         };
@@ -126,6 +126,7 @@ class Factory
 
         $dbEntity['country'] = 'todo';
         $dbEntity['addtime'] = date_create($dbEntity['addtime'])->getTimestamp();
+        $dbEntity['addtime'] = '20150706T193000+0800';
 
         foreach ($keys as $key) {
             if (!isset($this->fieldMapping[$key])) {

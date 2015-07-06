@@ -87,6 +87,8 @@ class GatewayUserPersist implements IPersistency
      */
     public function persist(array $payload)
     {
+        $this->bulk['body'] = [];
+
         foreach ($payload as $user) {
             $this->bulk['body'][] = [
                 'update' => [

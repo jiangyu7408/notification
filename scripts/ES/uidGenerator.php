@@ -180,7 +180,11 @@ function batchUpdateES(array $users)
         $esUserList[] = $factory->makeUser($user);
     }
 
-    $repo->burst($esUserList);
+    $batchSize = 10;
+    $offset    = 0;
+    while (($batch = array_splice($esUserList, $offset, $batchSize))) {
+        $repo->burst($batch);
+    }
 }
 
 function main()
@@ -194,7 +198,7 @@ function main()
 
             PHP_Timer::start();
             batchUpdateES($userList);
-            dump('ES update cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
+            dump('ES update[' . count($userList) . '] cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
         }
     }
 }

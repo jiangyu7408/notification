@@ -5,6 +5,10 @@
  * Date: 2015/07/06
  * Time: 11:29 AM
  */
+
+/**
+ * Example: GV=tw MODE=background php scripts/ES/uidGenerator.php
+ */
 require __DIR__ . '/../../bootstrap.php';
 
 function mysqlDsnGenerator($gameVersion)
@@ -189,11 +193,17 @@ $options  = getopt('v', ['gv:', 'es:', 'bs:', 'interval:', 'size:']);
 
 $verbose = isset($options['v']);
 
-$gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
+$gameVersion = null;
+if (defined('GAME_VERSION')) {
+    $gameVersion = GAME_VERSION;
+} else {
+    $gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
+}
+
 $esHost   = isset($options['es']) ? $options['es'] : '54.72.159.81';
-$backStep = isset($options['bs']) ? $options['bs'] : 0;
-$interval = isset($options['interval']) ? $options['interval'] : 5;
-$size     = isset($options['size']) ? $options['size'] : 5;
+$backStep    = isset($options['bs']) ? $options['bs'] : 1;
+$interval    = isset($options['interval']) ? $options['interval'] : 20;
+$size        = isset($options['size']) ? $options['size'] : 100;
 
 $lastActiveTimestamp = time() - $backStep;
 $quitTimestamp       = time() + $size * $interval;

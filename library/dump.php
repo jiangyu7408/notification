@@ -38,8 +38,10 @@ if (!function_exists('appendLog')) {
                 $logDir = realpath(__DIR__ . '/../log/');
                 assert(is_dir($logDir), 'log dir "' . $logDir . '" must be a dir');
                 $logDir .= '/' . date('Ymd');
-                $success = mkdir($logDir);
-                assert($success, 'log dir create failed: ' . $logDir . ': ' . print_r(error_get_last(), true));
+                if (!is_dir($logDir)) {
+                    $success = mkdir($logDir);
+                    assert($success, 'log dir create failed: ' . $logDir . ': ' . print_r(error_get_last(), true));
+                }
 
                 $logFile = $logDir . '/' . GAME_VERSION;
 

@@ -23,34 +23,6 @@ function mysqlDsnGenerator($gameVersion)
     }
 }
 
-function memcacheDsnGenerator()
-{
-    return [
-        'mc_farm' => [
-            'driver'      => 'memcached',
-            'servers'     => [
-                ['memcached_1', 11203]
-            ],
-            'compression' => false,
-            'lifetime'    => 3600,     // 默认1小时
-            'persistent'  => true
-        ]
-    ];
-}
-
-function getMemcacheConnection(array $options)
-{
-    static $connection = null;
-
-    if ($connection === null) {
-        $connection = new Memcached();
-        $success    = $connection->addServers($options['servers']);
-        assert($success);
-    }
-
-    return $connection;
-}
-
 function makeMySQLDsn(array $options)
 {
     return 'mysql:dbname=' . $options['database'] . ';host=' . $options['host'];
@@ -197,13 +169,14 @@ $gameVersion = null;
 if (defined('GAME_VERSION')) {
     $gameVersion = GAME_VERSION;
 } else {
-    $gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
+    assert(isset($options['gv']), 'game version not defined');
+    $gameVersion = trim($options['gv']);
 }
 
 $esHost   = isset($options['es']) ? $options['es'] : '54.72.159.81';
-$backStep    = isset($options['bs']) ? $options['bs'] : 1;
-$interval    = isset($options['interval']) ? $options['interval'] : 20;
-$size        = isset($options['size']) ? $options['size'] : 100;
+$backStep = isset($options['bs']) ? $options['bs'] : 1;
+$interval = isset($options['interval']) ? $options['interval'] : 20;
+$size     = isset($options['size']) ? $options['size'] : 100;
 
 $lastActiveTimestamp = time() - $backStep;
 $quitTimestamp       = time() + $size * $interval;

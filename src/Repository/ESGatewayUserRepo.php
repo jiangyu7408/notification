@@ -8,6 +8,7 @@
 
 namespace Repository;
 
+use Elasticsearch\Common\Exceptions\Serializer\JsonErrorException;
 use ESGateway\Factory;
 use ESGateway\User;
 use Persistency\IPersistency;
@@ -53,6 +54,11 @@ class ESGatewayUserRepo
         foreach ($list as $user) {
             $users[] = $this->factory->toArray($user);
         }
-        $this->persistency->persist($users);
+        try {
+            $this->persistency->persist($users);
+        } catch (JsonErrorException $e) {
+            dump($e->getMessage());
+            dump($list);
+        }
     }
 }

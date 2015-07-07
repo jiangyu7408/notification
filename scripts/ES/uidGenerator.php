@@ -9,6 +9,7 @@ require __DIR__ . '/../../bootstrap.php';
 
 function mysqlDsnGenerator()
 {
+
     while (true) {
         yield [
             'db1' => [

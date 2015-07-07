@@ -124,9 +124,9 @@ class Factory
         $user = new User();
         $keys = array_keys(get_object_vars($user));
 
-        $dbEntity['country'] = 'todo';
-        $dbEntity['addtime'] = date_create($dbEntity['addtime'])->getTimestamp();
-        $dbEntity['addtime'] = '20150706T193000+0800';
+        $dbEntity['country']   = ip2cc($dbEntity['loginip']);
+        $dbEntity['addtime']   = date_create($dbEntity['addtime'])->format("Ymd\\THisO");
+        $dbEntity['logintime'] = date("Ymd\\THisO", $dbEntity['logintime']);
 
         foreach ($keys as $key) {
             if (!isset($this->fieldMapping[$key])) {

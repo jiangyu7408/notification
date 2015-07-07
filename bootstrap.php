@@ -16,3 +16,20 @@ ini_set('assert.bail', '1');
 require __DIR__ . '/vendor/autoload.php';
 
 define('CONFIG_DIR', __DIR__);
+
+if (function_exists('geoip_country_code_by_name')) {
+    function ip2cc($ip)
+    {
+        return geoip_country_code_by_name($ip);
+    }
+} else {
+    require_once __DIR__ . '/library/geoip/geoip.php';
+    function ip2cc($ip)
+    {
+        static $gi = null;
+        if ($gi === null) {
+            $gi = geoip_open(__DIR__ . '/library/geoip/GeoIP.dat', GEOIP_STANDARD);
+        }
+        return geoip_country_code_by_addr($gi, $ip);
+    }
+}

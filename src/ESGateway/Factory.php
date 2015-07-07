@@ -124,6 +124,7 @@ class Factory
         $user = new User();
         $keys = array_keys(get_object_vars($user));
 
+        $dbEntity['name'] = utf8_encode($dbEntity['name']);
         $dbEntity['country']   = ip2cc($dbEntity['loginip']);
         $dbEntity['addtime']   = date_create($dbEntity['addtime'])->format("Ymd\\THisO");
         $dbEntity['logintime'] = date("Ymd\\THisO", $dbEntity['logintime']);

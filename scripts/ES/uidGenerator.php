@@ -63,14 +63,16 @@ function getMySQLConnection(array $options)
 
     $pdo = null;
     try {
-        dump('Connect MySQL on DSN: ' . $dsn);
+        appendLog('Connect MySQL on DSN: ' . $dsn);
         $pdo = new PDO($dsn, $options['username'], $options['password']);
     } catch (PDOException $e) {
-        dump('Error: ' . $e->getMessage());
+        appendLog('Error: ' . $e->getMessage());
         return false;
     }
 
     $connections[$dsn] = $pdo;
+
+//    dump(array_keys($connections));
 
     return $pdo;
 }
@@ -85,22 +87,9 @@ function fetchActiveUidList(PDO $pdo, $lastActiveTimestamp)
     return $uidList;
 }
 
-function getUserInfo($uidList)
-{
-    $memcacheOptions = memcacheDsnGenerator();
-    $memcacheClient  = getMemcacheConnection($memcacheOptions['mc_farm']);
-
-    dump($uidList);
-    dump(array_values($uidList));
-    $list = $memcacheClient->getMulti($uidList);
-    dump($list);
-}
-
-function readUserInfo(PDO $pdo, array $uidList)
+function readUserInfo(PDO $pdo, array $uidList, $concurrentLevel = 10)
 {
     $result = [];
-
-    $concurrentLevel = 10;
 
     $offset = 0;
     while (($concurrent = array_splice($uidList, $offset, $concurrentLevel))) {
@@ -113,7 +102,7 @@ function readUserInfo(PDO $pdo, array $uidList)
             continue;
         }
 
-        dump($statement->queryString);
+//        dump($statement->queryString);
 
         $allRows = $statement->fetchAll(PDO::FETCH_ASSOC);
         foreach ($allRows as $row) {
@@ -134,21 +123,20 @@ function onShard(array $mysqlOptions, $lastActiveTimestamp)
     PHP_Timer::start();
     $uidList  = fetchActiveUidList($pdo, $lastActiveTimestamp);
     $timeCost = PHP_Timer::secondsToTimeString(PHP_Timer::stop());
-    dump('fetchActiveUidList cost ' . $timeCost);
+    appendLog('fetchActiveUidList cost ' . $timeCost . ' to get result set of size = ' . count($uidList));
     foreach ($uidList as $uid) {
         assert(is_numeric($uid));
     }
 
     PHP_Timer::start();
-//    getUserInfo($uidList);
-    $details  = readUserInfo($pdo, $uidList);
+    $details = readUserInfo($pdo, $uidList, 50);
     $timeCost = PHP_Timer::secondsToTimeString(PHP_Timer::stop());
-    dump('readUserInfo cost ' . $timeCost);
+    appendLog('readUserInfo cost ' . $timeCost);
 
     return $details;
 }
 
-function getTestRepo($host, $gameVersion)
+function getESRepo($host, $gameVersion)
 {
     $builder = new \Application\ESGatewayBuilder();
     return $builder->buildUserRepo([
@@ -161,7 +149,7 @@ function getTestRepo($host, $gameVersion)
 
 function batchUpdateES($esHost, $gameVersion, array $users)
 {
-    $repo = getTestRepo($esHost, $gameVersion);
+    $repo = getESRepo($esHost, $gameVersion);
     assert($repo instanceof \Repository\ESGatewayUserRepo);
     $factory = $repo->getFactory();
     assert($factory instanceof ESGateway\Factory);
@@ -171,37 +159,75 @@ function batchUpdateES($esHost, $gameVersion, array $users)
         $esUserList[] = $factory->makeUser($user);
     }
 
-    $batchSize = 10;
+    $batchSize = 200;
     $offset    = 0;
     while (($batch = array_splice($esUserList, $offset, $batchSize))) {
         $repo->burst($batch);
     }
 }
 
-function main($esHost, $gameVersion)
+function main($esHost, $gameVersion, $lastActiveTimestamp)
 {
-    $lastActiveTimestamp = time() - 3600;
     $dsnList = mysqlDsnGenerator($gameVersion);
+
+    $totalUserCount = 0;
     foreach ($dsnList as $mysqlOptions) {
         $userList = onShard($mysqlOptions, $lastActiveTimestamp);
+        $totalUserCount += count($userList);
 
         PHP_Timer::start();
         batchUpdateES($esHost, $gameVersion, $userList);
-        dump('ES update[' . count($userList) . '] cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
+        appendLog('ES update[' . count($userList) . '] cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
     }
 
-    dump(PHP_Timer::resourceUsage());
+    appendLog(PHP_Timer::resourceUsage()
+              . ' total user count [' . $totalUserCount . '], from '
+              . date('Y/m/d H:i:s', $lastActiveTimestamp));
 }
 
-$options = getopt('v', ['gv:', 'es:']);
+$options  = getopt('v', ['gv:', 'es:', 'bs:', 'interval:', 'size:']);
 
 $verbose = isset($options['v']);
 
 $gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
-$esHost = isset($options['es']) ? $options['es'] : '54.72.159.81';
+$esHost   = isset($options['es']) ? $options['es'] : '54.72.159.81';
+$backStep = isset($options['bs']) ? $options['bs'] : 0;
+$interval = isset($options['interval']) ? $options['interval'] : 5;
+$size     = isset($options['size']) ? $options['size'] : 5;
+
+$lastActiveTimestamp = time() - $backStep;
+$quitTimestamp       = time() + $size * $interval;
+
 if ($verbose) {
-    dump('game version: ' . $gameVersion . ', ES host: ' . $esHost);
+    dump('game version: ' . $gameVersion
+         . ', ES host: ' . $esHost
+         . ', backStep = ' . $backStep
+         . ', interval = ' . $interval
+         . ', size = ' . $size
+         . ', start at = ' . date('H:i:s', $lastActiveTimestamp)
+         . ', quit at ' . date('H:i:s', $quitTimestamp)
+    );
 }
 
-main($esHost, $gameVersion);
+$timer = (new Timer\Generator())->shootThenGo($lastActiveTimestamp, $quitTimestamp);
+
+$step = null;
+foreach ($timer as $timestamp) {
+    if ($step === null) {
+        $step = 0;
+        appendLog(date('H:i:s', $lastActiveTimestamp) . ' run with ' . $lastActiveTimestamp);
+        main($esHost, $gameVersion, $lastActiveTimestamp);
+        continue;
+    }
+
+    $step++;
+    dump(date('His', $timestamp) . ' step = ' . $step);
+
+    if ($step >= $interval) {
+        $step    = 0;
+        $lastRun = $timestamp - $interval - 1;
+        appendLog(date('H:i:s') . ' run with ' . $lastRun);
+        main($esHost, $gameVersion, $lastRun);
+    }
+}
 

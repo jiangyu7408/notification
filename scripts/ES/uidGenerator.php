@@ -198,7 +198,7 @@ $options = getopt('v', ['gv:', 'es:']);
 $verbose = isset($options['v']);
 
 $gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
-$esHost  = isset($options['gv']) ? $options['gv'] : 'tw';
+$esHost = isset($options['es']) ? $options['es'] : '54.72.159.81';
 if ($verbose) {
     dump('game version: ' . $gameVersion . ', ES host: ' . $esHost);
 }

@@ -148,20 +148,20 @@ function onShard(array $mysqlOptions, $lastActiveTimestamp)
     return $details;
 }
 
-function getTestRepo()
+function getTestRepo($host, $gameVersion)
 {
     $builder = new \Application\ESGatewayBuilder();
     return $builder->buildUserRepo([
-        'host'  => '127.0.0.1',
+        'host' => $host,
         'port'  => 9200,
         'index' => 'farm',
-        'type'  => 'user:tw'
+        'type' => 'user:' . $gameVersion
     ]);
 }
 
-function batchUpdateES(array $users)
+function batchUpdateES($esHost, $gameVersion, array $users)
 {
-    $repo = getTestRepo();
+    $repo = getTestRepo($esHost, $gameVersion);
     assert($repo instanceof \Repository\ESGatewayUserRepo);
     $factory = $repo->getFactory();
     assert($factory instanceof ESGateway\Factory);
@@ -178,7 +178,7 @@ function batchUpdateES(array $users)
     }
 }
 
-function main($gameVersion)
+function main($esHost, $gameVersion)
 {
     $lastActiveTimestamp = time() - 3600;
     $dsnList = mysqlDsnGenerator($gameVersion);
@@ -186,21 +186,22 @@ function main($gameVersion)
         $userList = onShard($mysqlOptions, $lastActiveTimestamp);
 
         PHP_Timer::start();
-        batchUpdateES($userList);
+        batchUpdateES($esHost, $gameVersion, $userList);
         dump('ES update[' . count($userList) . '] cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
     }
 
     dump(PHP_Timer::resourceUsage());
 }
 
-$options = getopt('v', ['gv:']);
+$options = getopt('v', ['gv:', 'es:']);
 
 $verbose = isset($options['v']);
 
 $gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
+$esHost  = isset($options['gv']) ? $options['gv'] : 'tw';
 if ($verbose) {
-    dump('game version: ' . $gameVersion);
+    dump('game version: ' . $gameVersion . ', ES host: ' . $esHost);
 }
 
-main($gameVersion);
+main($esHost, $gameVersion);
 

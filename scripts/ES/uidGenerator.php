@@ -221,7 +221,10 @@ foreach ($timer as $timestamp) {
     }
 
     $step++;
-    dump(date('His', $timestamp) . ' step = ' . $step);
+
+    if ($verbose) {
+        dump(date('His', $timestamp) . ' step = ' . $step);
+    }
 
     if ($step >= $interval) {
         $step    = 0;

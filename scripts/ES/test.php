@@ -6,9 +6,12 @@
  * Time: 11:29 AM
  */
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/../../bootstrap.php';
 
-$platform = new \Environment\Platform(__DIR__ . '/../../../farm-server-conf/');
+$base = __DIR__ . '/../../../farm-server-conf/';
+assert(is_dir($base));
+
+$platform = new \Environment\Platform($base);
 
 $shardList = $platform->getMySQLShards('tw');
 

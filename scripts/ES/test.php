@@ -8,12 +8,17 @@
 
 require __DIR__ . '/../../bootstrap.php';
 
+$options = getopt('', ['gv:']);
+
+$gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
+dump('game version: ' . $gameVersion);
+
 $base = __DIR__ . '/../../../farm-server-conf/';
 assert(is_dir($base));
 
 $platform = new \Environment\Platform($base);
 
-$shardList = $platform->getMySQLShards('tw');
+$shardList = $platform->getMySQLShards($gameVersion);
 
 foreach ($shardList as $shard) {
     dump($shard);

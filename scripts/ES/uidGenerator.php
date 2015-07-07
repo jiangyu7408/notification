@@ -7,25 +7,15 @@
  */
 require __DIR__ . '/../../bootstrap.php';
 
-function mysqlDsnGenerator()
+function mysqlDsnGenerator($gameVersion)
 {
+    $base = __DIR__ . '/../../../farm-server-conf/';
+    assert(is_dir($base));
+    $platform = new \Environment\Platform($base);
 
-    while (true) {
-        yield [
-            'db1' => [
-                'type'         => 'mysql',
-                'host'         => '10.0.64.56',
-                'port'         => '3306',
-                'username'     => 'jiangyu',
-                'password'     => 'notification',
-                'persistent'   => false,
-                'database'     => 'farm_dev5',
-                'table_prefix' => 'tbl_',
-                'charset'      => 'utf8',
-            ]
-        ];
-
-        break;
+    $shardList = $platform->getMySQLShards($gameVersion);
+    foreach ($shardList as $shard) {
+        yield $shard;
     }
 }
 
@@ -188,22 +178,29 @@ function batchUpdateES(array $users)
     }
 }
 
-function main()
+function main($gameVersion)
 {
     $lastActiveTimestamp = time() - 3600;
-    $dsnList             = mysqlDsnGenerator();
-    /** @var array $allShards */
-    foreach ($dsnList as $allShards) {
-        foreach ($allShards as $dbKey => $mysqlOptions) {
-            $userList = onShard($mysqlOptions, $lastActiveTimestamp);
+    $dsnList = mysqlDsnGenerator($gameVersion);
+    foreach ($dsnList as $mysqlOptions) {
+        $userList = onShard($mysqlOptions, $lastActiveTimestamp);
 
-            PHP_Timer::start();
-            batchUpdateES($userList);
-            dump('ES update[' . count($userList) . '] cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
-        }
+        PHP_Timer::start();
+        batchUpdateES($userList);
+        dump('ES update[' . count($userList) . '] cost: ' . PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
     }
+
+    dump(PHP_Timer::resourceUsage());
 }
 
-main();
+$options = getopt('v', ['gv:']);
 
-dump(PHP_Timer::resourceUsage());
+$verbose = isset($options['v']);
+
+$gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
+if ($verbose) {
+    dump('game version: ' . $gameVersion);
+}
+
+main($gameVersion);
+

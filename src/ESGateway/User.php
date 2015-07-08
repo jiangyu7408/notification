@@ -70,4 +70,12 @@ class User
     public $water_exp;
     /** @var int */
     public $water_level;
+    /** @var int */
+    public $chef_level;
+    /** @var int */
+    public $silver_coins;
+    /** @var int */
+    public $reputation;
+    /** @var int */
+    public $reputation_level;
 }

@@ -8,6 +8,8 @@
 
 namespace ESGateway;
 
+require __DIR__ . '/../../library/ip2cc.php';
+
 use Elasticsearch\Client;
 
 /**
@@ -124,10 +126,12 @@ class Factory
         $user = new User();
         $keys = array_keys(get_object_vars($user));
 
-        $dbEntity['name'] = utf8_encode($dbEntity['name']);
-        $dbEntity['country']   = ip2cc($dbEntity['loginip']);
-        $dbEntity['addtime']   = date_create($dbEntity['addtime'])->format("Ymd\\THisO");
-        $dbEntity['logintime'] = date("Ymd\\THisO", $dbEntity['logintime']);
+        $dbEntity['name']       = utf8_encode($dbEntity['name']);
+        $dbEntity['country']    = ip2cc($dbEntity['loginip']);
+        $dbEntity['addtime']    = $this->sanityTimeString($dbEntity['addtime']);
+        $dbEntity['logintime']  = $this->sanityTimeString($dbEntity['logintime']);
+        $dbEntity['chef_level'] = 0;
+        $dbEntity['picture']    = '';
 
         foreach ($keys as $key) {
             if (!isset($this->fieldMapping[$key])) {
@@ -139,8 +143,21 @@ class Factory
         return $user;
     }
 
+    private function sanityTimeString($input)
+    {
+        if (is_numeric($input)) {
+            return date("Ymd\\THisO", $input);
+        }
+        if (is_string($input) && strpos($input, '+') === false) {
+            return date_create($input)->format("Ymd\\THisO");
+        }
+        return $input;
+    }
+
     public function toArray(User $user)
     {
-        return get_object_vars($user);
+        $array = get_object_vars($user);
+        ksort($array);
+        return $array;
     }
 }

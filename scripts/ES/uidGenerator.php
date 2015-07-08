@@ -99,9 +99,10 @@ function onShard(array $mysqlOptions, $lastActiveTimestamp)
     PHP_Timer::start();
     $uidList  = fetchActiveUidList($pdo, $lastActiveTimestamp);
     $timeCost = PHP_Timer::secondsToTimeString(PHP_Timer::stop());
+
     appendLog('fetchActiveUidList cost ' . $timeCost . ' to get result set of size = ' . count($uidList));
-    foreach ($uidList as $uid) {
-        assert(is_numeric($uid));
+    if (count($uidList) === 0) {
+        return [];
     }
 
     PHP_Timer::start();
@@ -125,6 +126,10 @@ function getESRepo($host, $gameVersion)
 
 function batchUpdateES($esHost, $gameVersion, array $users)
 {
+    if (count($users) === 0) {
+        return;
+    }
+
     $repo = getESRepo($esHost, $gameVersion);
     assert($repo instanceof \Repository\ESGatewayUserRepo);
     $factory = $repo->getFactory();
@@ -149,6 +154,9 @@ function main($esHost, $gameVersion, $lastActiveTimestamp)
     $totalUserCount = 0;
     foreach ($dsnList as $mysqlOptions) {
         $userList = onShard($mysqlOptions, $lastActiveTimestamp);
+        if (count($userList) === 0) {
+            continue;
+        }
         $totalUserCount += count($userList);
 
         PHP_Timer::start();
@@ -161,7 +169,7 @@ function main($esHost, $gameVersion, $lastActiveTimestamp)
               . date('Y/m/d H:i:s', $lastActiveTimestamp));
 }
 
-$options  = getopt('v', ['gv:', 'es:', 'bs:', 'interval:', 'size:']);
+$options = getopt('v', ['gv:', 'es:', 'bs:', 'interval:', 'size:']);
 
 $verbose = isset($options['v']);
 

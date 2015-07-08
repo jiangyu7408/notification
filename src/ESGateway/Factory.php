@@ -157,7 +157,7 @@ class Factory
     public function toArray(User $user)
     {
         $array = get_object_vars($user);
-        ksort($array);
+        ksort($array, SORT_STRING);
         return $array;
     }
 }

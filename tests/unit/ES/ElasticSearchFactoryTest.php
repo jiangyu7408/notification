@@ -58,6 +58,10 @@ class ElasticSearchFactoryTest extends \PHPUnit_Framework_TestCase
 
         $userArr = $this->factory->toArray($userObj);
         static::assertArrayHasKey('snsid', $userArr);
+
+        $sortedArray = $userArr;
+        ksort($sortedArray, SORT_STRING);
+        static::assertSame($sortedArray, $userArr);
     }
 
     protected function setup()

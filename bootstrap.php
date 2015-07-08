@@ -15,6 +15,5 @@ ini_set('assert.bail', '1');
 
 require __DIR__ . '/vendor/autoload.php';
 require __DIR__ . '/library/dump.php';
-require __DIR__ . '/library/ip2cc.php';
 
 define('CONFIG_DIR', __DIR__);

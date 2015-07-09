@@ -11,6 +11,7 @@ use Elasticsearch\Client;
 use ESGateway\Factory;
 use ESGateway\Type;
 use ESGateway\User;
+use Mockery;
 use Persistency\ElasticSearch\GatewayUserPersist;
 
 class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
@@ -23,9 +24,6 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
      * @var Factory
      */
     protected $factory;
-    /**
-     * @var Client
-     */
     protected $client;
     /**
      * @var GatewayUserPersist
@@ -43,9 +41,14 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
 
         static::assertInstanceOf(User::class, $userObj);
 
+        $this->client->shouldReceive('bulk')->times(1)->andReturn(true);
         $this->repo->fire($userObj);
 
         $this->persist->setSnsid($userObj->snsid);
+        $this->client->shouldReceive('get')->times(1)->andReturn([
+            'found'   => true,
+            '_source' => $this->factory->toArray($userObj)
+        ]);
         $found    = $this->persist->retrieve();
         $foundObj = $this->factory->makeUser($found);
         static::assertEquals($this->factory->toArray($userObj), $this->factory->toArray($foundObj));
@@ -74,10 +77,15 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
     public function testBulk()
     {
         $userObjList = $this->userProvider();
+        $this->client->shouldReceive('bulk')->times(1)->andReturn(true);
         $this->repo->burst($userObjList);
 
         foreach ($userObjList as $userObj) {
             $this->persist->setSnsid($userObj->snsid);
+            $this->client->shouldReceive('get')->times(1)->andReturn([
+                'found'   => true,
+                '_source' => $this->factory->toArray($userObj)
+            ]);
             $found    = $this->persist->retrieve();
             $foundObj = $this->factory->makeUser($found);
             static::assertEquals($this->factory->toArray($userObj), $this->factory->toArray($foundObj));
@@ -87,16 +95,12 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->factory = new Factory();
-        $ip            = '127.0.0.1';
-        $port          = 9200;
-
-        $dsn          = $this->factory->makeDsn($ip, $port);
-        $this->client = $this->factory->makeClient($dsn);
 
         $index = 'farm';
         $typeName = 'user:tw';
 
-        $this->type = $this->factory->makeType($index, $typeName);
+        $this->client = Mockery::mock(Client::class);
+        $this->type   = $this->factory->makeType($index, $typeName);
 
         $this->persist = new GatewayUserPersist($this->client, $this->type);
 

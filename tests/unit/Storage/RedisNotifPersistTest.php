@@ -7,6 +7,8 @@
  */
 namespace Persistency\Storage;
 
+use Mockery;
+
 class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -24,7 +26,6 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
 
     public function testRetrieve()
     {
-        static::markTestSkipped();
         static::assertInstanceOf(RedisStorage::class, $this->redisStorage);
         $persist = new RedisNotifPersist($this->redisStorage);
 
@@ -39,7 +40,6 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
 
     public function testPersist()
     {
-        static::markTestSkipped();
         static::assertInstanceOf(RedisStorage::class, $this->redisStorage);
         $persist = new RedisNotifPersist($this->redisStorage);
 
@@ -48,9 +48,11 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
             'snsid'    => '675097095878591'
         ];
 
+        $this->redisStorage->shouldReceive('add')->times(1)->andReturn(1);
         $ret = $persist->persist($payload);
         static::assertTrue($ret === true);
 
+        $this->redisStorage->shouldReceive('getList')->times(1)->andReturn([$payload]);
         $list = $this->redisStorage->getList($this->fireTime);
         foreach ($list as $each) {
             static::assertEquals($payload, $each);
@@ -59,18 +61,20 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
 
     protected function setup()
     {
-        $options = require __DIR__ . '/../../redis.php';
+        $this->prefix       = 'test';
+        $this->redisStorage = Mockery::mock(RedisStorage::class);
 
-        $this->prefix = 'test';
-
-        $this->redisStorage = (new RedisStorageFactory())->create($options, $this->prefix);
+//        $options = require __DIR__ . '/../../redis.php';
+//        $this->redisStorage = (new RedisStorageFactory())->create($options, $this->prefix);
 
         $this->fireTime = 1000;
+        $this->redisStorage->shouldReceive('purgeList')->times(1)->andReturn(true);
         $this->redisStorage->purgeList($this->fireTime);
     }
 
     protected function tearDown()
     {
+        $this->redisStorage->shouldReceive('purgeList')->times(1)->andReturn(true);
         $this->redisStorage->purgeList($this->fireTime);
     }
 }

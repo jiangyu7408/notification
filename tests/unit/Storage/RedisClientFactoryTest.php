@@ -22,7 +22,7 @@ class RedisClientFactoryTest extends \PHPUnit_Framework_TestCase
         $configObject = (new RedisConfigFactory())->create($this->options);
 
         $factory     = new RedisClientFactory();
-        $redisClient  = $factory->create($configObject);
+        $redisClient = $factory->create($configObject);
         static::assertInstanceOf(Client::class, $redisClient);
         $redisClient2 = $factory->create($configObject);
         static::assertSame($redisClient, $redisClient2);
@@ -30,6 +30,11 @@ class RedisClientFactoryTest extends \PHPUnit_Framework_TestCase
 
     protected function setup()
     {
-        $this->options = require __DIR__ . '/../../redis.php';
+        $this->options = [
+            'scheme'  => 'tcp',
+            'host'    => '127.0.0.1',
+            'port'    => 6379,
+            'timeout' => 5.0
+        ];
     }
 }

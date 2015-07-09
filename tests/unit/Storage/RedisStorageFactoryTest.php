@@ -25,6 +25,11 @@ class RedisStorageFactoryTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->options = require __DIR__ . '/../../redis.php';
+        $this->options = [
+            'scheme'  => 'tcp',
+            'host'    => '127.0.0.1',
+            'port'    => 6379,
+            'timeout' => 5.0
+        ];
     }
 }

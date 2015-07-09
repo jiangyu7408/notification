@@ -43,7 +43,7 @@ class RedisStorage
     public function add(array $payload)
     {
         if (!isset($payload['fireTime'])) {
-            trigger_error('payload should has key: fireTime, and >0');
+            throw new \InvalidArgumentException('payload should has key: fireTime, and >0');
         }
         $fireTime = $payload['fireTime'];
 

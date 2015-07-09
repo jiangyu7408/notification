@@ -35,7 +35,7 @@ class AuditStorage implements IPersistency
      */
     public function persist(array $payload)
     {
-        echo __METHOD__ . ': ' . print_r($payload, true) . PHP_EOL;
+//        echo __METHOD__ . ': ' . print_r($payload, true) . PHP_EOL;
         $this->items[] = $payload;
     }
 }

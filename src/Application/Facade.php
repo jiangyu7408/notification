@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/02
- * Time: 8:18 PM
+ * Time: 8:18 PM.
  */
 
 namespace Application;
@@ -16,8 +17,7 @@ use Repository\NotifListRepo;
 use Repository\NotifRepo;
 
 /**
- * Class Facade
- * @package Application
+ * Class Facade.
  */
 class Facade
 {
@@ -37,11 +37,11 @@ class Facade
         if (static::$instance === null) {
             $builder = new Builder(
                 [
-                    'facebook'       => require CONFIG_DIR . '/facebook.php',
-                    'facebook_queue' => require CONFIG_DIR . '/facebook_queue.php',
-                    'redis'          => require CONFIG_DIR . '/redis.php',
-                    'redis_queue'    => require CONFIG_DIR . '/redis_queue.php',
-                    'redis_notif'    => require CONFIG_DIR . '/redis_notif.php'
+                    'facebook' => require CONFIG_DIR.'/facebook.php',
+                    'facebook_queue' => require CONFIG_DIR.'/facebook_queue.php',
+                    'redis' => require CONFIG_DIR.'/redis.php',
+                    'redis_queue' => require CONFIG_DIR.'/redis_queue.php',
+                    'redis_notif' => require CONFIG_DIR.'/redis_notif.php',
                 ]
             );
 
@@ -61,6 +61,7 @@ class Facade
 
     /**
      * @param string $name
+     *
      * @return null|object
      */
     public function getService($name)
@@ -68,7 +69,7 @@ class Facade
         try {
             return $this->container->get($name);
         } catch (\Exception $e) {
-            return null;
+            return;
         }
     }
 
@@ -105,6 +106,7 @@ class Facade
         if (!$loaded) {
             $this->builder->buildNotif();
         }
+
         return $this->getService(NotifRepo::class);
     }
 
@@ -117,6 +119,7 @@ class Facade
         if (!$loaded) {
             $this->builder->buildNotifList();
         }
+
         return $this->getService(NotifListRepo::class);
     }
 
@@ -133,6 +136,7 @@ class Facade
 
     /**
      * @param $name
+     *
      * @return mixed|null
      */
     public function getParam($name)
@@ -140,7 +144,7 @@ class Facade
         try {
             return $this->container->getParameter($name);
         } catch (\Exception $e) {
-            return null;
+            return;
         }
     }
 }

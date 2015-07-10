@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/02
- * Time: 7:14 PM
+ * Time: 7:14 PM.
  */
 
 namespace Application;
@@ -23,8 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 
 /**
- * Class Builder
- * @package Application
+ * Class Builder.
  */
 class Builder
 {

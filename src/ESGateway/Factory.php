@@ -66,7 +66,7 @@ class Factory
     /**
      * @param string $dsn
      *
-*@return Client
+     * @return Client
      */
     public function makeClient($dsn)
     {
@@ -83,7 +83,7 @@ class Factory
      * @param string $ip
      * @param int $port
      *
-*@return string
+     * @return string
      */
     public function makeDsn($ip, $port)
     {
@@ -94,7 +94,7 @@ class Factory
      * @param string $ip
      * @param int $port
      *
-*@return DSN
+     * @return DSN
      */
     public function makeDsnObject($ip, $port)
     {
@@ -112,7 +112,7 @@ class Factory
      * @param string $index
      * @param string $typeName
      *
-*@return Type
+     * @return Type
      */
     public function makeType($index, $typeName)
     {

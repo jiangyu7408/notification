@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/06
- * Time: 2:30 PM
+ * Time: 2:30 PM.
  */
 
 namespace ESGateway;
 
 /**
- * Class DSN
- * @package ESGateway
+ * Class DSN.
  */
 class DSN
 {
@@ -19,6 +19,6 @@ class DSN
 
     public function toString()
     {
-        return 'http://' . $this->ip . ':' . $this->port;
+        return 'http://'.$this->ip.':'.$this->port;
     }
 }

@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/06
- * Time: 1:57 PM
+ * Time: 1:57 PM.
  */
 
 namespace ESGateway;
 
 /**
- * Class User
- * @package ESGateway
+ * Class User.
  */
 class User
 {

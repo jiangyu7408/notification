@@ -1,20 +1,20 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/06
- * Time: 1:58 PM
+ * Time: 1:58 PM.
  */
 
 namespace ESGateway;
 
-require __DIR__ . '/../../library/ip2cc.php';
+require __DIR__.'/../../library/ip2cc.php';
 
 use Elasticsearch\Client;
 
 /**
- * Class Factory
- * @package ESGateway
+ * Class Factory.
  */
 class Factory
 {
@@ -54,6 +54,7 @@ class Factory
             if ($input > 2147483647) {
                 return 2147483647;
             }
+
             return $input;
         };
 
@@ -72,7 +73,7 @@ class Factory
 
         return new Client(
             [
-                'hosts' => [$dsn]
+                'hosts' => [$dsn],
             ]
         );
     }
@@ -97,9 +98,9 @@ class Factory
         assert(is_string($ip) && strlen($ip) > 7);
         assert(is_int($port) && ($port > 1024 && $port < 65535));
 
-        $dsn       = new DSN();
+        $dsn = new DSN();
         $dsn->port = $port;
-        $dsn->ip   = $ip;
+        $dsn->ip = $ip;
 
         return $dsn;
     }
@@ -114,9 +115,9 @@ class Factory
         assert(is_string($index) && strlen($index) > 0);
         assert(is_string($typeName) && strlen($typeName) > 0);
 
-        $type        = new Type();
+        $type = new Type();
         $type->index = $index;
-        $type->type  = $typeName;
+        $type->type = $typeName;
 
         return $type;
     }
@@ -126,12 +127,12 @@ class Factory
         $user = new User();
         $keys = array_keys(get_object_vars($user));
 
-        $dbEntity['name']       = utf8_encode($dbEntity['name']);
-        $dbEntity['country']    = ip2cc($dbEntity['loginip']);
-        $dbEntity['addtime']    = $this->sanityTimeString($dbEntity['addtime']);
-        $dbEntity['logintime']  = $this->sanityTimeString($dbEntity['logintime']);
+        $dbEntity['name'] = utf8_encode($dbEntity['name']);
+        $dbEntity['country'] = ip2cc($dbEntity['loginip']);
+        $dbEntity['addtime'] = $this->sanityTimeString($dbEntity['addtime']);
+        $dbEntity['logintime'] = $this->sanityTimeString($dbEntity['logintime']);
         $dbEntity['chef_level'] = 0;
-        $dbEntity['picture']    = '';
+        $dbEntity['picture'] = '';
 
         foreach ($keys as $key) {
             if (!isset($this->fieldMapping[$key])) {
@@ -140,17 +141,19 @@ class Factory
             }
             $user->$key = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);
         }
+
         return $user;
     }
 
     private function sanityTimeString($input)
     {
         if (is_numeric($input)) {
-            return date("Ymd\\THisO", $input);
+            return date('Ymd\\THisO', $input);
         }
         if (is_string($input) && strpos($input, '+') === false) {
-            return date_create($input)->format("Ymd\\THisO");
+            return date_create($input)->format('Ymd\\THisO');
         }
+
         return $input;
     }
 
@@ -158,6 +161,7 @@ class Factory
     {
         $array = get_object_vars($user);
         ksort($array, SORT_STRING);
+
         return $array;
     }
 }

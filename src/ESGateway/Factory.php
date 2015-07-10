@@ -94,7 +94,7 @@ class Factory
      * @param string $ip
      * @param int    $port
      *
-     *@return DSN
+     * @return DSN
      */
     public function makeDsnObject($ip, $port)
     {

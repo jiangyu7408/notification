@@ -1,22 +1,24 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/02
- * Time: 5:45 PM
+ * Time: 5:45 PM.
  */
 
 namespace Config;
 
 /**
- * Class RedisConfigFactory
- * @package ConfigContainer
+ * Class RedisConfigFactory.
  */
 class RedisConfigFactory
 {
     /**
      * @param array $config
+     *
      * @return RedisConfig
+     *
      * @throws \InvalidArgumentException
      */
     public function create(array $config)
@@ -26,8 +28,10 @@ class RedisConfigFactory
 
     /**
      * @param RedisConfig $redisConfig
-     * @param array $config
+     * @param array       $config
+     *
      * @return RedisConfig
+     *
      * @throws \InvalidArgumentException
      */
     protected function setParam(RedisConfig $redisConfig, array $config)
@@ -35,7 +39,7 @@ class RedisConfigFactory
         $keys = array_keys(get_object_vars($redisConfig));
         foreach ($keys as $key) {
             if (!array_key_exists($key, $config)) {
-                throw new \InvalidArgumentException('bad config: check key => ' . $key);
+                throw new \InvalidArgumentException('bad config: check key => '.$key);
             }
             $redisConfig->$key = $config[$key];
         }

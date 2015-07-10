@@ -1,22 +1,23 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/03
- * Time: 2:06 PM
+ * Time: 2:06 PM.
  */
 
 namespace Config;
 
 /**
- * Class RedisNotifConfigFactory
- * @package Config
+ * Class RedisNotifConfigFactory.
  */
 class RedisNotifConfigFactory
 {
     /**
      * @param RedisConfig $config
-     * @param string $prefix
+     * @param string      $prefix
+     *
      * @return RedisNotifConfig
      */
     public function create(RedisConfig $config, $prefix)

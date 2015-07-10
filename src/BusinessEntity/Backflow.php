@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/24
- * Time: 6:11 PM
+ * Time: 6:11 PM.
  */
 
 namespace BusinessEntity;
 
 /**
- * Class Backflow
- * @package BusinessEntity
+ * Class Backflow.
  */
 class Backflow
 {

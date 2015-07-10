@@ -1,21 +1,22 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/25
- * Time: 3:34 PM
+ * Time: 3:34 PM.
  */
 
 namespace BusinessEntity;
 
 /**
- * Class BackflowFactory
- * @package BusinessEntity
+ * Class BackflowFactory.
  */
 class BackflowFactory
 {
     /**
      * @param array $input
+     *
      * @return Backflow
      */
     public function make(array $input)
@@ -23,7 +24,7 @@ class BackflowFactory
         $backflow = new Backflow();
 
         $keys = array_keys(get_object_vars($backflow));
-        array_map(function($key) use ($backflow, $input) {
+        array_map(function ($key) use ($backflow, $input) {
             $backflow->$key = $input[$key];
         }, $keys);
 
@@ -32,6 +33,7 @@ class BackflowFactory
 
     /**
      * @param Backflow $backflow
+     *
      * @return array
      */
     public function toArray(Backflow $backflow)

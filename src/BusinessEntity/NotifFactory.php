@@ -1,21 +1,22 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/24
- * Time: 5:53 PM
+ * Time: 5:53 PM.
  */
 
 namespace BusinessEntity;
 
 /**
- * Class NotifFactory
- * @package BusinessEntity
+ * Class NotifFactory.
  */
 class NotifFactory
 {
     /**
      * @param array $input
+     *
      * @return Notif
      */
     public function make(array $input)
@@ -33,6 +34,7 @@ class NotifFactory
 
     /**
      * @param Notif $notif
+     *
      * @return array
      */
     public function toArray(Notif $notif)
@@ -42,11 +44,13 @@ class NotifFactory
 
     /**
      * @param Notif $notif
+     *
      * @return Notif
      */
     public function markFired(Notif $notif)
     {
         $notif->fired = true;
+
         return $notif;
     }
 }

@@ -1,10 +1,12 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/03
- * Time: 1:34 PM
+ * Time: 1:34 PM.
  */
+
 namespace Persistency\Storage;
 
 use Mockery;
@@ -45,7 +47,7 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
 
         $payload = [
             'fireTime' => $this->fireTime,
-            'snsid'    => '675097095878591'
+            'snsid' => '675097095878591',
         ];
 
         $this->redisStorage->shouldReceive('add')->times(1)->andReturn(1);
@@ -61,7 +63,7 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
 
     protected function setup()
     {
-        $this->prefix       = 'test';
+        $this->prefix = 'test';
         $this->redisStorage = Mockery::mock(RedisStorage::class);
 
         $this->fireTime = 1000;

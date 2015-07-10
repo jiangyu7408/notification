@@ -29,8 +29,24 @@ class RedisConfigFactoryTest extends \PHPUnit_Framework_TestCase
         static::assertEquals($this->options, $array);
     }
 
+    public function testBogus()
+    {
+        $factory = new RedisConfigFactory();
+
+        try {
+            $factory->create([]);
+        } catch (\InvalidArgumentException $e) {
+            static::assertTrue(strpos($e->getMessage(), 'bad config: check key') !== false);
+        }
+    }
+
     protected function setup()
     {
-        $this->options = require __DIR__ . '/../../../redis.php';
+        $this->options = [
+            'scheme'  => 'tcp',
+            'host'    => '127.0.0.1',
+            'port'    => 6379,
+            'timeout' => 5.0
+        ];
     }
 }

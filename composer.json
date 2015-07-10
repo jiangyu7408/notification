@@ -17,7 +17,7 @@
         "mockery/mockery": "^0.9.4"
     },
     "require-dev": {
-        "phpunit/php-timer": ">=1.0.6",
+        "phpunit/php-timer": "^1.0",
         "phpunit/phpunit": "4.6.*"
     }
 }

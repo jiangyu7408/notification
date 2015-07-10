@@ -64,9 +64,6 @@ class RedisNotifPersistTest extends \PHPUnit_Framework_TestCase
         $this->prefix       = 'test';
         $this->redisStorage = Mockery::mock(RedisStorage::class);
 
-//        $options = require __DIR__ . '/../../redis.php';
-//        $this->redisStorage = (new RedisStorageFactory())->create($options, $this->prefix);
-
         $this->fireTime = 1000;
         $this->redisStorage->shouldReceive('purgeList')->times(1)->andReturn(true);
         $this->redisStorage->purgeList($this->fireTime);

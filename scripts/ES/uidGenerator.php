@@ -224,4 +224,3 @@ foreach ($timer as $timestamp) {
         main($esHost, $gameVersion, $lastRun);
     }
 }
-

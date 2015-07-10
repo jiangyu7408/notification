@@ -47,8 +47,6 @@ class Platform
             if (strpos($dir, 'facebook') === 0) {
                 return $dir;
             }
-
-            return;
         }));
 
         $this->mapping = [];

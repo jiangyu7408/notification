@@ -51,7 +51,7 @@ class NotifListRepo
      *
      * @return Notif
      */
-    private function makeEntity(array $rawData)
+    protected function makeEntity(array $rawData)
     {
         return $this->factory->make($rawData);
     }
@@ -61,7 +61,7 @@ class NotifListRepo
      *
      * @return array
      */
-    private function fromEntity(Notif $notification)
+    protected function fromEntity(Notif $notification)
     {
         $this->factory->markFired($notification);
 

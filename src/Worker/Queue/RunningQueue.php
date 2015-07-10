@@ -74,7 +74,7 @@ class RunningQueue
                 break;
             }
 
-            while ($done = curl_multi_info_read($this->curl)) {
+            while (false !== ($done = (curl_multi_info_read($this->curl)))) {
                 $response = $this->createResponse($done);
                 yield $response;
             }

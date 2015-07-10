@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/24
- * Time: 5:50 PM
+ * Time: 5:50 PM.
  */
 
 namespace Persistency\Storage;
 
 /**
- * Class InMemNotifPersist
- * @package Persistency
+ * Class InMemNotifPersist.
  */
 class InMemNotifPersist extends AbstractStorage
 {
@@ -27,11 +27,12 @@ class InMemNotifPersist extends AbstractStorage
 
     /**
      * @param array $payload
+     *
      * @return bool
      */
     public function persist(array $payload)
     {
         $this->payload = $payload;
-        echo __METHOD__ . ': ' . json_encode($payload);
+        echo __METHOD__.': '.json_encode($payload);
     }
 }

@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/29
- * Time: 11:51 AM
+ * Time: 11:51 AM.
  */
 
 namespace Persistency\Storage;
@@ -13,8 +14,7 @@ use Predis\Client;
 use Predis\Connection\Parameters;
 
 /**
- * Class RedisClientFactory
- * @package Persistency\Storage
+ * Class RedisClientFactory.
  */
 class RedisClientFactory
 {
@@ -22,6 +22,7 @@ class RedisClientFactory
 
     /**
      * @param RedisConfig $config
+     *
      * @return Client
      */
     public static function create(RedisConfig $config)

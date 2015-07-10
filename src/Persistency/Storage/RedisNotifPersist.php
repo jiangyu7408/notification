@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/29
- * Time: 11:49 AM
+ * Time: 11:49 AM.
  */
 
 namespace Persistency\Storage;
 
 /**
- * Class RedisNotifPersist
- * @package Persistency\Storage
+ * Class RedisNotifPersist.
  */
 class RedisNotifPersist extends AbstractStorage
 {
@@ -29,10 +29,11 @@ class RedisNotifPersist extends AbstractStorage
 
     /**
      * @param array $payload
+     *
      * @return bool
      */
     public function persist(array $payload)
     {
-        return (bool)$this->storage->add($payload);
+        return (bool) $this->storage->add($payload);
     }
 }

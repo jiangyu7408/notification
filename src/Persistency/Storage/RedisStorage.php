@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/29
- * Time: 12:14 PM
+ * Time: 12:14 PM.
  */
 
 namespace Persistency\Storage;
@@ -11,8 +12,7 @@ namespace Persistency\Storage;
 use Predis\Client;
 
 /**
- * Class RedisStorage
- * @package Persistency\Storage
+ * Class RedisStorage.
  */
 class RedisStorage
 {
@@ -38,7 +38,9 @@ class RedisStorage
 
     /**
      * @param array $payload
+     *
      * @return int
+     * @throws \InvalidArgumentException
      */
     public function add(array $payload)
     {
@@ -47,7 +49,7 @@ class RedisStorage
         }
         $fireTime = $payload['fireTime'];
 
-        $key   = $this->makeKey($fireTime);
+        $key = $this->makeKey($fireTime);
         $value = json_encode($payload);
         $field = md5($value);
 
@@ -59,15 +61,17 @@ class RedisStorage
 
     /**
      * @param int $fireTime
+     *
      * @return string
      */
     private function makeKey($fireTime)
     {
-        return $this->prefix . '_' . $fireTime;
+        return $this->prefix.'_'.$fireTime;
     }
 
     /**
      * @param int $fireTime
+     *
      * @return array
      */
     public function getList($fireTime)
@@ -81,11 +85,12 @@ class RedisStorage
 
     /**
      * @param int $fireTime
+     *
      * @return bool
      */
     public function purgeList($fireTime)
     {
-        return (bool)$this->client->del([$this->makeKey($fireTime)]);
+        return (bool) $this->client->del([$this->makeKey($fireTime)]);
     }
 
     /**

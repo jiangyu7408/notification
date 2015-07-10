@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/25
- * Time: 10:55 AM
+ * Time: 10:55 AM.
  */
 
 namespace FBGateway;
 
 /**
- * Class Builder
- * @package BusinessEntity
+ * Class Builder.
  */
 class Factory
 {
@@ -25,8 +25,8 @@ class Factory
     {
         $package = [
             'access_token' => $this->accessToken,
-            'href'         => '?ref_notif=' . $payload['trackRef'],
-            'template'     => $payload['template'],
+            'href' => '?ref_notif='.$payload['trackRef'],
+            'template' => $payload['template'],
         ];
 
         return $package;
@@ -34,6 +34,7 @@ class Factory
 
     /**
      * @param string $snsid
+     *
      * @return string
      */
     public function makeUrl($snsid)

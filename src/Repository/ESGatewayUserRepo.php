@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/06
- * Time: 1:56 PM
+ * Time: 1:56 PM.
  */
 
 namespace Repository;
@@ -14,19 +15,18 @@ use ESGateway\User;
 use Persistency\IPersistency;
 
 /**
- * Class ESGatewayUserRepo
- * @package Repository
+ * Class ESGatewayUserRepo.
  */
 class ESGatewayUserRepo
 {
     /**
      * @param IPersistency $persistency
-     * @param Factory $factory
+     * @param Factory      $factory
      */
     public function __construct(IPersistency $persistency, Factory $factory)
     {
         $this->persistency = $persistency;
-        $this->factory     = $factory;
+        $this->factory = $factory;
     }
 
     /**

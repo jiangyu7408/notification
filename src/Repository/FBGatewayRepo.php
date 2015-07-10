@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/24
- * Time: 7:57 PM
+ * Time: 7:57 PM.
  */
 
 namespace Repository;
@@ -13,19 +14,18 @@ use FBGateway\FBNotifFactory;
 use Persistency\IPersistency;
 
 /**
- * Class FBGatewayRepo
- * @package Repository
+ * Class FBGatewayRepo.
  */
 class FBGatewayRepo
 {
     /**
-     * @param IPersistency $persistency
+     * @param IPersistency   $persistency
      * @param FBNotifFactory $factory
      */
     public function __construct(IPersistency $persistency, FBNotifFactory $factory)
     {
         $this->persistency = $persistency;
-        $this->factory     = $factory;
+        $this->factory = $factory;
     }
 
     /**

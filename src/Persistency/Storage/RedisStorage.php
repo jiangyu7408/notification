@@ -40,6 +40,7 @@ class RedisStorage
      * @param array $payload
      *
      * @return int
+     *
      * @throws \InvalidArgumentException
      */
     public function add(array $payload)

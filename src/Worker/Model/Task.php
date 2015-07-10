@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 2:12 PM
+ * Time: 2:12 PM.
  */
 
 namespace Worker\Model;
 
 /**
- * Class Task
- * @package Worker\Task
+ * Class Task.
  */
 class Task
 {
@@ -41,11 +41,13 @@ class Task
 
     /**
      * @param array $options
+     *
      * @return $this
      */
     public function setOptions($options)
     {
         $this->options = $options;
+
         return $this;
     }
 
@@ -59,11 +61,13 @@ class Task
 
     /**
      * @param string $url
+     *
      * @return $this
      */
     public function setUrl($url)
     {
         $this->url = $url;
+
         return $this;
     }
 }

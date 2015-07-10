@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/25
- * Time: 11:52 AM
+ * Time: 11:52 AM.
  */
 
 namespace FBGateway;
@@ -11,13 +12,13 @@ namespace FBGateway;
 use BusinessEntity\Notif;
 
 /**
- * Class FBNotifFactory
- * @package FBGateway
+ * Class FBNotifFactory.
  */
 class FBNotifFactory
 {
     /**
      * @param Notif $notif
+     *
      * @return FBNotif
      */
     public function make(Notif $notif)
@@ -35,6 +36,7 @@ class FBNotifFactory
 
     /**
      * @param FBNotif $fbNotif
+     *
      * @return array
      */
     public function toArray(FBNotif $fbNotif)
@@ -44,6 +46,7 @@ class FBNotifFactory
 
     /**
      * @param Notif[] $notifications
+     *
      * @return FBNotif[]
      */
     public function makeList(array $notifications)

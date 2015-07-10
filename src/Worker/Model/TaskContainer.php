@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 2:18 PM
+ * Time: 2:18 PM.
  */
 
 namespace Worker\Model;
 
 /**
- * Class TaskContainer
- * @package Worker\Task
+ * Class TaskContainer.
  */
 class TaskContainer
 {

@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 2:32 PM
+ * Time: 2:32 PM.
  */
 
 namespace Worker\Queue;
@@ -11,8 +12,7 @@ namespace Worker\Queue;
 use Worker\Model\Task;
 
 /**
- * Class TaskProvider
- * @package Worker\Queue
+ * Class TaskProvider.
  */
 class TaskProvider extends \SplQueue
 {
@@ -42,7 +42,7 @@ class TaskProvider extends \SplQueue
         try {
             return $this->pop();
         } catch (\RuntimeException $e) {
-            return null;
+            return;
         }
     }
 }

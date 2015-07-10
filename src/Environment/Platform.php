@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/07
- * Time: 11:55 AM
+ * Time: 11:55 AM.
  */
 
 namespace Environment;
 
 /**
- * Class Platform
- * @package Environment
+ * Class Platform.
  */
 class Platform
 {
@@ -47,13 +47,14 @@ class Platform
             if (strpos($dir, 'facebook') === 0) {
                 return $dir;
             }
-            return null;
+
+            return;
         }));
 
         $this->mapping = [];
         foreach ($dirs as $dir) {
-            $version                 = substr($dir, strrpos($dir, '_') + 1);
-            $this->mapping[$version] = $this->onlineSettingDir . '/' . $dir;
+            $version = substr($dir, strrpos($dir, '_') + 1);
+            $this->mapping[$version] = $this->onlineSettingDir.'/'.$dir;
         }
     }
 
@@ -77,7 +78,7 @@ class Platform
 
     protected function getPlatformSetting($version, $name)
     {
-        $filename = $this->mapping[$version] . '/' . $name . '.php';
+        $filename = $this->mapping[$version].'/'.$name.'.php';
         assert(is_file($filename) && is_readable($filename));
 
         return $filename;

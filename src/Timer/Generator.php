@@ -1,27 +1,28 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/03
- * Time: 3:21 PM
+ * Time: 3:21 PM.
  */
 
 namespace Timer;
 
 /**
- * Class Generator
- * @package Timer
+ * Class Generator.
  */
 class Generator
 {
     /**
      * @param int $shootTime
      * @param int $stopTime
+     *
      * @return \Generator
      */
     public function shootThenGo($shootTime, $stopTime)
     {
-        $entry     = time();
+        $entry = time();
         $timestamp = $shootTime;
         while (true) {
             if ($timestamp > $stopTime) {
@@ -39,7 +40,7 @@ class Generator
                 continue;
             }
 
-            $timestamp++;
+            ++$timestamp;
         }
     }
 }

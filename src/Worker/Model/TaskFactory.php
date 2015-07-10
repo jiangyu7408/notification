@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 2:23 PM
+ * Time: 2:23 PM.
  */
 
 namespace Worker\Model;
 
 /**
- * Class TaskFactory
- * @package Worker\Task
+ * Class TaskFactory.
  */
 class TaskFactory
 {
@@ -21,7 +21,8 @@ class TaskFactory
 
     /**
      * @param string $url
-     * @param array $options
+     * @param array  $options
+     *
      * @return Task
      */
     public function create($url, array $options)
@@ -36,6 +37,7 @@ class TaskFactory
 
     /**
      * @param string $url
+     *
      * @return Task
      */
     public function createQuery($url)

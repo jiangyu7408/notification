@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/24
- * Time: 6:30 PM
+ * Time: 6:30 PM.
  */
 
 namespace Repository;
@@ -14,8 +15,7 @@ use Persistency\Storage\RedisNotifPersist;
 use Persistency\Storage\RedisStorageFactory;
 
 /**
- * Class NotifRepoBuilder
- * @package Repository
+ * Class NotifRepoBuilder.
  */
 class NotifRepoBuilder
 {

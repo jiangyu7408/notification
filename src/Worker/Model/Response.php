@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 3:40 PM
+ * Time: 3:40 PM.
  */
 
 namespace Worker\Model;
 
 /**
- * Class Response
- * @package Worker\Model
+ * Class Response.
  */
 class Response
 {
@@ -25,12 +25,12 @@ class Response
 
     /**
      * @param Request $request
-     * @param array $input
+     * @param array   $input
      */
     public function __construct(Request $request, array $input)
     {
         $this->request = $request;
-        $this->info    = $input;
+        $this->info = $input;
     }
 
     /**

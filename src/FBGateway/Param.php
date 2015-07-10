@@ -1,16 +1,16 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/25
- * Time: 10:51 AM
+ * Time: 10:51 AM.
  */
 
 namespace FBGateway;
 
 /**
- * Class Param
- * @package BusinessEntity
+ * Class Param.
  */
 class Param
 {

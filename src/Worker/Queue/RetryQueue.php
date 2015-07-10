@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 2:47 PM
+ * Time: 2:47 PM.
  */
 
 namespace Worker\Queue;
@@ -11,8 +12,7 @@ namespace Worker\Queue;
 use Worker\Model\Request;
 
 /**
- * Class RetryQueue
- * @package Worker\Queue
+ * Class RetryQueue.
  */
 class RetryQueue
 {
@@ -32,6 +32,7 @@ class RetryQueue
 
     /**
      * @param Request $request
+     *
      * @return bool
      */
     public function add(Request $request)
@@ -41,6 +42,7 @@ class RetryQueue
             return false;
         }
         $this->incrRetry($request);
+
         return true;
     }
 
@@ -55,12 +57,13 @@ class RetryQueue
 
         $this->list[$request->url] = [
             'request' => $request,
-            'step'    => 0
+            'step' => 0,
         ];
     }
 
     /**
      * @param Request $request
+     *
      * @return bool
      */
     protected function isMaxRetryReached(Request $request)
@@ -73,6 +76,6 @@ class RetryQueue
      */
     protected function incrRetry(Request $request)
     {
-        $this->list[$request->url]['step']++;
+        ++$this->list[$request->url]['step'];
     }
 }

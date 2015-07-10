@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/25
- * Time: 2:02 PM
+ * Time: 2:02 PM.
  */
 
 namespace Repository;
@@ -14,14 +15,14 @@ use Persistency\Storage\RedisNotifListPersist;
 use Persistency\Storage\RedisStorage;
 
 /**
- * Class NotifListRepoBuilder
- * @package Repository
+ * Class NotifListRepoBuilder.
  */
 class NotifListRepoBuilder
 {
     /**
-     * @param RedisStorage $redisStorage
+     * @param RedisStorage        $redisStorage
      * @param NotifArchiveStorage $archiveStorage
+     *
      * @return NotifListRepo
      */
     public function buildRepo(RedisStorage $redisStorage, NotifArchiveStorage $archiveStorage)
@@ -30,6 +31,7 @@ class NotifListRepoBuilder
             new RedisNotifListPersist($redisStorage, $archiveStorage),
             new NotifFactory()
         );
+
         return $repo;
     }
 }

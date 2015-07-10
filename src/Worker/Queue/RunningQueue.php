@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 2:37 PM
+ * Time: 2:37 PM.
  */
 
 namespace Worker\Queue;
@@ -13,8 +14,7 @@ use Worker\Model\Response;
 use Worker\Model\ResponseFactory;
 
 /**
- * Class RunningQueue
- * @package Worker\Queue
+ * Class RunningQueue.
  */
 class RunningQueue
 {
@@ -30,14 +30,14 @@ class RunningQueue
 
     /**
      * @param TaskProvider $taskProvider
-     * @param int $size
+     * @param int          $size
      */
     public function __construct(TaskProvider $taskProvider, $size)
     {
-        $this->taskProvider    = $taskProvider;
-        $this->size            = $size;
-        $this->curl            = curl_multi_init();
-        $this->queue           = [];
+        $this->taskProvider = $taskProvider;
+        $this->size = $size;
+        $this->curl = curl_multi_init();
+        $this->queue = [];
         $this->responseFactory = (new ResponseFactory());
     }
 
@@ -83,12 +83,13 @@ class RunningQueue
 
     /**
      * @param array $input
+     *
      * @return \Worker\Model\Response
      */
     protected function createResponse(array $input)
     {
-        $curlHandle      = $input['handle'];
-        $info            = curl_getinfo($curlHandle);
+        $curlHandle = $input['handle'];
+        $info = curl_getinfo($curlHandle);
         $info['content'] = curl_multi_getcontent($curlHandle);
 
         $request = $this->get($info['url']);

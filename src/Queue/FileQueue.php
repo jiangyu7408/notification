@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/30
- * Time: 10:25 AM
+ * Time: 10:25 AM.
  */
 
 namespace Queue;
@@ -11,8 +12,7 @@ namespace Queue;
 /**
  * Use a dir as a queue container.
  * Each file in this dir as an item of a queue.
- * Class FileQueue
- * @package Queue
+ * Class FileQueue.
  */
 class FileQueue implements IQueue
 {
@@ -37,45 +37,52 @@ class FileQueue implements IQueue
 
     /**
      * @param string $baseDir
+     *
      * @return string
+     *
      * @throws \InvalidArgumentException
      */
     private function prepareDir($baseDir)
     {
         if (!is_dir($baseDir)) {
-            throw new \InvalidArgumentException($baseDir . ' supposed to be a dir');
+            throw new \InvalidArgumentException($baseDir.' supposed to be a dir');
         }
-        $dir = $baseDir . '/' . date('Ymd');
+        $dir = $baseDir.'/'.date('Ymd');
         if (!is_dir($dir)) {
             $ret = mkdir($dir, 0777, true);
             if ($ret === false) {
                 throw new \InvalidArgumentException("can't have a dir for file[$baseDir]");
             }
         }
+
         return $dir;
     }
 
     /**
      * @param string $msg
+     *
      * @return bool
      */
     public function push($msg)
     {
-        $filename = $this->location . '/' . uniqid(date('His'), true);
+        $filename = $this->location.'/'.uniqid(date('His'), true);
         if (is_string($msg)) {
             return $this->writeFile($filename, $msg);
         }
+
         return $this->writeFile($filename, json_encode($msg));
     }
 
     /**
      * @param $filename
      * @param $msgString
+     *
      * @return bool
      */
     private function writeFile($filename, $msgString)
     {
         $ret = file_put_contents($filename, $msgString);
+
         return ($ret !== false);
     }
 
@@ -96,18 +103,20 @@ class FileQueue implements IQueue
 
         $content = file_get_contents($file);
         unlink($file);
+
         return $content;
     }
 
     /**
      * @param string $dir
+     *
      * @return null|string
      */
     private function firstFileInDir($dir)
     {
         $files = scandir($dir, SCANDIR_SORT_ASCENDING);
         if ($files === false) {
-            return null;
+            return;
         }
 
         $fileCount = count($files);
@@ -116,8 +125,8 @@ class FileQueue implements IQueue
             return '';
         }
 
-        for ($i = 2; $i < $fileCount; $i++) {
-            $file = $dir . '/' . $files[$i];
+        for ($i = 2; $i < $fileCount; ++$i) {
+            $file = $dir.'/'.$files[$i];
             if (is_file($file)) {
                 return $file;
             }

@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/24
- * Time: 7:46 PM
+ * Time: 7:46 PM.
  */
 
 namespace Repository;
@@ -13,8 +14,7 @@ use BusinessEntity\NotifFactory;
 use Persistency\Storage\RedisNotifListPersist;
 
 /**
- * Class NotifListRepo
- * @package Repository
+ * Class NotifListRepo.
  */
 class NotifListRepo
 {
@@ -26,12 +26,14 @@ class NotifListRepo
 
     /**
      * @param int $fireTime
+     *
      * @return \BusinessEntity\Notif[]
      */
     public function getPending($fireTime)
     {
         $this->storage->setFireTime($fireTime);
         $rawList = $this->storage->retrieve();
+
         return array_map([$this, 'makeEntity'], $rawList);
     }
 
@@ -46,6 +48,7 @@ class NotifListRepo
 
     /**
      * @param array $rawData
+     *
      * @return Notif
      */
     private function makeEntity(array $rawData)
@@ -55,11 +58,13 @@ class NotifListRepo
 
     /**
      * @param Notif $notification
+     *
      * @return array
      */
     private function fromEntity(Notif $notification)
     {
         $this->factory->markFired($notification);
+
         return $this->factory->toArray($notification);
     }
 }

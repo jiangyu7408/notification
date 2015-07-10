@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/03
- * Time: 5:09 PM
+ * Time: 5:09 PM.
  */
 
 namespace Worker;
@@ -11,8 +12,7 @@ namespace Worker;
 use Queue\FileQueue;
 
 /**
- * Class EndlessTasks
- * @package Worker
+ * Class EndlessTasks.
  */
 class EndlessTasks
 {
@@ -28,7 +28,7 @@ class EndlessTasks
 
     public function __construct($queueLocation, $batchSize = 200)
     {
-        $this->queue     = new FileQueue($queueLocation);
+        $this->queue = new FileQueue($queueLocation);
         $this->batchSize = $batchSize;
     }
 
@@ -61,14 +61,14 @@ class EndlessTasks
 
     protected function clearTask()
     {
-        $this->tasks       = [];
+        $this->tasks = [];
         $this->taskCounter = 0;
     }
 
     protected function addTask($task)
     {
         $this->tasks[] = $task;
-        $this->taskCounter++;
+        ++$this->taskCounter;
     }
 
     protected function isTaskFull()

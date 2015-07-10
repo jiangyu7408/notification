@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/01
- * Time: 11:51 AM
+ * Time: 11:51 AM.
  */
 
 namespace Worker;
@@ -16,8 +17,7 @@ use Worker\Queue\RunningQueue;
 use Worker\Queue\TaskProvider;
 
 /**
- * Class CurlWorker
- * @package Worker
+ * Class CurlWorker.
  */
 class CurlWorker
 {
@@ -41,7 +41,8 @@ class CurlWorker
 
     /**
      * @param Task[] $tasks
-     * @param int $concurrency
+     * @param int    $concurrency
+     *
      * @return bool
      */
     public function addTasks(array $tasks, $concurrency = 10)
@@ -51,7 +52,7 @@ class CurlWorker
         }
 
         $this->dataProvider = new TaskProvider($tasks);
-        $this->retryQueue   = new RetryQueue();
+        $this->retryQueue = new RetryQueue();
 
         $this->runningQueue = new RunningQueue($this->dataProvider, $concurrency);
         while ($this->runningQueue->canAdd()
@@ -70,8 +71,8 @@ class CurlWorker
 
     public function run()
     {
-        $retryCounter   = 0;
-        $failCounter    = 0;
+        $retryCounter = 0;
+        $failCounter = 0;
         $successCounter = 0;
 
         $pendingResponseList = $this->runningQueue->run();
@@ -80,18 +81,19 @@ class CurlWorker
             echo '*';
             $success = $this->handleResponseIfSuccess($pendingResponse);
             if ($success) {
-                $successCounter++;
+                ++$successCounter;
                 continue;
             }
 
             $this->handleResponseIfFail($pendingResponse, $failCounter, $retryCounter);
         }
 
-        echo PHP_EOL . "success: {$successCounter}, retry: {$retryCounter}, fail: {$failCounter}" . PHP_EOL;
+        echo PHP_EOL."success: {$successCounter}, retry: {$retryCounter}, fail: {$failCounter}".PHP_EOL;
     }
 
     /**
      * @param Response $pendingResponse
+     *
      * @return bool
      */
     protected function handleResponseIfSuccess(Response $pendingResponse)
@@ -112,20 +114,21 @@ class CurlWorker
 
     /**
      * @param Response $response
-     * @param int $failCounter
-     * @param int $retryCounter
+     * @param int      $failCounter
+     * @param int      $retryCounter
      */
     protected function handleResponseIfFail(Response $response, &$failCounter, &$retryCounter)
     {
-        $request  = $response->request;
+        $request = $response->request;
         $canRetry = $this->retryQueue->add($request);
         if (!$canRetry) {
-            $failCounter++;
+            ++$failCounter;
+
             return;
         }
 
         $this->runningQueue->add($request);
-        $retryCounter++;
+        ++$retryCounter;
         usleep(100000);
     }
 }

@@ -1,10 +1,12 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/30
- * Time: 4:12 PM
+ * Time: 4:12 PM.
  */
+
 namespace Persistency\Facebook;
 
 use FBGateway\Factory;
@@ -12,8 +14,7 @@ use Persistency\Audit\AuditStorage;
 use Persistency\IPersistency;
 
 /**
- * Class GatewayPersist
- * @package Persistency
+ * Class GatewayPersist.
  */
 abstract class AbstractPersist implements IPersistency
 {
@@ -57,7 +58,9 @@ abstract class AbstractPersist implements IPersistency
 
     /**
      * @param array $payload
+     *
      * @return bool
+     *
      * @throws \InvalidArgumentException
      */
     abstract public function persist(array $payload);
@@ -70,9 +73,9 @@ abstract class AbstractPersist implements IPersistency
     {
         $this->audit->persist(
             [
-                'success'  => false,
+                'success' => false,
                 'response' => $response,
-                'payload'  => $payload
+                'payload' => $payload,
             ]
         );
     }
@@ -85,7 +88,7 @@ abstract class AbstractPersist implements IPersistency
         $this->audit->persist(
             [
                 'success' => true,
-                'payload' => $payload
+                'payload' => $payload,
             ]
         );
     }

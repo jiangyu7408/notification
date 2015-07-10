@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/24
- * Time: 6:20 PM
+ * Time: 6:20 PM.
  */
 
 namespace Repository;
@@ -13,8 +14,7 @@ use BusinessEntity\NotifFactory;
 use Persistency\Storage\AbstractStorage;
 
 /**
- * Class NotifRepo
- * @package Repository
+ * Class NotifRepo.
  */
 class NotifRepo
 {

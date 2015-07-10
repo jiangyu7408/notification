@@ -81,9 +81,9 @@ class Factory
 
     /**
      * @param string $ip
-     * @param int $port
+     * @param int    $port
      *
-     * @return string
+*@return string
      */
     public function makeDsn($ip, $port)
     {
@@ -92,9 +92,10 @@ class Factory
 
     /**
      * @param string $ip
-     * @param int $port
+     * @param int    $port
+
      *
-     * @return DSN
+*@return DSN
      */
     public function makeDsnObject($ip, $port)
     {

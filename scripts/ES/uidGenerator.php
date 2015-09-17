@@ -185,7 +185,7 @@ if (defined('GAME_VERSION')) {
     $gameVersion = trim($options['gv']);
 }
 
-$esHost = isset($options['es']) ? $options['es'] : '54.72.159.81';
+$esHost = isset($options['es']) ? $options['es'] : '52.19.73.190';
 $backStep = isset($options['bs']) ? $options['bs'] : 1;
 $interval = isset($options['interval']) ? $options['interval'] : 20;
 $size = isset($options['size']) ? $options['size'] : 100;

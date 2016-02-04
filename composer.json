@@ -1,7 +1,7 @@
 {
     "name": "jiangyu7408/notification",
     "description": "notification",
-    "license": "unlicense",
+    "license": "proprietary",
     "autoload": {
         "classmap": [
             "src/"
@@ -19,6 +19,6 @@
     "require-dev": {
         "phpunit/php-timer": "^1.0",
         "phpunit/phpunit": "4.6.*",
-        "jiangyu/sharding-preemption": "0.1.*"
+        "jiangyu/sharding-preemption": "0.1.1"
     }
 }

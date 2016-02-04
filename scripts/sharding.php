@@ -37,6 +37,7 @@ $allShardSetting = [
 $poll = new PollMySQLOnSingleMachine($allShardSetting, function (ResourceCollection $collection) {
     foreach ($collection as $shardConfig) {
         dump($shardConfig->getUniqueIdentity());
+        sleep(3);
     }
 });
 $poll->setWorkerCount(2);

@@ -40,8 +40,8 @@ class FileQueueTest extends \PHPUnit_Framework_TestCase
 
     public function testSingle()
     {
-        $queue   = new FileQueue($this->dir);
-        $msg     = 'test' . time() . PHP_EOL;
+        $queue = new FileQueue($this->dir);
+        $msg = 'test'.time().PHP_EOL;
         $success = $queue->push($msg);
         static::assertTrue($success);
 
@@ -53,7 +53,7 @@ class FileQueueTest extends \PHPUnit_Framework_TestCase
     {
         $msgList = [];
         for ($i = 0; $i < 10; $i++) {
-            $msgList[] = 'queue_item_' . $i;
+            $msgList[] = 'queue_item_'.$i;
         }
 
         $queue = new FileQueue($this->dir);
@@ -64,7 +64,7 @@ class FileQueueTest extends \PHPUnit_Framework_TestCase
         }
 
         $offset = 0;
-        while ($msg = $queue->pop()) {
+        while (($msg = $queue->pop())) {
             static::assertEquals($msgList[$offset], $msg);
             $offset++;
         }
@@ -75,20 +75,20 @@ class FileQueueTest extends \PHPUnit_Framework_TestCase
         $this->cleanUp($this->dir);
     }
 
+    protected function setUp()
+    {
+        $this->dir = __DIR__.'/__fixture';
+        $this->cleanUp($this->dir);
+    }
+
     private function cleanUp($dir)
     {
         if (strpos($dir, 'unit') === false
             || strpos($dir, '__fixture') === false
         ) {
-            trigger_error('warning: bad dir => ' . $dir);
+            trigger_error('warning: bad dir => '.$dir);
         }
-        $cmd = "rm -rf $dir/" . date('Y') . '*';
+        $cmd = "rm -rf $dir/".date('Y').'*';
         exec($cmd);
-    }
-
-    protected function setUp()
-    {
-        $this->dir = __DIR__ . '/__fixture';
-        $this->cleanUp($this->dir);
     }
 }

@@ -12,6 +12,11 @@
  */
 require __DIR__.'/../../bootstrap.php';
 
+/**
+ * @param string $gameVersion
+ *
+ * @return Generator
+ */
 function mysqlDsnGenerator($gameVersion)
 {
     $base = __DIR__.'/../../../farm-server-conf/';
@@ -24,11 +29,21 @@ function mysqlDsnGenerator($gameVersion)
     }
 }
 
+/**
+ * @param array $options
+ *
+ * @return string
+ */
 function makeMySQLDsn(array $options)
 {
     return 'mysql:dbname='.$options['database'].';host='.$options['host'];
 }
 
+/**
+ * @param array $options
+ *
+ * @return false|PDO
+ */
 function getMySQLConnection(array $options)
 {
     static $connections = [];
@@ -38,23 +53,25 @@ function getMySQLConnection(array $options)
         return $connections[$dsn];
     }
 
-    $pdo = null;
     try {
         appendLog('Connect MySQL on DSN: '.$dsn);
         $pdo = new PDO($dsn, $options['username'], $options['password']);
+        $connections[$dsn] = $pdo;
+
+        return $pdo;
     } catch (PDOException $e) {
         appendLog('Error: '.$e->getMessage());
 
         return false;
     }
-
-    $connections[$dsn] = $pdo;
-
-//    dump(array_keys($connections));
-
-    return $pdo;
 }
 
+/**
+ * @param PDO $pdo
+ * @param int $lastActiveTimestamp
+ *
+ * @return array
+ */
 function fetchActiveUidList(PDO $pdo, $lastActiveTimestamp)
 {
     $query = 'select uid from tbl_user_session force index (time_last_active) where time_last_active>?';
@@ -66,6 +83,13 @@ function fetchActiveUidList(PDO $pdo, $lastActiveTimestamp)
     return $uidList;
 }
 
+/**
+ * @param PDO   $pdo
+ * @param array $uidList
+ * @param int   $concurrentLevel
+ *
+ * @return array
+ */
 function readUserInfo(PDO $pdo, array $uidList, $concurrentLevel = 10)
 {
     $result = [];
@@ -77,11 +101,9 @@ function readUserInfo(PDO $pdo, array $uidList, $concurrentLevel = 10)
         $statement = $pdo->prepare('SELECT * from tbl_user where uid in ('.$uids.')');
         $success = $statement->execute();
         if (!$success) {
-            dump('PDO Statement Error: '.print_r($statement->errorInfo(), true));
+            dump('PDO Statement Error: '.json_encode($statement->errorInfo()));
             continue;
         }
-
-//        dump($statement->queryString);
 
         $allRows = $statement->fetchAll(PDO::FETCH_ASSOC);
         foreach ($allRows as $row) {
@@ -92,6 +114,12 @@ function readUserInfo(PDO $pdo, array $uidList, $concurrentLevel = 10)
     return $result;
 }
 
+/**
+ * @param array $mysqlOptions
+ * @param int   $lastActiveTimestamp
+ *
+ * @return array
+ */
 function onShard(array $mysqlOptions, $lastActiveTimestamp)
 {
     $pdo = getMySQLConnection($mysqlOptions);
@@ -116,18 +144,31 @@ function onShard(array $mysqlOptions, $lastActiveTimestamp)
     return $details;
 }
 
+/**
+ * @param string $host
+ * @param string $gameVersion
+ *
+ * @return \Repository\ESGatewayUserRepo
+ */
 function getESRepo($host, $gameVersion)
 {
     $builder = new \Application\ESGatewayBuilder();
 
-    return $builder->buildUserRepo([
-                                       'host'  => $host,
-                                       'port'  => 9200,
-                                       'index' => 'farm',
-                                       'type'  => 'user:'.$gameVersion,
-                                   ]);
+    return $builder->buildUserRepo(
+        [
+            'host' => $host,
+            'port' => 9200,
+            'index' => 'farm',
+            'type' => 'user:'.$gameVersion,
+        ]
+    );
 }
 
+/**
+ * @param string $esHost
+ * @param string $gameVersion
+ * @param array  $users
+ */
 function batchUpdateES($esHost, $gameVersion, array $users)
 {
     if (count($users) === 0) {
@@ -151,6 +192,11 @@ function batchUpdateES($esHost, $gameVersion, array $users)
     }
 }
 
+/**
+ * @param string $esHost
+ * @param string $gameVersion
+ * @param int    $lastActiveTimestamp
+ */
 function main($esHost, $gameVersion, $lastActiveTimestamp)
 {
     $dsnList = mysqlDsnGenerator($gameVersion);
@@ -168,9 +214,14 @@ function main($esHost, $gameVersion, $lastActiveTimestamp)
         appendLog('ES update['.count($userList).'] cost: '.PHP_Timer::secondsToTimeString(PHP_Timer::stop()));
     }
 
-    appendLog(PHP_Timer::resourceUsage()
-              .' total user count ['.$totalUserCount.'], from '
-              .date('Y/m/d H:i:s', $lastActiveTimestamp));
+    appendLog(
+        sprintf(
+            '%s total user count [%d], from %s',
+            PHP_Timer::resourceUsage(),
+            $totalUserCount,
+            date('Y/m/d H:i:s', $lastActiveTimestamp)
+        )
+    );
 }
 
 $options = getopt('v', ['gv:', 'es:', 'bs:', 'interval:', 'size:']);
@@ -194,13 +245,17 @@ $lastActiveTimestamp = time() - $backStep;
 $quitTimestamp = time() + $size * $interval;
 
 if ($verbose) {
-    dump('game version: '.$gameVersion
-         .', ES host: '.$esHost
-         .', backStep = '.$backStep
-         .', interval = '.$interval
-         .', size = '.$size
-         .', start at = '.date('H:i:s', $lastActiveTimestamp)
-         .', quit at '.date('H:i:s', $quitTimestamp));
+    $msg = sprintf(
+        'game version: %s, ES host: %s, backStep=%d, interval=%d, size=%d, start at: %s, quit at: %s',
+        $gameVersion,
+        $esHost,
+        $backStep,
+        $interval,
+        $size,
+        date('H:i:s', $lastActiveTimestamp),
+        date('H:i:s', $quitTimestamp)
+    );
+    dump($msg);
 }
 
 $timer = (new Timer\Generator())->shootThenGo($lastActiveTimestamp, $quitTimestamp);

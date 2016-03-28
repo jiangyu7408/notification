@@ -33,7 +33,14 @@ class CurlWorker
      * @var RunningQueue
      */
     protected $runningQueue;
+    /**
+     * @var RequestFactory
+     */
+    protected $requestFactory;
 
+    /**
+     * CurlWorker constructor.
+     */
     public function __construct()
     {
         $this->requestFactory = new RequestFactory();
@@ -64,11 +71,9 @@ class CurlWorker
         return true;
     }
 
-    protected function makeRequest(Task $task)
-    {
-        return $this->requestFactory->create($task->getOptions());
-    }
-
+    /**
+     *
+     */
     public function run()
     {
         $retryCounter = 0;
@@ -89,6 +94,16 @@ class CurlWorker
         }
 
         echo PHP_EOL."success: {$successCounter}, retry: {$retryCounter}, fail: {$failCounter}".PHP_EOL;
+    }
+
+    /**
+     * @param Task $task
+     *
+     * @return Model\Request
+     */
+    protected function makeRequest(Task $task)
+    {
+        return $this->requestFactory->create($task->getOptions());
     }
 
     /**

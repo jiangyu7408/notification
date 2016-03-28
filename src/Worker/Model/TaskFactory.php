@@ -50,7 +50,12 @@ class TaskFactory
     public function createQuery($url)
     {
         $task = clone $this->prototype;
-        $task->setUrl($url);
+        $task->setUrl($url)
+             ->setOptions(
+                 [
+                     CURLOPT_URL => $url,
+                 ]
+             );
 
         return $task;
     }

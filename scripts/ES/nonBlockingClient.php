@@ -7,6 +7,18 @@
  */
 require __DIR__.'/../../bootstrap.php';
 
+/**
+ * @param string $url
+ *
+ * @return string
+ */
+function parseSnsid($url)
+{
+    $arr = explode('/', parse_url($url, PHP_URL_PATH));
+
+    return (string) $arr[3];
+}
+
 $snsidList = [
     '100001349218797',
     '675097095878591',
@@ -52,9 +64,10 @@ array_walk($responseList, function (array $response) {
 $httpCost = 0;
 array_walk($trace, function (\Worker\Queue\HttpTracer $httpTracer, $url) use (&$httpCost) {
     $httpCost += $httpTracer->getElapsedTime();
-    dump(parse_url($url, PHP_URL_PATH).' => '.$httpTracer);
+    dump(parseSnsid($url).' => '.$httpTracer);
 });
 
 dump('time cost on http: '.PHP_Timer::secondsToTimeString($httpCost));
 dump('wall time on http: '.PHP_Timer::secondsToTimeString($taskWallTime));
 dump('Run time: '.PHP_Timer::timeSinceStartOfRequest());
+dump(sprintf('Memory: %4.2fMb', memory_get_peak_usage(true) / 1048576));

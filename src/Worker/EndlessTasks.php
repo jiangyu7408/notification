@@ -6,7 +6,6 @@
  * Date: 2015/07/03
  * Time: 5:09 PM.
  */
-
 namespace Worker;
 
 use Queue\FileQueue;
@@ -26,12 +25,21 @@ class EndlessTasks
     protected $tasks = [];
     protected $taskCounter = 0;
 
+    /**
+     * EndlessTasks constructor.
+     *
+     * @param string $queueLocation
+     * @param int    $batchSize
+     */
     public function __construct($queueLocation, $batchSize = 200)
     {
         $this->queue = new FileQueue($queueLocation);
         $this->batchSize = $batchSize;
     }
 
+    /**
+     * @return \Generator
+     */
     public function get()
     {
         while (true) {
@@ -54,6 +62,9 @@ class EndlessTasks
         }
     }
 
+    /**
+     * @return bool
+     */
     protected function hasTask()
     {
         return $this->taskCounter > 0;
@@ -65,14 +76,20 @@ class EndlessTasks
         $this->taskCounter = 0;
     }
 
+    /**
+     * @param mixed $task
+     */
     protected function addTask($task)
     {
         $this->tasks[] = $task;
         ++$this->taskCounter;
     }
 
+    /**
+     * @return bool
+     */
     protected function isTaskFull()
     {
-        return $this->taskCounter === $this->batchSize;
+        return $this->taskCounter >= $this->batchSize;
     }
 }

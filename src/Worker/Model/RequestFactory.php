@@ -14,6 +14,11 @@ namespace Worker\Model;
  */
 class RequestFactory
 {
+    /**
+     * @param array $options
+     *
+     * @return Request
+     */
     public function create(array $options)
     {
         $request = new Request();

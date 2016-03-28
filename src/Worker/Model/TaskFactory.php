@@ -6,7 +6,6 @@
  * Date: 2015/07/01
  * Time: 2:23 PM.
  */
-
 namespace Worker\Model;
 
 /**
@@ -14,6 +13,14 @@ namespace Worker\Model;
  */
 class TaskFactory
 {
+    /**
+     * @var Task
+     */
+    protected $prototype;
+
+    /**
+     * TaskFactory constructor.
+     */
     public function __construct()
     {
         $this->prototype = new Task();

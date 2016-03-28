@@ -6,7 +6,6 @@
  * Date: 2015/07/01
  * Time: 3:41 PM.
  */
-
 namespace Worker\Model;
 
 /**

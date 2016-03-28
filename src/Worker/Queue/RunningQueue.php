@@ -6,7 +6,6 @@
  * Date: 2015/07/01
  * Time: 2:37 PM.
  */
-
 namespace Worker\Queue;
 
 use Worker\Model\Request;
@@ -18,15 +17,20 @@ use Worker\Model\ResponseFactory;
  */
 class RunningQueue
 {
-    /**
-     * @var Request[]
-     */
+    /** @var TaskProvider */
+    protected $taskProvider;
+    /** @var int */
+    protected $size;
+    /** @var resource */
+    protected $curl;
+    /** @var Request[] */
     protected $queue;
-    protected $verbose = true;
-    /**
-     * @var ResponseFactory
-     */
+    /** @var ResponseFactory */
     protected $responseFactory;
+    /** @var HttpTracer[] */
+    protected $trace = [];
+    /** @var HttpTracer */
+    protected $httpTracer;
 
     /**
      * @param TaskProvider $taskProvider
@@ -38,7 +42,7 @@ class RunningQueue
         $this->size = $size;
         $this->curl = curl_multi_init();
         $this->queue = [];
-        $this->responseFactory = (new ResponseFactory());
+        $this->responseFactory = new ResponseFactory();
     }
 
     /**
@@ -64,9 +68,11 @@ class RunningQueue
      */
     public function add(Request $request)
     {
+        if (is_object($this->httpTracer)) {
+            $this->trace[$request->url] = $tracer = clone $this->httpTracer;
+            $tracer->start();
+        }
         $this->queue[$request->url] = $request;
-
-        echo '.';
         $ret = curl_multi_add_handle($this->curl, $request->handle);
         assert($ret === 0);
     }
@@ -88,6 +94,8 @@ class RunningQueue
 
             while (false !== ($done = (curl_multi_info_read($this->curl)))) {
                 $response = $this->createResponse($done);
+                $this->traceResponse($response);
+
                 yield $response;
             }
         } while ($running);
@@ -100,7 +108,45 @@ class RunningQueue
      */
     public function get($url)
     {
+        assert(array_key_exists($url, $this->queue));
+
         return $this->queue[$url];
+    }
+
+    /**
+     * @param HttpTracer $httpTracer
+     *
+     * @return $this
+     */
+    public function setTracer(HttpTracer $httpTracer)
+    {
+        $this->httpTracer = $httpTracer;
+
+        return $this;
+    }
+
+    /**
+     * @return HttpTracer[]
+     */
+    public function getTrace()
+    {
+        return $this->trace;
+    }
+
+    /**
+     * @param Response $response
+     */
+    protected function traceResponse(Response $response)
+    {
+        if (!method_exists($this->httpTracer, 'stop')) {
+            return;
+        }
+        $info = $response->info;
+        $url = $info['url'];
+        if (!isset($this->trace[$url])) {
+            return;
+        }
+        $this->trace[$url]->stop($info);
     }
 
     /**

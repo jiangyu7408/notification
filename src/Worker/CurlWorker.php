@@ -6,12 +6,12 @@
  * Date: 2015/07/01
  * Time: 11:51 AM.
  */
-
 namespace Worker;
 
 use Worker\Model\RequestFactory;
 use Worker\Model\Response;
 use Worker\Model\Task;
+use Worker\Queue\HttpTracer;
 use Worker\Queue\RetryQueue;
 use Worker\Queue\RunningQueue;
 use Worker\Queue\TaskProvider;
@@ -21,28 +21,25 @@ use Worker\Queue\TaskProvider;
  */
 class CurlWorker
 {
-    /**
-     * @var TaskProvider
-     */
-    protected $dataProvider;
-    /**
-     * @var RetryQueue
-     */
-    protected $retryQueue;
-    /**
-     * @var RunningQueue
-     */
-    protected $runningQueue;
-    /**
-     * @var RequestFactory
-     */
+    /** @var HttpTracer */
+    protected $httpTracer;
+    /** @var RequestFactory */
     protected $requestFactory;
+    /** @var TaskProvider */
+    protected $dataProvider;
+    /** @var RetryQueue */
+    protected $retryQueue;
+    /** @var RunningQueue */
+    protected $runningQueue;
 
     /**
      * CurlWorker constructor.
+     *
+     * @param HttpTracer $httpTracer
      */
-    public function __construct()
+    public function __construct(HttpTracer $httpTracer = null)
     {
+        $this->httpTracer = $httpTracer;
         $this->requestFactory = new RequestFactory();
     }
 
@@ -62,6 +59,9 @@ class CurlWorker
         $this->retryQueue = new RetryQueue();
 
         $this->runningQueue = new RunningQueue($this->dataProvider, $concurrency);
+        if ($this->httpTracer) {
+            $this->runningQueue->setTracer($this->httpTracer);
+        }
         while ($this->runningQueue->canAdd()
                && ($task = $this->dataProvider->nextTask())) {
             $request = $this->makeRequest($task);
@@ -72,28 +72,30 @@ class CurlWorker
     }
 
     /**
+     * @param array    $resultBuffer
+     * @param \Closure $stepHandler
      *
+     * @return Queue\HttpTracer[]
      */
-    public function run()
+    public function run(array &$resultBuffer, \Closure $stepHandler)
     {
         $retryCounter = 0;
         $failCounter = 0;
-        $successCounter = 0;
 
         $pendingResponseList = $this->runningQueue->run();
         /** @var Response $pendingResponse */
         foreach ($pendingResponseList as $pendingResponse) {
-            echo '*';
+            call_user_func($stepHandler);
+            $resultBuffer[] = $pendingResponse->info;
             $success = $this->handleResponseIfSuccess($pendingResponse);
             if ($success) {
-                ++$successCounter;
                 continue;
             }
 
             $this->handleResponseIfFail($pendingResponse, $failCounter, $retryCounter);
         }
 
-        echo PHP_EOL."success: {$successCounter}, retry: {$retryCounter}, fail: {$failCounter}".PHP_EOL;
+        return $this->runningQueue->getTrace();
     }
 
     /**

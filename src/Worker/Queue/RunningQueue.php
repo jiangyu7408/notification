@@ -41,6 +41,9 @@ class RunningQueue
         $this->responseFactory = (new ResponseFactory());
     }
 
+    /**
+     *
+     */
     public function __destruct()
     {
         if (is_resource($this->curl)) {
@@ -48,11 +51,17 @@ class RunningQueue
         }
     }
 
+    /**
+     * @return bool
+     */
     public function canAdd()
     {
         return (count($this->queue) <= $this->size);
     }
 
+    /**
+     * @param Request $request
+     */
     public function add(Request $request)
     {
         $this->queue[$request->url] = $request;
@@ -62,6 +71,9 @@ class RunningQueue
         assert($ret === 0);
     }
 
+    /**
+     * @return \Generator
+     */
     public function run()
     {
         $running = 0;
@@ -82,6 +94,16 @@ class RunningQueue
     }
 
     /**
+     * @param string $url
+     *
+     * @return Request
+     */
+    public function get($url)
+    {
+        return $this->queue[$url];
+    }
+
+    /**
      * @param array $input
      *
      * @return \Worker\Model\Response
@@ -99,11 +121,9 @@ class RunningQueue
         return $response;
     }
 
-    public function get($url)
-    {
-        return $this->queue[$url];
-    }
-
+    /**
+     * @param Response $response
+     */
     protected function cleanUp(Response $response)
     {
         $ret = curl_multi_remove_handle($this->curl, $response->request->handle);
@@ -112,8 +132,12 @@ class RunningQueue
         }
     }
 
+    /**
+     * @param Response $response
+     */
     private function handleCurlError(Response $response)
     {
+        assert(is_object($response));
         // TODO handle error
     }
 }

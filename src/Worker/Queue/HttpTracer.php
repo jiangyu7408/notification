@@ -13,6 +13,8 @@ namespace Worker\Queue;
  */
 class HttpTracer
 {
+    /** @var int */
+    protected $httpStatus;
     /** @var float */
     protected $startTs;
     /** @var float */
@@ -39,6 +41,7 @@ class HttpTracer
      */
     public function stop(array $info)
     {
+        $this->httpStatus = $info['http_code'];
         $this->stopTs = $this->startTs + $info['total_time'];
         $this->networkLatency = $info['namelookup_time'] + $info['connect_time'];
         $this->serverLatency = $info['starttransfer_time'] - $info['pretransfer_time'];
@@ -78,7 +81,8 @@ class HttpTracer
     public function __toString()
     {
         return sprintf(
-            'start: %f, stop: %f, network: %f, server: %f',
+            'code: %d, start: %f, stop: %f, network: %f, server: %f',
+            $this->httpStatus,
             $this->startTs,
             $this->stopTs,
             $this->networkLatency,

@@ -3,15 +3,13 @@
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/06/30
- * Time: 3:37 PM
+ * Time: 3:37 PM.
  */
-
 use Worker\EndlessTasks;
 
-require __DIR__ . '/../bootstrap.php';
+require __DIR__.'/../bootstrap.php';
 
-function fireNotifications($jsonArray)
-{
+$fireNotifications = function ($jsonArray) {
     $requestFactory = new \Worker\Model\TaskFactory();
 
     $tasks = [];
@@ -30,8 +28,8 @@ function fireNotifications($jsonArray)
     $worker->addTasks($tasks);
     $worker->run();
     $delta = PHP_Timer::stop();
-    echo PHP_Timer::resourceUsage() . ' fire notif cost: ' . PHP_Timer::secondsToTimeString($delta) . PHP_EOL;
-}
+    echo PHP_Timer::resourceUsage().' fire notif cost: '.PHP_Timer::secondsToTimeString($delta).PHP_EOL;
+};
 
 $facebookOptions = \Application\Facade::getInstance()->getFBGatewayOptions();
 dump($facebookOptions);
@@ -42,5 +40,5 @@ $bufferedNotifications = $taskGenerator->get();
 
 /** @var string[] $tasks */
 foreach ($bufferedNotifications as $tasks) {
-    fireNotifications($tasks);
+    call_user_func($fireNotifications, $tasks);
 }

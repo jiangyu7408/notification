@@ -10,28 +10,6 @@ use Environment\Platform;
 
 require __DIR__.'/../../bootstrap.php';
 
-$options = getopt('a', ['gv:']);
-
-$gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
-appendLog('game version: '.$gameVersion);
-
-$base = __DIR__.'/../../../farm-server-conf/';
-assert(is_dir($base));
-
-$esHost = '52.19.73.190';
-$esPort = 9200;
-
-$esClient = new Client(['hosts' => [sprintf('http://%s:%d/', $esHost, $esPort)]]);
-//$docUpdater = new DocumentUpdater($esClient, $gameVersion);
-$docUpdater = new NonBlockingDocUpdater();
-
-$platform = new Platform($base);
-
-$updater = new UserStatusUpdater($gameVersion);
-$query = array_key_exists('a', $options) ? new AllDeAuthorizedUserQuery() : new DeAuthorizedUserQuery();
-$resultSet = $updater->run($platform, $query, $docUpdater);
-dump($resultSet);
-
 interface DocumentUpdater
 {
     public function update(array $snsidList);
@@ -117,6 +95,24 @@ class BlockingDocumentUpdater implements DocumentUpdater
 
 class NonBlockingDocUpdater implements DocumentUpdater
 {
+    /** @var \Worker\Model\TaskFactory */
+    protected $taskFactory;
+    protected $concurrency = 200;
+    protected $taskWallTime = 0;
+    protected $httpCost = 0;
+    /** @var int */
+    protected $total;
+    /** @var int */
+    protected $processed;
+
+    /**
+     * NonBlockingDocUpdater constructor.
+     */
+    public function __construct()
+    {
+        $this->taskFactory = new \Worker\Model\TaskFactory();
+    }
+
     /**
      * @param array $snsidList
      *
@@ -124,48 +120,87 @@ class NonBlockingDocUpdater implements DocumentUpdater
      */
     public function update(array $snsidList)
     {
-        $taskFactory = new \Worker\Model\TaskFactory();
-        $tasks = array_map(function ($snsid) use ($taskFactory) {
-            $url = sprintf('http://52.19.73.190:9200/farm/user:tw/%s/_update', $snsid);
-            $postData = sprintf('{"doc":{"status":"%d"}}', time());
+        $this->total = count($snsidList);
+        dump('total = '.$this->total);
+        $resultSet = [
+            200 => 0,
+            404 => 0,
+        ];
+        $cursor = 0;
+        while (true) {
+            $batch = array_slice($snsidList, $cursor, $this->concurrency);
+            $size = count($batch);
+            if ($size === 0) {
+                break;
+            }
+            $cursor += $size;
+            $ret = $this->onBatch($batch);
+            foreach ($ret as $httpCode) {
+                $resultSet[$httpCode]++;
+            }
+        }
+        echo PHP_EOL;
 
-            return $taskFactory->create($url, [
+        dump('   time cost on http: '.PHP_Timer::secondsToTimeString($this->httpCost));
+        dump('average cost on http: '.PHP_Timer::secondsToTimeString($this->httpCost / $this->total));
+        dump('   wall time on http: '.PHP_Timer::secondsToTimeString($this->taskWallTime));
+
+        return $resultSet;
+    }
+
+    protected function onBatch(array $batch)
+    {
+        $tasks = $this->taskBatchFactory($batch);
+
+        PHP_Timer::start();
+        $curlWorker = new \Worker\CurlWorker(new \Worker\Queue\HttpTracer());
+        $curlWorker->addTasks($tasks, $this->concurrency);
+        $responseList = [];
+
+        $trace = $curlWorker->run($responseList, function () {
+            printf("%10d/%d\r", ++$this->processed, $this->total);
+        });
+        $this->taskWallTime += PHP_Timer::stop();
+
+        array_walk($trace, function (\Worker\Queue\HttpTracer $httpTracer) {
+            $this->httpCost += $httpTracer->getElapsedTime();
+        });
+
+        return array_map(function (array $response) {
+            return (int) $response['http_code'];
+        }, $responseList);
+    }
+
+    /**
+     * @param array $snsidList
+     *
+     * @return array
+     */
+    protected function taskBatchFactory(array $snsidList)
+    {
+        return array_map(function ($snsid) {
+            $url = sprintf('http://52.19.73.190:9200/farm/user:tw/%s/_update', $snsid);
+            $postData = sprintf('{"doc":{"status":"%d"}}', 0);
+
+            return $this->taskFactory->create($url, [
                 CURLOPT_URL => $url,
                 CURLOPT_POST => 1,
                 CURLOPT_POSTFIELDS => $postData,
                 CURLOPT_RETURNTRANSFER => 1,
             ]);
         }, $snsidList);
+    }
 
-        PHP_Timer::start();
-        $curlWorker = new \Worker\CurlWorker(new \Worker\Queue\HttpTracer());
-        $curlWorker->addTasks($tasks);
-        $responseList = [];
+    /**
+     * @param string $url
+     *
+     * @return string
+     */
+    protected function parseSnsid($url)
+    {
+        $arr = explode('/', parse_url($url, PHP_URL_PATH));
 
-        $trace = $curlWorker->run($responseList, function () {
-            echo microtime(true).' got response'.PHP_EOL;
-        });
-        $taskWallTime = PHP_Timer::stop();
-
-        array_walk($responseList, function (array $response) {
-            dump(
-                [
-                    'url' => $response['url'],
-                    'http_code' => $response['http_code'],
-                    'content' => $response['content'],
-                ]
-            );
-        });
-
-        $httpCost = 0;
-        array_walk($trace, function (\Worker\Queue\HttpTracer $httpTracer, $url) use (&$httpCost) {
-            $httpCost += $httpTracer->getElapsedTime();
-            dump(parse_url($url, PHP_URL_PATH).' => '.$httpTracer);
-        });
-
-        dump('time cost on http: '.PHP_Timer::secondsToTimeString($httpCost));
-        dump('wall time on http: '.PHP_Timer::secondsToTimeString($taskWallTime));
-        dump('Run time: '.PHP_Timer::timeSinceStartOfRequest());
+        return (string) $arr[3];
     }
 }
 
@@ -182,12 +217,25 @@ class DeAuthorizedUserQuery
 
 class AllDeAuthorizedUserQuery extends DeAuthorizedUserQuery
 {
+    /** @var int */
+    protected $timestamp;
+
+    /**
+     * AllDeAuthorizedUserQuery constructor.
+     *
+     * @param string $date
+     */
+    public function __construct($date)
+    {
+        $this->timestamp = (new DateTime($date))->getTimestamp();
+    }
+
     /**
      * @return string
      */
     public function getSql()
     {
-        return sprintf('select snsid from tbl_user_remove_log');
+        return sprintf('select snsid from tbl_user_remove_log where log_time>'.$this->timestamp);
     }
 }
 
@@ -220,7 +268,6 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
-     *
      * @throws Exception
      */
     protected function findDeAuthorizedUser(Platform $platform, DeAuthorizedUserQuery $query)
@@ -236,6 +283,7 @@ class UserStatusUpdater
             $snsidList = $this->onShard($shardConfig, $query);
             $delta = PHP_Timer::stop();
             appendLog('cost on database '.$dbName.': '.PHP_Timer::secondsToTimeString($delta));
+            dump(sprintf('Memory: %4.2fMb', memory_get_peak_usage(true) / 1048576));
             $resultSet = array_merge($resultSet, $snsidList);
         }
 
@@ -247,7 +295,6 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
-     *
      * @throws Exception
      */
     private function onShard(array $dbItem, DeAuthorizedUserQuery $query)
@@ -260,7 +307,9 @@ class UserStatusUpdater
             throw new \Exception('connect to db failed: ['.$dsn.']');
         }
 
-        $statement = $pdo->query($query->getSql());
+        $sql = $query->getSql();
+        dump($sql);
+        $statement = $pdo->query($sql);
         $resultSet = $statement->fetchAll(PDO::FETCH_ASSOC);
 
         return array_map(function (array $data) {
@@ -268,3 +317,31 @@ class UserStatusUpdater
         }, $resultSet);
     }
 }
+
+$options = getopt('', ['date:', 'gv:']);
+
+$gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
+appendLog('game version: '.$gameVersion);
+
+$base = __DIR__.'/../../../farm-server-conf/';
+assert(is_dir($base));
+
+$esHost = '52.19.73.190';
+$esPort = 9200;
+
+$esClient = new Client(['hosts' => [sprintf('http://%s:%d/', $esHost, $esPort)]]);
+//$docUpdater = new DocumentUpdater($esClient, $gameVersion);
+$docUpdater = new NonBlockingDocUpdater();
+
+$platform = new Platform($base);
+
+$updater = new UserStatusUpdater($gameVersion);
+dump($options);
+$query = array_key_exists('date', $options)
+    ? new AllDeAuthorizedUserQuery($options['date'])
+    : new DeAuthorizedUserQuery();
+$resultSet = $updater->run($platform, $query, $docUpdater);
+dump($resultSet);
+
+dump('Run time: '.PHP_Timer::timeSinceStartOfRequest());
+dump(sprintf('Memory: %4.2fMb', memory_get_peak_usage(true) / 1048576));

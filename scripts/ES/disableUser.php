@@ -74,7 +74,10 @@ class DocumentUpdater
             $errMsg = $e->getMessage();
             $decodedArray = json_decode($errMsg, true);
             if (is_array($decodedArray)) {
-                return ['snsid' => $snsid] + $decodedArray;
+                return [
+                    'snsid' => $snsid,
+                    'error' => $decodedArray['status'],
+                ];
             }
 
             return [
@@ -130,7 +133,6 @@ class UserStatusUpdater
 
         $resultSet = array_map(function ($snsid) use ($updater) {
             $ret = $updater->updateUserStatus($snsid, 0);
-            dump($ret);
 
             return $ret;
         }, $snsidList);

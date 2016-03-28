@@ -3,9 +3,8 @@
  * Created by PhpStorm.
  * User: Jiang Yu
  * Date: 2015/07/07
- * Time: 11:29 AM
+ * Time: 11:29 AM.
  */
-
 use Elasticsearch\Client;
 use Environment\Platform;
 
@@ -23,7 +22,8 @@ $esHost = '52.19.73.190';
 $esPort = 9200;
 
 $esClient = new Client(['hosts' => [sprintf('http://%s:%d/', $esHost, $esPort)]]);
-$docUpdater = new DocumentUpdater($esClient, $gameVersion);
+//$docUpdater = new DocumentUpdater($esClient, $gameVersion);
+$docUpdater = new NonBlockingDocUpdater();
 
 $platform = new Platform($base);
 
@@ -32,8 +32,20 @@ $query = array_key_exists('a', $options) ? new AllDeAuthorizedUserQuery() : new 
 $resultSet = $updater->run($platform, $query, $docUpdater);
 dump($resultSet);
 
-class DocumentUpdater
+interface DocumentUpdater
 {
+    public function update(array $snsidList);
+}
+
+class BlockingDocumentUpdater implements DocumentUpdater
+{
+    /** @var Client */
+    protected $client;
+    /** @var string */
+    protected $index = 'farm';
+    /** @var string */
+    protected $type;
+
     /**
      * DocumentUpdater constructor.
      *
@@ -43,8 +55,23 @@ class DocumentUpdater
     public function __construct(Client $client, $gameVersionShort)
     {
         $this->client = $client;
-        $this->index = 'farm';
         $this->type = 'user:'.$gameVersionShort;
+    }
+
+    /**
+     * @param array $snsidList
+     *
+     * @return array
+     */
+    public function update(array $snsidList)
+    {
+        $resultSet = array_map(function ($snsid) {
+            $ret = $this->updateUserStatus($snsid, 0);
+
+            return $ret;
+        }, $snsidList);
+
+        return $resultSet;
     }
 
     /**
@@ -53,7 +80,7 @@ class DocumentUpdater
      *
      * @return array
      */
-    public function updateUserStatus($snsid, $status)
+    protected function updateUserStatus($snsid, $status)
     {
         assert(is_numeric($status));
         $params = [
@@ -85,6 +112,60 @@ class DocumentUpdater
                 'error' => $errMsg,
             ];
         }
+    }
+}
+
+class NonBlockingDocUpdater implements DocumentUpdater
+{
+    /**
+     * @param array $snsidList
+     *
+     * @return array
+     */
+    public function update(array $snsidList)
+    {
+        $taskFactory = new \Worker\Model\TaskFactory();
+        $tasks = array_map(function ($snsid) use ($taskFactory) {
+            $url = sprintf('http://52.19.73.190:9200/farm/user:tw/%s/_update', $snsid);
+            $postData = sprintf('{"doc":{"status":"%d"}}', time());
+
+            return $taskFactory->create($url, [
+                CURLOPT_URL => $url,
+                CURLOPT_POST => 1,
+                CURLOPT_POSTFIELDS => $postData,
+                CURLOPT_RETURNTRANSFER => 1,
+            ]);
+        }, $snsidList);
+
+        PHP_Timer::start();
+        $curlWorker = new \Worker\CurlWorker(new \Worker\Queue\HttpTracer());
+        $curlWorker->addTasks($tasks);
+        $responseList = [];
+
+        $trace = $curlWorker->run($responseList, function () {
+            echo microtime(true).' got response'.PHP_EOL;
+        });
+        $taskWallTime = PHP_Timer::stop();
+
+        array_walk($responseList, function (array $response) {
+            dump(
+                [
+                    'url' => $response['url'],
+                    'http_code' => $response['http_code'],
+                    'content' => $response['content'],
+                ]
+            );
+        });
+
+        $httpCost = 0;
+        array_walk($trace, function (\Worker\Queue\HttpTracer $httpTracer, $url) use (&$httpCost) {
+            $httpCost += $httpTracer->getElapsedTime();
+            dump(parse_url($url, PHP_URL_PATH).' => '.$httpTracer);
+        });
+
+        dump('time cost on http: '.PHP_Timer::secondsToTimeString($httpCost));
+        dump('wall time on http: '.PHP_Timer::secondsToTimeString($taskWallTime));
+        dump('Run time: '.PHP_Timer::timeSinceStartOfRequest());
     }
 }
 
@@ -123,21 +204,15 @@ class UserStatusUpdater
     /**
      * @param Platform              $platform
      * @param DeAuthorizedUserQuery $query
-     * @param DocumentUpdater       $updater
+     * @param DocumentUpdater       $docUpdater
      *
      * @return array
      */
-    public function run(Platform $platform, DeAuthorizedUserQuery $query, DocumentUpdater $updater)
+    public function run(Platform $platform, DeAuthorizedUserQuery $query, DocumentUpdater $docUpdater)
     {
         $snsidList = $this->findDeAuthorizedUser($platform, $query);
 
-        $resultSet = array_map(function ($snsid) use ($updater) {
-            $ret = $updater->updateUserStatus($snsid, 0);
-
-            return $ret;
-        }, $snsidList);
-
-        return $resultSet;
+        return $docUpdater->update($snsidList);
     }
 
     /**
@@ -145,6 +220,7 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
+     *
      * @throws Exception
      */
     protected function findDeAuthorizedUser(Platform $platform, DeAuthorizedUserQuery $query)
@@ -171,6 +247,7 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
+     *
      * @throws Exception
      */
     private function onShard(array $dbItem, DeAuthorizedUserQuery $query)

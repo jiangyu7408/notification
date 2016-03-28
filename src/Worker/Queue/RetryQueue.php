@@ -6,7 +6,6 @@
  * Date: 2015/07/01
  * Time: 2:47 PM.
  */
-
 namespace Worker\Queue;
 
 use Worker\Model\Request;
@@ -25,6 +24,11 @@ class RetryQueue
      */
     protected $list = [];
 
+    /**
+     * RetryQueue constructor.
+     *
+     * @param int $maxTry
+     */
     public function __construct($maxTry = 3)
     {
         $this->maxTry = $maxTry;

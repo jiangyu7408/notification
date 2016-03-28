@@ -6,7 +6,6 @@
  * Date: 2015/07/02
  * Time: 8:18 PM.
  */
-
 namespace Application;
 
 use Config\RedisConfig;
@@ -45,7 +44,7 @@ class Facade
                 ]
             );
 
-            static::$instance = new static($builder);
+            static::$instance = new self($builder);
         }
 
         return static::$instance;
@@ -135,7 +134,7 @@ class Facade
     }
 
     /**
-     * @param $name
+     * @param string $name
      *
      * @return mixed|null
      */

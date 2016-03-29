@@ -97,7 +97,7 @@ class NonBlockingDocUpdater implements DocumentUpdater
 {
     /** @var \Worker\Model\TaskFactory */
     protected $taskFactory;
-    protected $concurrency = 200;
+    protected $concurrency;
     protected $taskWallTime = 0;
     protected $httpCost = 0;
     /** @var int */
@@ -107,9 +107,13 @@ class NonBlockingDocUpdater implements DocumentUpdater
 
     /**
      * NonBlockingDocUpdater constructor.
+     *
+     * @param int $concurrency
      */
-    public function __construct()
+    public function __construct($concurrency = 100)
     {
+        $this->concurrency = (int) $concurrency;
+        assert($this->concurrency > 0);
         $this->taskFactory = new \Worker\Model\TaskFactory();
     }
 
@@ -125,6 +129,7 @@ class NonBlockingDocUpdater implements DocumentUpdater
         $resultSet = [
             200 => 0,
             404 => 0,
+            409 => 0,
         ];
         $cursor = 0;
         while (true) {
@@ -218,7 +223,9 @@ class DeAuthorizedUserQuery
 class AllDeAuthorizedUserQuery extends DeAuthorizedUserQuery
 {
     /** @var int */
-    protected $timestamp;
+    protected $fromTs;
+    /** @var int */
+    protected $toTs;
 
     /**
      * AllDeAuthorizedUserQuery constructor.
@@ -227,7 +234,12 @@ class AllDeAuthorizedUserQuery extends DeAuthorizedUserQuery
      */
     public function __construct($date)
     {
-        $this->timestamp = (new DateTime($date))->getTimestamp();
+        $dateTime = new DateTime($date);
+        $this->fromTs = $dateTime->getTimestamp();
+        if (strlen($date) === strlen('2016-03')) {
+            $endDateTime = $dateTime->add(new DateInterval('P1M'));
+            $this->toTs = $endDateTime->getTimestamp();
+        }
     }
 
     /**
@@ -235,7 +247,12 @@ class AllDeAuthorizedUserQuery extends DeAuthorizedUserQuery
      */
     public function getSql()
     {
-        return sprintf('select snsid from tbl_user_remove_log where log_time>'.$this->timestamp);
+        $sql = sprintf('select snsid from tbl_user_remove_log where log_time>='.$this->fromTs);
+        if ($this->toTs) {
+            $sql .= ' and log_time<='.$this->toTs;
+        }
+
+        return $sql;
     }
 }
 
@@ -318,10 +335,11 @@ class UserStatusUpdater
     }
 }
 
-$options = getopt('', ['date:', 'gv:']);
+$options = getopt('', ['concurrency:', 'date:', 'gv:']);
 
+$concurrency = isset($options['concurrency']) ? (int) $options['concurrency'] : 100;
 $gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
-appendLog('game version: '.$gameVersion);
+appendLog('game version: '.$gameVersion.', concurrency: '.$concurrency);
 
 $base = __DIR__.'/../../../farm-server-conf/';
 assert(is_dir($base));
@@ -331,7 +349,7 @@ $esPort = 9200;
 
 $esClient = new Client(['hosts' => [sprintf('http://%s:%d/', $esHost, $esPort)]]);
 //$docUpdater = new DocumentUpdater($esClient, $gameVersion);
-$docUpdater = new NonBlockingDocUpdater();
+$docUpdater = new NonBlockingDocUpdater($concurrency);
 
 $platform = new Platform($base);
 

@@ -141,7 +141,7 @@ class NonBlockingDocUpdater implements DocumentUpdater
             $cursor += $size;
             $ret = $this->onBatch($batch);
             foreach ($ret as $httpCode) {
-                $resultSet[$httpCode]++;
+                ++$resultSet[$httpCode];
             }
         }
         echo PHP_EOL;
@@ -285,6 +285,7 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
+     *
      * @throws Exception
      */
     protected function findDeAuthorizedUser(Platform $platform, DeAuthorizedUserQuery $query)
@@ -312,6 +313,7 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
+     *
      * @throws Exception
      */
     private function onShard(array $dbItem, DeAuthorizedUserQuery $query)

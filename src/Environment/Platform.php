@@ -6,7 +6,6 @@
  * Date: 2015/07/07
  * Time: 11:55 AM.
  */
-
 namespace Environment;
 
 /**
@@ -23,6 +22,11 @@ class Platform
      */
     protected $mapping;
 
+    /**
+     * Platform constructor.
+     *
+     * @param string $entry
+     */
     public function __construct($entry)
     {
         $this->onlineSettingDir = $entry;
@@ -30,6 +34,29 @@ class Platform
 
         if (!defined('SYS_PATH')) {
             define('SYS_PATH', __DIR__);
+        }
+    }
+
+    /**
+     * @param string $version
+     *
+     * @return \Generator
+     */
+    public function getMySQLShards($version)
+    {
+        /** @var array $all */
+        $all = require $this->getPlatformSetting($version, 'database');
+        assert(is_array($all));
+
+        foreach ($all as $each) {
+            if (!is_array($each)) {
+                continue;
+            }
+            if (count($each) === 0) {
+                continue;
+            }
+
+            yield $each;
         }
     }
 
@@ -53,24 +80,6 @@ class Platform
         foreach ($dirs as $dir) {
             $version = substr($dir, strrpos($dir, '_') + 1);
             $this->mapping[$version] = $this->onlineSettingDir.'/'.$dir;
-        }
-    }
-
-    public function getMySQLShards($version)
-    {
-        /** @var array $all */
-        $all = require $this->getPlatformSetting($version, 'database');
-        assert(is_array($all));
-
-        foreach ($all as $each) {
-            if (!is_array($each)) {
-                continue;
-            }
-            if (count($each) === 0) {
-                continue;
-            }
-
-            yield $each;
         }
     }
 

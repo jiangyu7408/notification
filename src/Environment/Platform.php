@@ -48,13 +48,14 @@ class Platform
         $all = require $this->getPlatformSetting($version, 'database');
         assert(is_array($all));
 
-        foreach ($all as $each) {
+        foreach ($all as $shardId => $each) {
             if (!is_array($each)) {
                 continue;
             }
             if (count($each) === 0) {
                 continue;
             }
+            $each['shardId'] = $shardId;
 
             yield $each;
         }

@@ -39,6 +39,7 @@ class Machine
         $persist = new AggregatorPersist('uid.persist');
         $this->aggregator = new UidAggregator($persist);
         $this->shardList = ShardHelper::getShardList($gameVersion);
+        $this->logFile = LOG_DIR.'/'.date('Ymd').'/'.$gameVersion.'.machine';
     }
 
     /**
@@ -64,7 +65,7 @@ class Machine
             appendLog(__CLASS__.': [after aggregate] '.$shardId.' have uid '.count($uidList));
             array_map(
                 function ($uid) use ($now) {
-                    \error_log(sprintf('%d => %s'.PHP_EOL, $uid, $now), 3, 'run.log');
+                    \error_log(sprintf('%d => %s'.PHP_EOL, $uid, $now), 3, $this->logFile);
                 },
                 $uidList
             );

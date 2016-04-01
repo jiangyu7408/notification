@@ -110,6 +110,8 @@ class GatewayUserPersist implements IPersistency
         $this->responses = $this->client->bulk($this->bulk);
 
         if ($this->responses['errors']) {
+            appendLog($this->responses['errors']);
+
             return false;
         }
 

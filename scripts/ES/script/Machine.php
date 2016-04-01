@@ -101,7 +101,11 @@ class Machine
 
         $flatUserList = [];
         foreach ($groupedUserList as $shardId => $userList) {
-            appendLog(sprintf('%s: %s have %d user to sync', __METHOD__, $shardId, count($userList)));
+            $count = count($userList);
+            if ($count === 0) {
+                continue;
+            }
+            appendLog(sprintf('%s: %s have %d user to sync', __METHOD__, $shardId, $count));
             $flatUserList = array_merge($flatUserList, $userList);
         }
         $this->batchUpdateES($this->esHost, $this->gameVersion, $flatUserList);

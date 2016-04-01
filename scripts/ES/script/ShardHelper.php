@@ -9,6 +9,7 @@
 namespace script;
 
 use Environment\Platform;
+use PDO;
 
 /**
  * Class ShardHelper.
@@ -62,20 +63,37 @@ class ShardHelper
     /**
      * @param array $options
      *
-     * @return false|\PDO
+     * @return false|PDO
      */
     public static function pdoFactory(array $options)
     {
+        /** @var PDO[] $connections */
         static $connections = [];
 
         $dsn = 'mysql:dbname='.$options['database'].';host='.$options['host'];
         if (isset($connections[$dsn])) {
-            return $connections[$dsn];
+            $connections[$dsn] = $pdo = self::reconnectIfNeeded($connections[$dsn], $dsn, $options);
+
+            return $pdo;
         }
 
+        $connections[$dsn] = $pdo = self::connect($dsn, $options);
+
+        return $pdo;
+    }
+
+    /**
+     * @param string $dsn
+     * @param array  $options
+     *
+     * @return false|PDO
+     */
+    private static function connect($dsn, array $options)
+    {
         try {
             appendLog('Connect MySQL on DSN: '.$dsn);
-            $connections[$dsn] = $pdo = new \PDO($dsn, $options['username'], $options['password']);
+            $pdo = new PDO($dsn, $options['username'], $options['password']);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             return $pdo;
         } catch (\PDOException $e) {
@@ -83,5 +101,27 @@ class ShardHelper
 
             return false;
         }
+    }
+
+    /**
+     * @param PDO    $pdo
+     * @param string $dsn
+     * @param array  $options
+     *
+     * @return false|PDO
+     */
+    private static function reconnectIfNeeded(PDO $pdo, $dsn, array $options)
+    {
+        try {
+            $pdo->query("SHOW STATUS;")->execute();
+        } catch (\PDOException $e) {
+            if ($e->getCode() != 'HY000' || !stristr($e->getMessage(), 'server has gone away')) {
+                throw $e;
+            }
+
+            $pdo = self::connect($dsn, $options);
+        }
+
+        return $pdo;
     }
 }

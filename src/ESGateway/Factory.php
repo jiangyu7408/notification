@@ -44,6 +44,7 @@ class Factory
             'top_map_size',
             'water_exp',
             'water_level',
+            'uid',
         ],
     ];
 

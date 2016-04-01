@@ -6,7 +6,6 @@
  * Date: 2015/07/06
  * Time: 2:11 PM.
  */
-
 namespace Persistency\ElasticSearch;
 
 use Elasticsearch\Client;
@@ -55,6 +54,9 @@ class GatewayUserPersist implements IPersistency
         ];
     }
 
+    /**
+     * @param string $snsid
+     */
     public function setSnsid($snsid)
     {
         assert(is_string($snsid));
@@ -66,11 +68,13 @@ class GatewayUserPersist implements IPersistency
      */
     public function retrieve()
     {
-        $ret = $this->client->get([
-            'index' => $this->type->index,
-            'type' => $this->type->type,
-            'id' => $this->snsid,
-        ]);
+        $ret = $this->client->get(
+            [
+                'index' => $this->type->index,
+                'type' => $this->type->type,
+                'id' => $this->snsid,
+            ]
+        );
 
         $this->responses = $ret;
 

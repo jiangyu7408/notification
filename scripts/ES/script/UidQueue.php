@@ -19,9 +19,10 @@ class UidQueue
      * UidQueue constructor.
      *
      * @param string $dir
+     * @param string $gameVersion
      * @param array  $shardList
      */
-    public function __construct($dir, array $shardList)
+    public function __construct($dir, $gameVersion, array $shardList)
     {
         if (!is_dir($dir) || !is_writable($dir)) {
             throw new \InvalidArgumentException($dir.' not usable');
@@ -37,6 +38,7 @@ class UidQueue
             $shardList
         );
         $this->dir = $dir;
+        $this->gameVersion = $gameVersion;
         $this->shardList = $shardList;
     }
 
@@ -51,7 +53,7 @@ class UidQueue
                 if (count($uidList) === 0) {
                     return;
                 }
-                $filePath = $this->dir.'/'.$shardId;
+                $filePath = $this->getQueueFilePath($shardId);
                 $fileQueue = new FileQueue($filePath);
                 $fileQueue->push(implode(PHP_EOL, $uidList));
             }
@@ -69,7 +71,7 @@ class UidQueue
         }
         array_map(
             function ($shardId) use (&$result) {
-                $filePath = $this->dir.'/'.$shardId;
+                $filePath = $this->getQueueFilePath($shardId);
                 $fileQueue = new FileQueue($filePath);
                 while (($data = $fileQueue->pop()) !== '') {
                     $result[$shardId] = array_merge($result[$shardId], explode(PHP_EOL, $data));
@@ -79,5 +81,15 @@ class UidQueue
         );
 
         return $result;
+    }
+
+    /**
+     * @param string $shardId
+     *
+     * @return string
+     */
+    private function getQueueFilePath($shardId)
+    {
+        return sprintf('%s/%s/%s', $this->dir, $this->gameVersion, $shardId);
     }
 }

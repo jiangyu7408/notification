@@ -23,7 +23,12 @@ class UserDetailGenerator
      */
     public static function generate($gameVersion, array $groupedUidList)
     {
-        $shardConfigList = ShardHelper::shardConfigGenerator($gameVersion);
+        $generator = ShardHelper::platformFactory()->getMySQLShards($gameVersion);
+
+        $shardConfigList = [];
+        foreach ($generator as $shardConfig) {
+            $shardConfigList[$shardConfig['shardId']] = $shardConfig;
+        }
 
         $userList = [];
         foreach ($groupedUidList as $shardId => $uidList) {

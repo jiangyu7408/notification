@@ -56,7 +56,7 @@ foreach ($stepGenerator as $timestamp) {
     dump(date('Y-m-d H:i:s'));
     appendLog(date('c', $timestamp).' run with ts '.$timestamp);
     $shardList = ShardHelper::getShardList($gameVersion);
-    $queue = new UidQueue(UID_QUEUE_DIR, $shardList);
+    $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
     $groupedUidList = UidListGenerator::generate($gameVersion, $lastActiveTimestamp);
     $verbose && dump($groupedUidList);

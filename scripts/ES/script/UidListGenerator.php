@@ -16,17 +16,18 @@ class UidListGenerator
     /**
      * @param string $gameVersion
      * @param int    $fromTs
+     * @param bool   $verbose
      *
      * @return array
      */
-    public static function generate($gameVersion, $fromTs)
+    public static function generate($gameVersion, $fromTs, $verbose)
     {
         $shardConfigList = ShardHelper::shardConfigGenerator($gameVersion);
 
         $groupedUidList = [];
         foreach ($shardConfigList as $shardConfig) {
             $shardId = $shardConfig['shardId'];
-            $groupedUidList[$shardId] = self::onShard($shardConfig, $fromTs);
+            $groupedUidList[$shardId] = self::onShard($shardConfig, $fromTs, $verbose);
         }
 
         return $groupedUidList;
@@ -35,21 +36,25 @@ class UidListGenerator
     /**
      * @param array $mysqlOptions
      * @param int   $lastActiveTimestamp
+     * @param bool  $verbose
      *
      * @return array [uid, uid]
      */
-    protected static function onShard(array $mysqlOptions, $lastActiveTimestamp)
+    protected static function onShard(array $mysqlOptions, $lastActiveTimestamp, $verbose = false)
     {
         $pdo = ShardHelper::pdoFactory($mysqlOptions);
         if ($pdo === false) {
             return [];
         }
+        $shardId = $mysqlOptions['shardId'];
 
         \PHP_Timer::start();
         $uidList = self::fetchActiveUidList($pdo, $lastActiveTimestamp);
         $timeCost = \PHP_Timer::secondsToTimeString(\PHP_Timer::stop());
 
-        appendLog('fetchActiveUidList cost '.$timeCost.' to get result set of size = '.count($uidList));
+        if ($verbose) {
+            appendLog(sprintf('fetchActiveUidList %s cost %s to get %d uid', $shardId, $timeCost, count($uidList)));
+        }
 
         return $uidList;
     }

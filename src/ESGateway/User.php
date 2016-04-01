@@ -16,6 +16,8 @@ class User
 {
     /** @var string */
     public $snsid;
+    /** @var int */
+    public $uid;
     /** @var string */
     public $name;
     /** @var string */

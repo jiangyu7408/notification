@@ -127,7 +127,6 @@ class UidAggregator
     protected function loadProgress()
     {
         $progress = $this->persist->load();
-        dump($progress);
         if (array_key_exists('queue', $progress)) {
             $this->queue = $progress['queue'];
         }

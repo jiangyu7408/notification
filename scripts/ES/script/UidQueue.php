@@ -28,18 +28,23 @@ class UidQueue
             throw new \InvalidArgumentException($dir.' not usable');
         }
         rtrim($dir, '/');
+        $this->dir = $dir;
+        $this->gameVersion = $gameVersion;
+        $this->shardList = $shardList;
+
+        $queueDir = $this->getQueueDir();
+        if (!is_dir($queueDir)) {
+            mkdir($queueDir);
+        }
         array_map(
             function ($shardId) use ($dir) {
-                $filePath = $dir.'/'.$shardId;
+                $filePath = $this->getQueueFilePath($shardId);
                 if (!file_exists($filePath)) {
                     mkdir($filePath);
                 }
             },
             $shardList
         );
-        $this->dir = $dir;
-        $this->gameVersion = $gameVersion;
-        $this->shardList = $shardList;
     }
 
     /**
@@ -90,6 +95,14 @@ class UidQueue
      */
     private function getQueueFilePath($shardId)
     {
-        return sprintf('%s/%s/%s', $this->dir, $this->gameVersion, $shardId);
+        return sprintf('%s/%s', $this->getQueueDir(), $shardId);
+    }
+
+    /**
+     * @return string
+     */
+    private function getQueueDir()
+    {
+        return sprintf('%s/%s', $this->dir, $this->gameVersion);
     }
 }

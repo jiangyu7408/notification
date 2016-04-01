@@ -6,7 +6,6 @@
  * Date: 2015/07/06
  * Time: 1:58 PM.
  */
-
 namespace ESGateway;
 
 require __DIR__.'/../../library/ip2cc.php';
@@ -48,6 +47,9 @@ class Factory
         ],
     ];
 
+    /**
+     * Factory constructor.
+     */
     public function __construct()
     {
         $intValidator = function ($input) {
@@ -80,30 +82,30 @@ class Factory
     }
 
     /**
-     * @param string $ip
+     * @param string $ipAddress
      * @param int    $port
      *
      * @return string
      */
-    public function makeDsn($ip, $port)
+    public function makeDsn($ipAddress, $port)
     {
-        return $this->makeDsnObject($ip, $port)->toString();
+        return $this->makeDsnObject($ipAddress, $port)->toString();
     }
 
     /**
-     * @param string $ip
+     * @param string $ipAddress
      * @param int    $port
      *
      * @return DSN
      */
-    public function makeDsnObject($ip, $port)
+    public function makeDsnObject($ipAddress, $port)
     {
-        assert(is_string($ip) && strlen($ip) > 7);
+        assert(is_string($ipAddress) && strlen($ipAddress) > 7);
         assert(is_int($port) && ($port > 1024 && $port < 65535));
 
         $dsn = new DSN();
         $dsn->port = $port;
-        $dsn->ip = $ip;
+        $dsn->ip = $ipAddress;
 
         return $dsn;
     }
@@ -126,6 +128,11 @@ class Factory
         return $type;
     }
 
+    /**
+     * @param array $dbEntity
+     *
+     * @return User
+     */
     public function makeUser(array $dbEntity)
     {
         $user = new User();
@@ -149,23 +156,33 @@ class Factory
         return $user;
     }
 
-    private function sanityTimeString($input)
-    {
-        if (is_numeric($input)) {
-            return date('Ymd\\THisO', $input);
-        }
-        if (is_string($input) && strpos($input, '+') === false) {
-            return date_create($input)->format('Ymd\\THisO');
-        }
-
-        return $input;
-    }
-
+    /**
+     * @param User $user
+     *
+     * @return array
+     */
     public function toArray(User $user)
     {
         $array = get_object_vars($user);
         ksort($array, SORT_STRING);
 
         return $array;
+    }
+
+    /**
+     * @param string $input
+     *
+     * @return string
+     */
+    private function sanityTimeString($input)
+    {
+        if (is_numeric($input)) {
+            return (string) date('Ymd\\THisO', $input);
+        }
+        if (is_string($input) && strpos($input, '+') === false) {
+            return date_create($input)->format('Ymd\\THisO');
+        }
+
+        return $input;
     }
 }

@@ -36,10 +36,11 @@ class Machine
     {
         $this->gameVersion = $gameVersion;
         $this->esHost = $esHost;
-        $persist = new AggregatorPersist('uid.persist');
+        $date = date('Ymd');
+        $persist = new AggregatorPersist(LOG_DIR.'/'.$date.'/'.$gameVersion.'.uid.persist');
         $this->aggregator = new UidAggregator($persist);
         $this->shardList = ShardHelper::getShardList($gameVersion);
-        $this->logFile = LOG_DIR.'/'.date('Ymd').'/'.$gameVersion.'.machine';
+        $this->logFile = LOG_DIR.'/'.$date.'/'.$gameVersion.'.machine';
     }
 
     /**

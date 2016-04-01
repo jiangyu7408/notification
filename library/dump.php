@@ -69,7 +69,7 @@ if (!function_exists('appendLog')) {
             }
             $origHandler = VarDumper::setHandler($handler);
 
-            VarDumper::dump(date('H:i:s'));
+            VarDumper::dump(date('c'));
             foreach (func_get_args() as $var) {
                 VarDumper::dump($var);
             }

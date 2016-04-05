@@ -50,14 +50,23 @@ if ($verbose) {
     dump($msg);
 }
 
-$stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, $verbose);
+$stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, false);
 foreach ($stepGenerator as $timestamp) {
-    dump(date('Y-m-d H:i:s'));
     appendLog(date('c', $timestamp).' run with ts '.$timestamp);
     $shardList = ShardHelper::getShardList($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
     $groupedUidList = \script\InstallGenerator::generate($gameVersion, date('Y-m-d'), $verbose);
-    $verbose && dump($groupedUidList);
+    if ($verbose) {
+        $installUser = [];
+        array_map(
+            function (array $uidList) use (&$installUser) {
+                $installUser = array_merge($installUser, $uidList);
+            },
+            $groupedUidList
+        );
+        dump(date('c'));
+        dump($installUser);
+    }
     $queue->push($groupedUidList);
 }

@@ -72,7 +72,12 @@ class ShardHelper
 
         $dsn = 'mysql:dbname='.$options['database'].';host='.$options['host'];
         if (isset($connections[$dsn])) {
-            $connections[$dsn] = $pdo = self::reconnectIfNeeded($connections[$dsn], $dsn, $options);
+            $pdo = $connections[$dsn];
+            if (is_bool($pdo)) {
+                $connections[$dsn] = $pdo = self::connect($dsn, $options);
+            } else {
+                $connections[$dsn] = $pdo = self::reconnectIfNeeded($connections[$dsn], $dsn, $options);
+            }
 
             return $pdo;
         }

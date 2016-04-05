@@ -54,23 +54,23 @@ dump(date_default_timezone_get());
 
 $stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, false);
 foreach ($stepGenerator as $timestamp) {
-    appendLog(date('c', $timestamp).' run with ts '.$timestamp);
+    appendLog('installGenerator: '.date('c', $timestamp).' run with ts '.$timestamp);
     $shardList = ShardHelper::getShardList($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
     $groupedUidList = \script\InstallGenerator::generate($gameVersion, date('Y-m-d'), $verbose);
+    $installUser = [];
+    array_map(
+        function (array $uidList) use (&$installUser) {
+            $installUser = array_merge($installUser, $uidList);
+        },
+        $groupedUidList
+    );
     if ($verbose) {
-        $installUser = [];
-        array_map(
-            function (array $uidList) use (&$installUser) {
-                $installUser = array_merge($installUser, $uidList);
-            },
-            $groupedUidList
-        );
         dump(date('c'));
         dump($installUser);
-        $data = date('c').' have '.count($installUser).PHP_EOL.print_r($installUser, true);
-        file_put_contents(LOG_DIR.'/'.date('Ymd').'/'.$gameVersion.'.install', $data);
     }
+    $data = date('c').' have '.count($installUser).PHP_EOL.print_r($installUser, true);
+    file_put_contents(LOG_DIR.'/'.date('Ymd').'/'.$gameVersion.'.install', $data);
     $queue->push($groupedUidList);
 }

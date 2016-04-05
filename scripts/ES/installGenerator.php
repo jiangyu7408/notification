@@ -18,7 +18,7 @@ spl_autoload_register(
     }
 );
 
-$options = getopt('v', ['gv:', 'es:', 'bs:', 'interval:', 'round:', 'pop']);
+$options = getopt('v', ['gv:', 'date:', 'interval:', 'round:']);
 
 $verbose = isset($options['v']);
 
@@ -30,35 +30,40 @@ if (defined('GAME_VERSION')) {
     $gameVersion = trim($options['gv']);
 }
 
-$backStep = isset($options['bs']) ? $options['bs'] : 1;
+$specifiedDate = isset($options['date']) ? $options['date'] : '';
 $interval = isset($options['interval']) ? $options['interval'] : 1800;
 $round = isset($options['round']) ? $options['round'] : 100;
 
-$lastActiveTimestamp = time() - $backStep;
-$quitTimestamp = time() + $round * $interval;
+$now = time();
+$quitTimestamp = $now + $round * $interval;
 
 if ($verbose) {
     $msg = sprintf(
-        'game version: %s, backStep=%d, interval=%d, round=%d, start at: %s, quit at: %s',
+        'game version: %s, specifiedDate=%s, interval=%d, round=%d, start at: %s, quit at: %s',
         $gameVersion,
-        $backStep,
+        $specifiedDate,
         $interval,
         $round,
-        date('H:i:s', $lastActiveTimestamp),
+        date('H:i:s'),
         date('H:i:s', $quitTimestamp)
     );
     dump($msg);
 }
 
-dump(date_default_timezone_get());
+$logFileGetter = function ($gameVersion, $date) {
+    $logDate = str_replace('-', '', $date);
 
-$stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, false);
+    return LOG_DIR.'/'.$logDate.'/'.$gameVersion.'.install';
+};
+$myself = basename(__FILE__);
+$stepGenerator = WorkRoundGenerator::generate($now, $quitTimestamp, $interval, false);
 foreach ($stepGenerator as $timestamp) {
-    appendLog('installGenerator: '.date('c', $timestamp).' run with ts '.$timestamp);
+    appendLog($myself.': '.date('c', $timestamp).' run with ts '.$timestamp);
     $shardList = ShardHelper::getShardList($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
-    $groupedUidList = \script\InstallGenerator::generate($gameVersion, date('Y-m-d'), $verbose);
+    $date = $specifiedDate ? $specifiedDate : date('Y-m-d');
+    $groupedUidList = \script\InstallGenerator::generate($gameVersion, $date, $verbose);
     $installUser = [];
     array_map(
         function (array $uidList) use (&$installUser) {
@@ -66,11 +71,16 @@ foreach ($stepGenerator as $timestamp) {
         },
         $groupedUidList
     );
-    if ($verbose) {
+    $data = date('c').' have '.count($installUser).PHP_EOL.print_r($installUser, true);
+
+    $logFile = call_user_func($logFileGetter, $gameVersion, $date);
+    file_put_contents($logFile, $data);
+    $queue->push($groupedUidList);
+
+    if ($specifiedDate) {
         dump(date('c'));
         dump($installUser);
+        dump($myself.': quit');
+        break;
     }
-    $data = date('c').' have '.count($installUser).PHP_EOL.print_r($installUser, true);
-    file_put_contents(LOG_DIR.'/'.date('Ymd').'/'.$gameVersion.'.install', $data);
-    $queue->push($groupedUidList);
 }

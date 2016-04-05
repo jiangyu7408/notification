@@ -50,6 +50,8 @@ if ($verbose) {
     dump($msg);
 }
 
+dump(date_default_timezone_get());
+
 $stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, false);
 foreach ($stepGenerator as $timestamp) {
     appendLog(date('c', $timestamp).' run with ts '.$timestamp);
@@ -67,6 +69,8 @@ foreach ($stepGenerator as $timestamp) {
         );
         dump(date('c'));
         dump($installUser);
+        $data = date('c').' have '.count($installUser).PHP_EOL.print_r($installUser, true);
+        file_put_contents(LOG_DIR.'/'.date('Ymd').'/'.$gameVersion.'.install', $data);
     }
     $queue->push($groupedUidList);
 }

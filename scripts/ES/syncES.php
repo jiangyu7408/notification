@@ -65,6 +65,8 @@ if ($verbose) {
 
 $stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, $verbose);
 foreach ($stepGenerator as $timestamp) {
-    appendLog(date('c', $timestamp).': drive machine');
+    $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
+    dump($msg);
+    appendLog($msg);
     (new Machine($gameVersion, $esHost))->run($maxRepeatTimes, $longestWaitTime);
 }

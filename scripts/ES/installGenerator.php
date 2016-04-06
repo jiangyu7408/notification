@@ -58,7 +58,9 @@ $logFileGetter = function ($gameVersion, $date) {
 $myself = basename(__FILE__);
 $stepGenerator = WorkRoundGenerator::generate($now, $quitTimestamp, $interval, false);
 foreach ($stepGenerator as $timestamp) {
-    appendLog($myself.': '.date('c', $timestamp).' run with ts '.$timestamp);
+    $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
+    dump($msg);
+    appendLog($msg);
     $shardList = ShardHelper::getShardList($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 

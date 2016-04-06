@@ -41,6 +41,7 @@ class Machine
         $this->aggregator = new UidAggregator($persist);
         $this->shardList = ShardHelper::getShardList($gameVersion);
         $this->logFile = LOG_DIR.'/'.$date.'/'.$gameVersion.'.machine';
+        $this->prepareLogDir($this->logFile);
     }
 
     /**
@@ -238,5 +239,15 @@ class Machine
         );
 
         return $groupedUidList;
+    }
+
+    /**
+     * @param string $logFile
+     */
+    private function prepareLogDir($logFile)
+    {
+        assert(strpos($logFile, '/mnt/htdocs/notification/log/') === 0);
+        $dirName = dirname($logFile);
+        mkdir($dirName, 0755, true);
     }
 }

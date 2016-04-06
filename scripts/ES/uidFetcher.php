@@ -51,10 +51,12 @@ if ($verbose) {
     dump($msg);
 }
 
+$myself = basename(__FILE__);
 $stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, $verbose);
 foreach ($stepGenerator as $timestamp) {
-    dump(date('Y-m-d H:i:s'));
-    appendLog(date('c', $timestamp).' run with ts '.$timestamp);
+    $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
+    dump($msg);
+    appendLog($msg);
     $shardList = ShardHelper::getShardList($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 

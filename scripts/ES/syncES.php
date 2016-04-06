@@ -63,6 +63,7 @@ if ($verbose) {
     dump(sprintf('max repeat times: %d, max wait time: %d', $maxRepeatTimes, $longestWaitTime));
 }
 
+$myself = basename(__FILE__);
 $stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, $verbose);
 foreach ($stepGenerator as $timestamp) {
     $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;

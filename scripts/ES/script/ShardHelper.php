@@ -97,7 +97,16 @@ class ShardHelper
     {
         try {
             appendLog('Connect MySQL on DSN: '.$dsn);
-            $pdo = new PDO($dsn, $options['username'], $options['password']);
+            $pdo = new PDO(
+                $dsn,
+                $options['username'],
+                $options['password'],
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_TIMEOUT => 1,
+                    PDO::ATTR_CASE => PDO::CASE_NATURAL,
+                ]
+            );
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             return $pdo;

@@ -81,12 +81,17 @@ $pdoOptionChecker = function (PDO $pdo) use ($optionsReader) {
     return call_user_func($optionsReader, $pdo, $attributes);
 };
 
-$gameVersion = 'tw';
+$options = getopt('', ['gv:']);
+$gameVersion = isset($options['gv']) ? trim($options['gv']) : 'tw';
 
 $shardConfigList = \script\ShardHelper::shardConfigGenerator($gameVersion);
 $infoList = [];
 foreach ($shardConfigList as $options) {
     $pdo = \script\ShardHelper::pdoFactory($options);
+    if ($pdo === false) {
+        dump('error on '.json_encode($options));
+        continue;
+    }
     $infoList[$options['shardId']] = call_user_func($pdoOptionChecker, $pdo);
 }
 

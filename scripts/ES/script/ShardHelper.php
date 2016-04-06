@@ -96,7 +96,6 @@ class ShardHelper
     private static function connect($dsn, array $options)
     {
         try {
-            appendLog('Connect MySQL on DSN: '.$dsn);
             $pdo = new PDO(
                 $dsn,
                 $options['username'],
@@ -111,7 +110,7 @@ class ShardHelper
 
             return $pdo;
         } catch (\PDOException $e) {
-            appendLog('Error: '.$e->getMessage());
+            appendLog(sprintf('Error on dsn[%s]: %s', $dsn, $e->getMessage()));
 
             return false;
         }

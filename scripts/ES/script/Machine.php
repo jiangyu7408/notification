@@ -248,6 +248,9 @@ class Machine
     {
         assert(strpos($logFile, '/mnt/htdocs/notification/log/') === 0);
         $dirName = dirname($logFile);
-        mkdir($dirName, 0755, true);
+        if (!is_dir($dirName)) {
+            $success = mkdir($dirName, 0755, true);
+            assert($success);
+        }
     }
 }

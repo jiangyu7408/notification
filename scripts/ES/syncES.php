@@ -8,6 +8,8 @@
 use script\Machine;
 use script\WorkRoundGenerator;
 
+ini_set('memory_limit', '2G');
+
 require __DIR__.'/../../bootstrap.php';
 spl_autoload_register(
     function ($className) {

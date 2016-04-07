@@ -19,6 +19,7 @@ use Repository\ESGatewayUserRepo;
  */
 class Machine
 {
+    const FLUSH_MAGIC_NUMBER = 1000;
     /** @var string */
     protected $gameVersion;
     /** @var UidAggregator */
@@ -81,6 +82,7 @@ class Machine
      */
     private function updateES(array $groupedUidList)
     {
+        appendLog(sprintf('%s start with memory usage %s', __METHOD__, PHP_Timer::resourceUsage()));
         $count = $this->countUidList($groupedUidList);
         if ($count === 0) {
             appendLog(sprintf('%s: have 0 user to sync', __METHOD__));
@@ -93,23 +95,35 @@ class Machine
         $delta = PHP_Timer::stop();
         appendLog(
             sprintf(
-                'Fetch %d user detail cost %s with average cost %s',
+                '%s Fetch %d user detail cost %s with average cost %s',
+                __METHOD__,
                 $count,
                 PHP_Timer::secondsToTimeString($delta),
                 PHP_Timer::secondsToTimeString($delta / $count)
             )
         );
+        appendLog(
+            sprintf('%s after user detail generated with memory usage %s', __METHOD__, PHP_Timer::resourceUsage())
+        );
 
-        $flatUserList = [];
+        $esUpdateQueue = [];
         foreach ($groupedUserList as $shardId => $userList) {
             $count = count($userList);
             if ($count === 0) {
                 continue;
             }
             appendLog(sprintf('%s: %s have %d user to sync', __METHOD__, $shardId, $count));
-            $flatUserList = array_merge($flatUserList, $userList);
+            $esUpdateQueue = array_merge($esUpdateQueue, $userList);
+            $queueLength = count($esUpdateQueue);
+            if ($queueLength >= self::FLUSH_MAGIC_NUMBER) {
+                appendLog(
+                    sprintf('%s: flush ES update queue: %d user to sync', PHP_Timer::resourceUsage(), $queueLength)
+                );
+                $this->batchUpdateES($this->esHost, $this->gameVersion, $esUpdateQueue);
+                $esUpdateQueue = [];
+            }
         }
-        $this->batchUpdateES($this->esHost, $this->gameVersion, $flatUserList);
+        $this->batchUpdateES($this->esHost, $this->gameVersion, $esUpdateQueue);
     }
 
     /**

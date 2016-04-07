@@ -53,7 +53,13 @@ if ($verbose) {
 $logFileGetter = function ($gameVersion, $date) {
     $logDate = str_replace('-', '', $date);
 
-    return LOG_DIR.'/'.$logDate.'/'.$gameVersion.'.install';
+    $filePath = LOG_DIR.'/'.$logDate.'/'.$gameVersion.'.install';
+    $dir = dirname($filePath);
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
+
+    return $filePath;
 };
 $myself = basename(__FILE__);
 $stepGenerator = WorkRoundGenerator::generate($now, $quitTimestamp, $interval, false);

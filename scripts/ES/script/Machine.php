@@ -117,7 +117,12 @@ class Machine
             $queueLength = count($esUpdateQueue);
             if ($queueLength >= self::FLUSH_MAGIC_NUMBER) {
                 appendLog(
-                    sprintf('%s: flush ES update queue: %d user to sync', PHP_Timer::resourceUsage(), $queueLength)
+                    sprintf(
+                        '%s: flush ES update queue: %d user to sync %s',
+                        date('c'),
+                        $queueLength,
+                        PHP_Timer::resourceUsage()
+                    )
                 );
                 $this->batchUpdateES($this->esHost, $this->gameVersion, $esUpdateQueue);
                 $esUpdateQueue = [];

@@ -8,8 +8,6 @@
 
 require __DIR__.'/../../bootstrap.php';
 
-$includePath = __DIR__.'/../../src';
-set_include_path(get_include_path().PATH_SEPARATOR.$includePath);
 spl_autoload_register(
     function ($className) {
         $classFile = str_replace('\\', '/', $className).'.php';

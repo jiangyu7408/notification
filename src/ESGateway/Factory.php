@@ -45,6 +45,14 @@ class Factory
             'water_exp',
             'water_level',
             'uid',
+            'silver_coins',
+            'reputation',
+            'reputation_level',
+            'vip_level',
+            'vip_points',
+            'history_pay_amount',
+            'last_pay_time',
+            'last_pay_amount',
         ],
     ];
 
@@ -58,7 +66,7 @@ class Factory
                 return 2147483647;
             }
 
-            return $input;
+            return (int) $input;
         };
 
         foreach ($this->fieldMapping['int'] as $field) {
@@ -151,7 +159,7 @@ class Factory
                 $user->$key = $dbEntity[$key];
                 continue;
             }
-            $user->$key = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);
+            $user->{$key} = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);
         }
 
         return $user;

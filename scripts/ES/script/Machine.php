@@ -8,11 +8,8 @@
  */
 namespace script;
 
-use Application\ESGatewayBuilder;
-use ESGateway\Factory;
-use ESGateway\User;
+use Facade\ES\Indexer;
 use PHP_Timer;
-use Repository\ESGatewayUserRepo;
 
 /**
  * Class Machine.
@@ -144,35 +141,15 @@ class Machine
         }
         appendLog(sprintf('%s have %d user to sync', __METHOD__, $count));
 
-        $repo = $this->getESRepo($esHost, $gameVersion);
-        assert($repo instanceof ESGatewayUserRepo);
-        $factory = $repo->getFactory();
-        assert($factory instanceof Factory);
-
-        /** @var User[] $esUserList */
-        $esUserList = [];
-        foreach ($users as $user) {
-            $esUserList[] = $factory->makeUser($user);
-        }
-
-        $batchSize = 200;
-        $offset = 0;
-        $totalDelta = 0;
-        while (($batch = array_splice($esUserList, $offset, $batchSize))) {
-            PHP_Timer::start();
-            $repo->burst($batch);
-            $delta = PHP_Timer::stop();
-            $totalDelta += $delta;
-            appendLog(
-                sprintf(
-                    '%s %f on slice(%d users) cost %s',
-                    __METHOD__,
-                    microtime(true),
-                    count($batch),
-                    PHP_Timer::secondsToTimeString($delta)
-                )
-            );
-        }
+        $config = [
+            'host' => $esHost,
+            'port' => 9200,
+            'index' => 'farm',
+            'type' => 'user:'.$gameVersion,
+        ];
+        $indexer = new Indexer($config);
+        $deltaList = $indexer->batchUpdate($users);
+        $totalDelta = array_sum($deltaList);
         appendLog(
             sprintf(
                 'Sync %d users to ES cost %s with average cost %s',
@@ -180,26 +157,6 @@ class Machine
                 PHP_Timer::secondsToTimeString($totalDelta),
                 PHP_Timer::secondsToTimeString($totalDelta / $count)
             )
-        );
-    }
-
-    /**
-     * @param string $host
-     * @param string $gameVersion
-     *
-     * @return ESGatewayUserRepo
-     */
-    private function getESRepo($host, $gameVersion)
-    {
-        $builder = new ESGatewayBuilder();
-
-        return $builder->buildUserRepo(
-            [
-                'host' => $host,
-                'port' => 9200,
-                'index' => 'farm',
-                'type' => 'user:'.$gameVersion,
-            ]
         );
     }
 

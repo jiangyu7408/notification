@@ -15,69 +15,77 @@ namespace ESGateway;
 class User
 {
     /** @var string */
-    public $snsid;
+    public $snsid = '';
     /** @var int */
-    public $uid;
+    public $uid = 0;
     /** @var string */
-    public $name;
+    public $name = '';
     /** @var string */
-    public $picture;
+    public $track_ref = '';
     /** @var string */
-    public $track_ref;
+    public $country = '';
+    /** @var int */
+    public $addtime = 0;
+    /** @var int */
+    public $coins = 0;
+    /** @var int */
+    public $continuous_day = 0;
     /** @var string */
-    public $country;
+    public $email = '';
     /** @var int */
-    public $addtime;
+    public $experience = 0;
     /** @var int */
-    public $coins;
+    public $gas = 0;
     /** @var int */
-    public $continuous_day;
+    public $greenery = 0;
+    /** @var int */
+    public $level = 1;
     /** @var string */
-    public $email;
+    public $loginip = '';
     /** @var int */
-    public $experience;
+    public $loginnum = 0;
     /** @var int */
-    public $gas;
+    public $logintime = 0;
     /** @var int */
-    public $greenery;
+    public $new_cash1 = 0;
     /** @var int */
-    public $level;
-    /** @var string */
-    public $loginip;
+    public $new_cash2 = 0;
     /** @var int */
-    public $loginnum;
+    public $new_cash3 = 0;
     /** @var int */
-    public $logintime;
+    public $op = 0;
     /** @var int */
-    public $new_cash1;
+    public $pay_times = 0;
     /** @var int */
-    public $new_cash2;
+    public $reward_points = 0;
     /** @var int */
-    public $new_cash3;
+    public $sign_points = 0;
     /** @var int */
-    public $op;
+    public $size_x = 0;
     /** @var int */
-    public $pay_times;
+    public $status = 0;
     /** @var int */
-    public $reward_points;
+    public $top_map_size = 0;
     /** @var int */
-    public $sign_points;
+    public $water_exp = 0;
     /** @var int */
-    public $size_x;
+    public $water_level = 0;
     /** @var int */
-    public $status;
+    public $chef_level = 0;
     /** @var int */
-    public $top_map_size;
+    public $silver_coins = 0;
     /** @var int */
-    public $water_exp;
+    public $reputation = 0;
     /** @var int */
-    public $water_level;
+    public $reputation_level = 0;
     /** @var int */
-    public $chef_level;
+    public $vip_level = 0;
     /** @var int */
-    public $silver_coins;
+    public $vip_points = 0;
     /** @var int */
-    public $reputation;
+    public $history_pay_amount = 0;
     /** @var int */
-    public $reputation_level;
+    public $last_pay_time = 0;
+    /** @var int */
+    public $last_pay_amount = 0;
 }

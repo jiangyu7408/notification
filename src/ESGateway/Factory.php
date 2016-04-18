@@ -155,8 +155,11 @@ class Factory
         $dbEntity['picture'] = '';
 
         foreach ($keys as $key) {
+            if (!array_key_exists($key, $dbEntity)) {
+                continue;
+            }
             if (!isset($this->fieldMapping[$key])) {
-                $user->$key = $dbEntity[$key];
+                $user->{$key} = $dbEntity[$key];
                 continue;
             }
             $user->{$key} = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);

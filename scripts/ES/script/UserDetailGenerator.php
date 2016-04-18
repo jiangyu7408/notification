@@ -43,6 +43,29 @@ class UserDetailGenerator
     }
 
     /**
+     * @param string $gameVersion
+     * @param array  $uidList
+     *
+     * @return array
+     */
+    public static function find($gameVersion, array $uidList)
+    {
+        $generator = ShardHelper::platformFactory()->getMySQLShards($gameVersion);
+
+        $userList = [];
+        foreach ($generator as $shardConfig) {
+            $shardId = $shardConfig['shardId'];
+            $pdo = ShardHelper::pdoFactory($shardConfig);
+            if ($pdo === false) {
+                continue;
+            }
+            $userList[$shardId] = self::readUserInfo($pdo, $uidList, 100);
+        }
+
+        return $userList;
+    }
+
+    /**
      * @param PDO   $pdo
      * @param array $uidList
      * @param int   $concurrentLevel

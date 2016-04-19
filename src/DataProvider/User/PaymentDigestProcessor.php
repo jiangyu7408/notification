@@ -8,6 +8,8 @@
  */
 namespace DataProvider\User;
 
+use DataProvider\Currency\CurrencyQuery;
+
 /**
  * Class PaymentDigestProcessor.
  */
@@ -24,6 +26,9 @@ class PaymentDigestProcessor
     public function process($snsid, $uid, array $paymentList, array $refundList)
     {
         $goodPaymentList = $this->filterOutRefund($paymentList, $refundList);
+        if (count($goodPaymentList) === 0) {
+            return null;
+        }
 
         $digest = new PaymentDigest();
         $digest->snsid = $snsid;
@@ -68,6 +73,14 @@ class PaymentDigestProcessor
             return (float) $payment->amount;
         }
 
-        throw new \BadMethodCallException(sprintf('currency[%s] not support', $payment->currency));
+        try {
+            $rate = CurrencyQuery::query($payment->currency);
+
+            return ($rate * $payment->amount);
+        } catch (\InvalidArgumentException $e) {
+            appendLog(sprintf('currency[%s] rate fail: %s', $payment->currency, $e->getMessage()));
+        }
+
+        return 0.0;
     }
 }

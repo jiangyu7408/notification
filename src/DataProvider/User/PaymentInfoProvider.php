@@ -81,7 +81,7 @@ class PaymentInfoProvider
         $columns = sprintf('snsid,paymentId as %s,amount,currency,time', self::PAYMENT_ID);
         $placeHolderList = array_pad([], count($snsidList), '?');
         $sql = sprintf(
-            'select %s from tbl_payment_refund where snsId in ()',
+            'select %s from tbl_payment_refund where snsId in (%s)',
             $columns,
             implode(',', $placeHolderList)
         );
@@ -95,7 +95,7 @@ class PaymentInfoProvider
         /** @var RefundPayment[] $result */
         $result = [];
         $prototype = new RefundPayment();
-        $vars = get_object_vars($prototype);
+        $vars = array_keys(get_object_vars($prototype));
 
         $allRows = $statement->fetchAll(PDO::FETCH_ASSOC);
         foreach ($allRows as $row) {
@@ -122,10 +122,10 @@ class PaymentInfoProvider
      */
     protected static function fetchPayments(PDO $pdo, array $snsidList)
     {
-        $columns = sprintf('snsid,type as %s,currency,amount,paid_time as paidTime', self::PAYMENT_ID);
+        $columns = sprintf('uid as snsid,type as %s,currency,amount,paid_time as paidTime', self::PAYMENT_ID);
         $placeHolderList = array_pad([], count($snsidList), '?');
         $sql = sprintf(
-            'select %s from tbl_payments where uid in ()',
+            'select %s from tbl_payments where uid in (%s)',
             $columns,
             implode(',', $placeHolderList)
         );
@@ -139,13 +139,13 @@ class PaymentInfoProvider
         /** @var Payment[] $result */
         $result = [];
         $prototype = new Payment();
-        $vars = get_object_vars($prototype);
+        $vars = array_keys(get_object_vars($prototype));
 
         $allRows = $statement->fetchAll(PDO::FETCH_ASSOC);
         foreach ($allRows as $row) {
             $data = clone $prototype;
             foreach ($vars as $field) {
-                assert(array_key_exists($field, $row));
+                assert(array_key_exists($field, $row), sprintf('on field %s', $field));
                 $data->{$field} = $row[$field];
             }
             if (!array_key_exists($data->snsid, $result)) {

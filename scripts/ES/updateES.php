@@ -56,6 +56,23 @@ foreach ($groupedUsers as $eachUserList) {
 }
 $verbose && dump($users);
 
+$uidList = [];
+foreach ($users as $uid => $user) {
+    $uidList[$user['snsid']] = $uid;
+}
+
+$configGenerator = \script\ShardHelper::shardConfigGenerator($gameVersion);
+$provider = new \DataProvider\User\PaymentInfoProvider();
+foreach ($configGenerator as $shardConfig) {
+    dump(sprintf('on shard %s', $shardConfig['shardId']));
+    $pdo = \script\ShardHelper::pdoFactory($shardConfig);
+    $ret = $provider->readUserInfo($pdo, $uidList);
+    if ($ret[$uid]) {
+        dump($ret);
+        break;
+    }
+}
+
 $config = [
     'host' => $esHost,
     'port' => 9200,

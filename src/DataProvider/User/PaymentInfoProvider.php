@@ -78,7 +78,7 @@ class PaymentInfoProvider
      */
     protected static function fetchRefund(PDO $pdo, array $snsidList)
     {
-        $columns = sprintf('snsid,paymentId as %s,amount,currency,time', self::PAYMENT_ID);
+        $columns = sprintf('snsid,paymentId as %s,amount/100 as amount,currency,time', self::PAYMENT_ID);
         $placeHolderList = array_pad([], count($snsidList), '?');
         $sql = sprintf(
             'select %s from tbl_payment_refund where snsId in (%s)',
@@ -122,7 +122,7 @@ class PaymentInfoProvider
      */
     protected static function fetchPayments(PDO $pdo, array $snsidList)
     {
-        $columns = sprintf('uid as snsid,type as %s,currency,amount,paid_time as paidTime', self::PAYMENT_ID);
+        $columns = sprintf('uid as snsid,type as %s,currency,amount/100 as amount,paid_time as paidTime', self::PAYMENT_ID);
         $placeHolderList = array_pad([], count($snsidList), '?');
         $sql = sprintf(
             'select %s from tbl_payments where uid in (%s)',

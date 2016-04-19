@@ -23,20 +23,18 @@ class Factory
     protected $intValidator;
     protected $fieldMapping = [
         'int' => [
-            'addtime',
-            'coins',
+            'uid',
+            'loginnum',
             'continuous_day',
             'experience',
             'gas',
             'greenery',
             'level',
-            'loginnum',
-            'logintime',
+            'coins',
             'new_cash1',
             'new_cash2',
             'new_cash3',
             'op',
-            'pay_times',
             'reward_points',
             'sign_points',
             'size_x',
@@ -44,15 +42,19 @@ class Factory
             'top_map_size',
             'water_exp',
             'water_level',
-            'uid',
             'silver_coins',
             'reputation',
             'reputation_level',
             'vip_level',
             'vip_points',
+            'pay_times',
             'history_pay_amount',
-            'last_pay_time',
             'last_pay_amount',
+        ],
+        'string' => [
+            'addtime',
+            'logintime',
+            'last_pay_time',
         ],
     ];
 
@@ -68,9 +70,18 @@ class Factory
 
             return (int) $input;
         };
+        $stringValidator = function ($input) {
+            return trim($input);
+        };
 
         foreach ($this->fieldMapping['int'] as $field) {
             $this->fieldMapping[$field] = $intValidator;
+        }
+        foreach ($this->fieldMapping['string'] as $field) {
+            if (isset($this->fieldMapping[$field])) {
+                throw new \LogicException('bad logic setting found on field: '.$field);
+            }
+            $this->fieldMapping[$field] = $stringValidator;
         }
     }
 
@@ -144,16 +155,18 @@ class Factory
      */
     public function makeUser(array $dbEntity)
     {
-        $user = new User();
-        $keys = array_keys(get_object_vars($user));
-
         $dbEntity['name'] = utf8_encode($dbEntity['name']);
         $dbEntity['country'] = ip2cc($dbEntity['loginip']);
         $dbEntity['addtime'] = $this->sanityTimeString($dbEntity['addtime']);
         $dbEntity['logintime'] = $this->sanityTimeString($dbEntity['logintime']);
+        if (array_key_exists('last_pay_time', $dbEntity)) {
+            $dbEntity['last_pay_time'] = $this->sanityTimeString($dbEntity['last_pay_time']);
+        }
         $dbEntity['chef_level'] = 0;
         $dbEntity['picture'] = '';
 
+        $user = new User();
+        $keys = array_keys(get_object_vars($user));
         foreach ($keys as $key) {
             if (!array_key_exists($key, $dbEntity)) {
                 continue;

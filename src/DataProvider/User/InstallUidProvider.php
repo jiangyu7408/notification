@@ -9,7 +9,6 @@
 namespace DataProvider\User;
 
 use Database\PdoPool;
-use Database\ShardHelper;
 
 /**
  * Class InstallUidProvider.
@@ -52,7 +51,7 @@ class InstallUidProvider
             function ($shardId) use (&$groupedUidList, $date) {
                 $groupedUidList[$shardId] = $this->onShard($shardId, $date);
             },
-            ShardHelper::listShardId($this->gameVersion)
+            $this->pdoPool->listShardId()
         );
 
         return $groupedUidList;

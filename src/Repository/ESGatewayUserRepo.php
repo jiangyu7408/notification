@@ -38,27 +38,44 @@ class ESGatewayUserRepo
     }
 
     /**
-     * @param User $user
+     * @param User   $user
+     * @param string $errorInfo
+     *
+     * @return bool
      */
-    public function fire(User $user)
+    public function fire(User $user, &$errorInfo)
     {
-        $this->persistency->persist([$this->factory->toArray($user)]);
+        $list = [$this->factory->toArray($user)];
+
+        return $this->burst($list, $errorInfo);
     }
 
     /**
      * @param User[] $list
+     * @param string $errorString
+     *
+     * @return bool
      */
-    public function burst(array $list)
+    public function burst(array $list, &$errorString)
     {
         $users = [];
         foreach ($list as $user) {
             $users[] = $this->factory->toArray($user);
         }
+
+        $errorString = null;
         try {
             $this->persistency->persist($users);
         } catch (JsonErrorException $e) {
-            dump($e->getMessage());
-            dump($list);
+            $errorString = $e->getMessage();
+        } catch (\RuntimeException $e) {
+            $errorString = $e->getMessage();
         }
+
+        if ($errorString) {
+            return false;
+        }
+
+        return true;
     }
 }

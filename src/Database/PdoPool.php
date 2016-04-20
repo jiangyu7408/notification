@@ -76,6 +76,14 @@ class PdoPool
     }
 
     /**
+     * @return string[]
+     */
+    public function listShardId()
+    {
+        return array_keys($this->shardOptions);
+    }
+
+    /**
      * @param array $options
      *
      * @return string

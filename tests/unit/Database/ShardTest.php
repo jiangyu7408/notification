@@ -24,6 +24,9 @@ class ShardTest extends \PHPUnit_Framework_TestCase
     {
         $pool = PdoFactory::makePool('tw');
         static::assertInstanceOf(PdoPool::class, $pool);
+
+        $shardIdList = $pool->listShardId();
+        static::assertEquals($shardIdList, ShardHelper::listShardId('tw'));
     }
 
     /**

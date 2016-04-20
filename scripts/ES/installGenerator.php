@@ -5,9 +5,10 @@
  * Date: 2016/04/05
  * Time: 12:59.
  */
-use script\ShardHelper;
-use script\UidQueue;
-use script\WorkRoundGenerator;
+use Buffer\UidQueue;
+use Database\ShardHelper;
+use DataProvider\User\InstallGenerator;
+use Facade\WorkRoundGenerator;
 
 require __DIR__.'/../../bootstrap.php';
 
@@ -67,11 +68,11 @@ foreach ($stepGenerator as $timestamp) {
     $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
     dump($msg);
     appendLog($msg);
-    $shardList = ShardHelper::getShardList($gameVersion);
+    $shardList = ShardHelper::listShardId($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
     $date = $specifiedDate ? $specifiedDate : date('Y-m-d');
-    $groupedUidList = \script\InstallGenerator::generate($gameVersion, $date, $verbose);
+    $groupedUidList = InstallGenerator::generate($gameVersion, $date, $verbose);
     $installUser = [];
     array_map(
         function (array $uidList) use (&$installUser) {

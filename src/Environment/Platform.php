@@ -13,23 +13,24 @@ namespace Environment;
  */
 class Platform
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $onlineSettingDir;
-    /**
-     * @var array
-     */
+    /** @var string */
+    protected $gameVersion;
+    /** @var array */
     protected $mapping;
 
     /**
      * Platform constructor.
      *
      * @param string $entry
+     * @param string $gameVersion
      */
-    public function __construct($entry)
+    protected function __construct($entry, $gameVersion)
     {
         $this->onlineSettingDir = $entry;
+        $this->gameVersion = $gameVersion;
+
         $this->loadFacebookPlatforms();
 
         if (!defined('SYS_PATH')) {
@@ -38,14 +39,12 @@ class Platform
     }
 
     /**
-     * @param string $version
-     *
      * @return \Generator
      */
-    public function getMySQLShards($version)
+    public function getMySQLShards()
     {
         /** @var array $all */
-        $all = require $this->getPlatformSetting($version, 'database');
+        $all = require $this->getPlatformSetting($this->gameVersion, 'database');
         assert(is_array($all));
 
         foreach ($all as $shardId => $each) {
@@ -59,6 +58,38 @@ class Platform
 
             yield $each;
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function locateIdMap()
+    {
+        /** @var array $struct */
+        $struct = require $this->getPlatformSetting($this->gameVersion, 'struct');
+        assert(is_array($struct));
+        assert(isset($struct['idmapDbItem']));
+
+        return trim($struct['idmapDbItem']);
+    }
+
+    /**
+     * @return array
+     */
+    public function getGlobalShard()
+    {
+        /** @var array $struct */
+        $struct = require $this->getPlatformSetting($this->gameVersion, 'struct');
+        assert(is_array($struct));
+        assert(isset($struct['idmapDbItem']));
+        $globalShardId = $struct['idmapDbItem'];
+
+        /** @var array $all */
+        $all = require $this->getPlatformSetting($this->gameVersion, 'database');
+        assert(is_array($all));
+        assert(isset($all[$globalShardId]));
+
+        return (array) $all[$globalShardId];
     }
 
     protected function loadFacebookPlatforms()
@@ -84,6 +115,12 @@ class Platform
         }
     }
 
+    /**
+     * @param string $version
+     * @param string $name
+     *
+     * @return string
+     */
     protected function getPlatformSetting($version, $name)
     {
         $filename = $this->mapping[$version].'/'.$name.'.php';

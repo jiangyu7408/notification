@@ -5,7 +5,7 @@
  * Date: 2016/04/06
  * Time: 15:21.
  */
-use script\UidListGenerator;
+use DataProvider\User\UidListGenerator;
 
 require __DIR__.'/../../bootstrap.php';
 

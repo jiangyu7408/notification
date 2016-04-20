@@ -18,3 +18,11 @@ require __DIR__.'/library/dump.php';
 define('CONFIG_DIR', __DIR__);
 $includePath = __DIR__.'/src';
 set_include_path(get_include_path().PATH_SEPARATOR.$includePath);
+
+$classLoader = new \Symfony\Component\ClassLoader\ClassLoader();
+$classLoader->addPrefixes(
+    [
+        'src',
+    ]
+);
+$classLoader->register();

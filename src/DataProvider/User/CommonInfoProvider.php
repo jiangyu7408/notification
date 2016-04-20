@@ -28,13 +28,14 @@ class CommonInfoProvider
 
         $offset = 0;
         while (($concurrent = array_splice($uidList, $offset, $concurrentLevel))) {
-            $uids = implode(',', $concurrent);
-
-            $statement = $pdo->query('SELECT * from tbl_user where uid in ('.$uids.')');
+            $placeHolderList = array_pad([], count($concurrent), '?');
+            $sql = sprintf('SELECT * from tbl_user WHERE uid IN (%s)', implode(',', $placeHolderList));
+            $statement = $pdo->prepare($sql);
             if ($statement === false) {
-                appendLog('PDO Statement Error: '.json_encode($pdo->errorInfo()));
-                continue;
+                throw new \RuntimeException(json_encode($pdo->errorInfo()));
             }
+            $success = $statement->execute($concurrent);
+            assert($success);
 
             $allRows = $statement->fetchAll(PDO::FETCH_ASSOC);
             foreach ($allRows as $row) {

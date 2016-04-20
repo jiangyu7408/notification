@@ -19,11 +19,7 @@ require __DIR__.'/../../bootstrap.php';
  */
 function mysqlDsnGenerator($gameVersion)
 {
-    $base = __DIR__.'/../../../farm-server-conf/';
-    assert(is_dir($base));
-    $platform = new \Environment\Platform($base);
-
-    $shardList = $platform->getMySQLShards($gameVersion);
+    $shardList = \Environment\PlatformFactory::make($gameVersion)->getMySQLShards();
     foreach ($shardList as $shard) {
         yield $shard;
     }

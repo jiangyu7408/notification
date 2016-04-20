@@ -285,14 +285,13 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
-     *
      * @throws Exception
      */
     protected function findDeAuthorizedUser(Platform $platform, DeAuthorizedUserQuery $query)
     {
         $resultSet = [];
 
-        $shardList = $platform->getMySQLShards($this->gameVersion);
+        $shardList = $platform->getMySQLShards();
 
         foreach ($shardList as $shardConfig) {
             $dbName = $shardConfig['database'];
@@ -313,7 +312,6 @@ class UserStatusUpdater
      * @param DeAuthorizedUserQuery $query
      *
      * @return array
-     *
      * @throws Exception
      */
     private function onShard(array $dbItem, DeAuthorizedUserQuery $query)
@@ -353,14 +351,12 @@ $esClient = new Client(['hosts' => [sprintf('http://%s:%d/', $esHost, $esPort)]]
 //$docUpdater = new DocumentUpdater($esClient, $gameVersion);
 $docUpdater = new NonBlockingDocUpdater($concurrency);
 
-$platform = new Platform($base);
-
 $updater = new UserStatusUpdater($gameVersion);
 dump($options);
 $query = array_key_exists('date', $options)
     ? new AllDeAuthorizedUserQuery($options['date'])
     : new DeAuthorizedUserQuery();
-$resultSet = $updater->run($platform, $query, $docUpdater);
+$resultSet = $updater->run(\Environment\PlatformFactory::make($gameVersion), $query, $docUpdater);
 dump($resultSet);
 
 dump('Run time: '.PHP_Timer::timeSinceStartOfRequest());

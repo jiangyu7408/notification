@@ -6,19 +6,14 @@
  * Time: 11:29 AM
  */
 
-require __DIR__ . '/../../bootstrap.php';
+require __DIR__.'/../../bootstrap.php';
 
 $options = getopt('', ['gv:']);
 
 $gameVersion = isset($options['gv']) ? $options['gv'] : 'tw';
-appendLog('game version: ' . $gameVersion);
+appendLog('game version: '.$gameVersion);
 
-$base = __DIR__ . '/../../../farm-server-conf/';
-assert(is_dir($base));
-
-$platform = new \Environment\Platform($base);
-
-$shardList = $platform->getMySQLShards($gameVersion);
+$shardList = \Environment\PlatformFactory::make($gameVersion)->getMySQLShards();
 
 foreach ($shardList as $shard) {
     appendLog($shard);

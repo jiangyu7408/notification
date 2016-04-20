@@ -6,7 +6,7 @@
  * Date: 2016/03/31
  * Time: 17:34.
  */
-namespace script;
+namespace Facade;
 
 use Timer\Generator;
 

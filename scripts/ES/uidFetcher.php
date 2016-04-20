@@ -5,10 +5,10 @@
  * Date: 2016/03/31
  * Time: 17:08.
  */
-use script\ShardHelper;
-use script\UidListGenerator;
-use script\UidQueue;
-use script\WorkRoundGenerator;
+use Buffer\UidQueue;
+use Database\ShardHelper;
+use DataProvider\User\UidListGenerator;
+use Facade\WorkRoundGenerator;
 
 require __DIR__.'/../../bootstrap.php';
 
@@ -57,7 +57,7 @@ foreach ($stepGenerator as $timestamp) {
     $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
     dump($msg);
     appendLog($msg);
-    $shardList = ShardHelper::getShardList($gameVersion);
+    $shardList = ShardHelper::listShardId($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
     $groupedUidList = UidListGenerator::generate($gameVersion, $lastActiveTimestamp, $verbose);

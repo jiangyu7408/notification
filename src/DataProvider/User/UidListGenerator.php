@@ -6,7 +6,10 @@
  * Date: 2016/03/31
  * Time: 17:04.
  */
-namespace script;
+namespace DataProvider\User;
+
+use Database\PdoFactory;
+use Database\ShardHelper;
 
 /**
  * Class UidListGenerator.
@@ -22,38 +25,44 @@ class UidListGenerator
      */
     public static function generate($gameVersion, $fromTs, $verbose)
     {
-        $shardConfigList = ShardHelper::shardConfigGenerator($gameVersion);
+        $shardIdList = ShardHelper::listShardId($gameVersion);
 
         $groupedUidList = [];
-        foreach ($shardConfigList as $shardConfig) {
-            $shardId = $shardConfig['shardId'];
-            $groupedUidList[$shardId] = self::onShard($shardConfig, $fromTs, $verbose);
+        foreach ($shardIdList as $shardId) {
+            $groupedUidList[$shardId] = self::onShard($gameVersion, $shardIdList, $fromTs, $verbose);
         }
 
         return $groupedUidList;
     }
 
     /**
-     * @param array $mysqlOptions
-     * @param int   $lastActiveTimestamp
-     * @param bool  $verbose
+     * @param string $gameVersion
+     * @param string $shardId
+     * @param int    $lastActiveTimestamp
+     * @param bool   $verbose
      *
      * @return array [uid, uid]
      */
-    protected static function onShard(array $mysqlOptions, $lastActiveTimestamp, $verbose = false)
+    protected static function onShard($gameVersion, $shardId, $lastActiveTimestamp, $verbose = false)
     {
-        $pdo = ShardHelper::pdoFactory($mysqlOptions);
+        $pdo = PdoFactory::makePool($gameVersion)->getByShardId($shardId);
         if ($pdo === false) {
             return [];
         }
-        $shardId = $mysqlOptions['shardId'];
 
         \PHP_Timer::start();
         $uidList = self::fetchActiveUidList($pdo, $lastActiveTimestamp);
         $timeCost = \PHP_Timer::secondsToTimeString(\PHP_Timer::stop());
 
         if ($verbose) {
-            appendLog(sprintf('fetchActiveUidList %s cost %s to get %d uid', $shardId, $timeCost, count($uidList)));
+            appendLog(
+                sprintf(
+                    'fetchActiveUidList %s cost %s to get %d uid',
+                    $shardId,
+                    $timeCost,
+                    count($uidList)
+                )
+            );
         }
 
         return $uidList;

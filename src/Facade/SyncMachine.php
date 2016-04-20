@@ -6,15 +6,20 @@
  * Date: 2016/04/01
  * Time: 16:43.
  */
-namespace script;
+namespace Facade;
 
+use Buffer\AggregatorPersist;
+use Buffer\UidAggregator;
+use Buffer\UidQueue;
+use Database\ShardHelper;
+use DataProvider\User\UserDetailGenerator;
 use Facade\ES\Indexer;
 use PHP_Timer;
 
 /**
- * Class Machine.
+ * Class SyncMachine.
  */
-class Machine
+class SyncMachine
 {
     const FLUSH_MAGIC_NUMBER = 1000;
     /** @var string */
@@ -25,7 +30,7 @@ class Machine
     protected $shardList;
 
     /**
-     * Machine constructor.
+     * SyncMachine constructor.
      *
      * @param string $gameVersion
      * @param string $esHost
@@ -37,7 +42,7 @@ class Machine
         $date = date('Ymd');
         $persist = new AggregatorPersist(LOG_DIR.'/'.$gameVersion.'.uid.persist');
         $this->aggregator = new UidAggregator($persist);
-        $this->shardList = ShardHelper::getShardList($gameVersion);
+        $this->shardList = ShardHelper::listShardId($gameVersion);
         $this->logFile = LOG_DIR.'/'.$date.'/'.$gameVersion.'.machine';
         $this->prepareLogDir($this->logFile);
     }

@@ -6,7 +6,7 @@
  * Date: 2016/03/31
  * Time: 17:06.
  */
-namespace script;
+namespace Buffer;
 
 /**
  * Class AggregatorPersist.

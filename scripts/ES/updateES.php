@@ -6,14 +6,10 @@
  * Time: 18:33.
  */
 
-require __DIR__.'/../../bootstrap.php';
+use Database\PdoFactory;
+use DataProvider\User\UserDetailGenerator;
 
-spl_autoload_register(
-    function ($className) {
-        $classFile = str_replace('\\', '/', $className).'.php';
-        require $classFile;
-    }
-);
+require __DIR__.'/../../bootstrap.php';
 
 $options = getopt(
     'v',
@@ -46,7 +42,7 @@ $msg = sprintf(
 $verbose && dump($msg);
 
 $users = null;
-$groupedUsers = \script\UserDetailGenerator::find($gameVersion, [$uid]);
+$groupedUsers = UserDetailGenerator::find($gameVersion, [$uid]);
 foreach ($groupedUsers as $eachUserList) {
     if (count($eachUserList) === 0) {
         continue;
@@ -61,16 +57,37 @@ foreach ($users as $uid => $user) {
     $uidList[$user['snsid']] = $uid;
 }
 
-$configGenerator = \script\ShardHelper::shardConfigGenerator($gameVersion);
-$provider = new \DataProvider\User\PaymentInfoProvider();
+$configGenerator = \Database\ShardHelper::shardConfigGenerator($gameVersion);
 foreach ($configGenerator as $shardConfig) {
-    dump(sprintf('on shard %s', $shardConfig['shardId']));
-    $pdo = \script\ShardHelper::pdoFactory($shardConfig);
-    $ret = $provider->readUserInfo($pdo, $uidList);
-    if ($ret[$uid]) {
-        dump($ret);
+    $shardId = $shardConfig['shardId'];
+    dump(sprintf('on shard %s', $shardId));
+    $pdo = PdoFactory::makePool($gameVersion)->getByShardId($shardId);
+
+    $common = \DataProvider\User\CommonInfoProvider::readUserInfo($pdo, $uidList);
+    if ($common) {
+        dump($common);
         break;
     }
+}
+
+$pdo = PdoFactory::makeGlobalPdo($gameVersion);
+$paymentDigestList = \DataProvider\User\PaymentInfoProvider::readUserInfo($pdo, $uidList);
+if ($paymentDigestList[$uid]) {
+    dump($paymentDigestList);
+}
+
+foreach ($common as $uid => $user) {
+    if (isset($paymentDigestList[$uid])) {
+        $common[$uid]['history_pay_amount'] = $paymentDigestList[$uid]->totalAmount;
+        $common[$uid]['last_pay_time'] = (int) $paymentDigestList[$uid]->lastPaidTime;
+        $common[$uid]['last_pay_amount'] = $paymentDigestList[$uid]->lastPaidAmount;
+    }
+}
+dump($common);
+
+foreach ($common as $user) {
+    $data = (new \ESGateway\Factory())->makeUser($user);
+    dump($data);
 }
 
 $config = [

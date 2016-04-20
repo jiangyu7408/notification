@@ -6,7 +6,7 @@
  * Date: 2016/03/31
  * Time: 17:03.
  */
-namespace script;
+namespace Buffer;
 
 use Queue\FileQueue;
 

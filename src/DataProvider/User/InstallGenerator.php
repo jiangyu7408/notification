@@ -6,7 +6,10 @@
  * Date: 2016/04/05
  * Time: 11:23.
  */
-namespace script;
+namespace DataProvider\User;
+
+use Database\PdoFactory;
+use Database\ShardHelper;
 
 /**
  * Class InstallGenerator.
@@ -27,34 +30,42 @@ class InstallGenerator
         $groupedUidList = [];
         foreach ($shardConfigList as $shardConfig) {
             $shardId = $shardConfig['shardId'];
-            $groupedUidList[$shardId] = self::onShard($shardConfig, $date, $verbose);
+            $groupedUidList[$shardId] = self::onShard($gameVersion, $shardId, $date, $verbose);
         }
 
         return $groupedUidList;
     }
 
     /**
-     * @param array  $mysqlOptions
+     * @param string $gameVersion
+     * @param string $shardId
      * @param string $date
      * @param bool   $verbose
      *
      * @return array [uid, uid]
      */
-    protected static function onShard(array $mysqlOptions, $date, $verbose = false)
+    protected static function onShard($gameVersion, $shardId, $date, $verbose = false)
     {
         assert(is_string($date) && strlen($date) == strlen('2016-04-04'));
-        $pdo = ShardHelper::pdoFactory($mysqlOptions);
+        $pdo = PdoFactory::makePool($gameVersion)->getByShardId($shardId);
         if ($pdo === false) {
             return [];
         }
-        $shardId = $mysqlOptions['shardId'];
 
         \PHP_Timer::start();
         $uidList = self::fetchNewUser($pdo, $date);
         $timeCost = \PHP_Timer::secondsToTimeString(\PHP_Timer::stop());
 
         if ($verbose) {
-            appendLog(sprintf('%s %s cost %s to get %d uid', __CLASS__, $shardId, $timeCost, count($uidList)));
+            appendLog(
+                sprintf(
+                    '%s %s cost %s to get %d uid',
+                    __CLASS__,
+                    $shardId,
+                    $timeCost,
+                    count($uidList)
+                )
+            );
         }
 
         return $uidList;

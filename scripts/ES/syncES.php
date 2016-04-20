@@ -5,8 +5,8 @@
  * Date: 2016/03/30
  * Time: 16:58.
  */
-use script\Machine;
-use script\WorkRoundGenerator;
+use Facade\SyncMachine;
+use Facade\WorkRoundGenerator;
 
 ini_set('memory_limit', '2G');
 
@@ -71,5 +71,5 @@ foreach ($stepGenerator as $timestamp) {
     $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
     dump($msg);
     appendLog($msg);
-    (new Machine($gameVersion, $esHost))->run($maxRepeatTimes, $longestWaitTime);
+    (new SyncMachine($gameVersion, $esHost))->run($maxRepeatTimes, $longestWaitTime);
 }

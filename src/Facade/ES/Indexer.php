@@ -23,6 +23,8 @@ class Indexer
     protected $userDataFactory;
     /** @var int */
     protected $batchSize;
+    /** @var array */
+    protected $batchResult = [];
     /** @var \ESGateway\User[] */
     protected $lastRoundData;
 
@@ -58,7 +60,11 @@ class Indexer
 
         while (($batch = array_splice($esUserList, 0, $this->batchSize))) {
             $start = microtime(true);
-            $this->repo->burst($batch);
+            $errorString = '';
+            $success = $this->repo->burst($batch, $errorString);
+            if (!$success) {
+                $this->batchResult[] = $errorString;
+            }
             $deltaList[] = microtime(true) - $start;
         }
 
@@ -71,6 +77,14 @@ class Indexer
     public function getLastRoundData()
     {
         return $this->lastRoundData;
+    }
+
+    /**
+     * @return array
+     */
+    public function getBatchResult()
+    {
+        return $this->batchResult;
     }
 
     /**

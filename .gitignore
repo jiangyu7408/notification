@@ -2,3 +2,6 @@
 .idea/
 vendor/
 coverage/
+*.cache
+facebook.php
+log/*

@@ -5,7 +5,7 @@
  * Date: 2016/04/06
  * Time: 15:21.
  */
-use DataProvider\User\UidListGenerator;
+use DataProvider\User\ActiveUidProvider;
 
 require __DIR__.'/../../bootstrap.php';
 
@@ -23,7 +23,7 @@ assert(isset($options['gv']), 'game version not defined');
 $gameVersion = trim($options['gv']);
 
 $lastActiveTimestamp = (new DateTime())->setTime(0, 0, 0)->getTimestamp();
-$groupedUidList = UidListGenerator::generate($gameVersion, $lastActiveTimestamp, $verbose);
+$groupedUidList = ActiveUidProvider::generate($gameVersion, $lastActiveTimestamp, $verbose);
 
 $stats = [];
 array_walk(

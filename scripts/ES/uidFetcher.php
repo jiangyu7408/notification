@@ -7,7 +7,7 @@
  */
 use Buffer\UidQueue;
 use Database\ShardHelper;
-use DataProvider\User\UidListGenerator;
+use DataProvider\User\ActiveUidProvider;
 use Facade\WorkRoundGenerator;
 
 require __DIR__.'/../../bootstrap.php';
@@ -60,7 +60,7 @@ foreach ($stepGenerator as $timestamp) {
     $shardList = ShardHelper::listShardId($gameVersion);
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
-    $groupedUidList = UidListGenerator::generate($gameVersion, $lastActiveTimestamp, $verbose);
+    $groupedUidList = ActiveUidProvider::generate($gameVersion, $lastActiveTimestamp, $verbose);
     $verbose && dump($groupedUidList);
     $queue->push($groupedUidList);
 }

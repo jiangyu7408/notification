@@ -12,7 +12,7 @@ use Buffer\AggregatorPersist;
 use Buffer\UidAggregator;
 use Buffer\UidQueue;
 use Database\ShardHelper;
-use DataProvider\User\UserDetailGenerator;
+use DataProvider\User\UserDetailProvider;
 use Facade\ES\Indexer;
 use PHP_Timer;
 
@@ -93,7 +93,7 @@ class SyncMachine
         }
 
         PHP_Timer::start();
-        $groupedUserList = UserDetailGenerator::generate($this->gameVersion, $groupedUidList);
+        $groupedUserList = UserDetailProvider::generate($this->gameVersion, $groupedUidList);
         $delta = PHP_Timer::stop();
         appendLog(
             sprintf(

@@ -7,7 +7,7 @@
  */
 
 use Database\PdoFactory;
-use DataProvider\User\UserDetailGenerator;
+use DataProvider\User\UserDetailProvider;
 
 require __DIR__.'/../../bootstrap.php';
 
@@ -42,7 +42,7 @@ $msg = sprintf(
 $verbose && dump($msg);
 
 $users = null;
-$groupedUsers = UserDetailGenerator::find($gameVersion, [$uid]);
+$groupedUsers = UserDetailProvider::find($gameVersion, [$uid]);
 foreach ($groupedUsers as $eachUserList) {
     if (count($eachUserList) === 0) {
         continue;

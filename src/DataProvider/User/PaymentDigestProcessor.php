@@ -33,14 +33,14 @@ class PaymentDigestProcessor
         $digest = new PaymentDigest();
         $digest->snsid = $snsid;
         $digest->uid = $uid;
-        $digest->totalAmount = 0.0;
+        $digest->historyPayAmount = 0.0;
 
         foreach ($goodPaymentList as $payment) {
             $sanitizedAmount = $this->sanitizeAmount($payment);
-            $digest->totalAmount += $sanitizedAmount;
-            if ($digest->lastPaidTime < $payment->paidTime) {
-                $digest->lastPaidTime = $payment->paidTime;
-                $digest->lastPaidAmount = $sanitizedAmount;
+            $digest->historyPayAmount += $sanitizedAmount;
+            if ($digest->lastPayTime < $payment->paidTime) {
+                $digest->lastPayTime = (int) $payment->paidTime;
+                $digest->lastPayAmount = $sanitizedAmount;
             }
         }
 

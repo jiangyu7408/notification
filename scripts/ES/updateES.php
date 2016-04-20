@@ -78,9 +78,9 @@ if ($paymentDigestList[$uid]) {
 
 foreach ($common as $uid => $user) {
     if (isset($paymentDigestList[$uid])) {
-        $common[$uid]['history_pay_amount'] = $paymentDigestList[$uid]->totalAmount;
-        $common[$uid]['last_pay_time'] = (int) $paymentDigestList[$uid]->lastPaidTime;
-        $common[$uid]['last_pay_amount'] = $paymentDigestList[$uid]->lastPaidAmount;
+        $common[$uid]['history_pay_amount'] = $paymentDigestList[$uid]->historyPayAmount;
+        $common[$uid]['last_pay_time'] = (int) $paymentDigestList[$uid]->lastPayTime;
+        $common[$uid]['last_pay_amount'] = $paymentDigestList[$uid]->lastPayAmount;
     }
 }
 dump($common);

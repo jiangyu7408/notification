@@ -18,27 +18,30 @@ class PaymentInfoProvider
     const PAYMENT_ID = 'paymentId';
 
     /**
-     * $uidList MUST BE associate array: ['snsid' => 'uid']
+     * $snsidUidPairs MUST BE associate array: ['snsid' => 'uid']
      *
      * @param PDO   $pdo
-     * @param array $uidList
+     * @param array $snsidUidPairs
      * @param int   $concurrentLevel
      *
      * @return PaymentDigest[]
      */
-    public static function readUserInfo(PDO $pdo, array $uidList, $concurrentLevel = 100)
+    public static function readUserInfo(PDO $pdo, array $snsidUidPairs, $concurrentLevel = 100)
     {
         /** @var PaymentDigest[] $result */
         $result = [];
 
-        $snsidList = array_keys($uidList);
+        $snsidList = array_keys($snsidUidPairs);
+        if ($snsidList == range(0, count($snsidUidPairs) - 1)) {
+            throw new \InvalidArgumentException('snsidUidPairs must be snsid => uid');
+        }
 
         while (($concurrent = array_splice($snsidList, 0, $concurrentLevel))) {
             $batch = [];
             array_walk(
                 $concurrent,
-                function ($snsid) use ($uidList, &$batch) {
-                    $batch[$snsid] = $uidList[$snsid];
+                function ($snsid) use ($snsidUidPairs, &$batch) {
+                    $batch[$snsid] = $snsidUidPairs[$snsid];
                 }
             );
             self::onBatch($pdo, $batch, $result);

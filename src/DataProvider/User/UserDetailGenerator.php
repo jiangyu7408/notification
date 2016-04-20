@@ -82,9 +82,9 @@ class UserDetailGenerator
                 if (!isset($paymentDigestList[$uid])) {
                     continue;
                 }
-                $common[$uid]['history_pay_amount'] = $paymentDigestList[$uid]->totalAmount;
-                $common[$uid]['last_pay_time'] = (int) $paymentDigestList[$uid]->lastPaidTime;
-                $common[$uid]['last_pay_amount'] = $paymentDigestList[$uid]->lastPaidAmount;
+                $common[$uid]['history_pay_amount'] = $paymentDigestList[$uid]->historyPayAmount;
+                $common[$uid]['last_pay_time'] = (int) $paymentDigestList[$uid]->lastPayTime;
+                $common[$uid]['last_pay_amount'] = $paymentDigestList[$uid]->lastPayAmount;
             }
         }
 

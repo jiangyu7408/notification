@@ -15,7 +15,7 @@ class PaymentDigest
 {
     public $snsid = '';
     public $uid = 0;
-    public $totalAmount = 0.0;
-    public $lastPaidAmount = 0.0;
-    public $lastPaidTime = 0;
+    public $historyPayAmount = 0.0;
+    public $lastPayAmount = 0.0;
+    public $lastPayTime = 0;
 }

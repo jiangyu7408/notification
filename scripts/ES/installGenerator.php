@@ -6,18 +6,12 @@
  * Time: 12:59.
  */
 use Buffer\UidQueue;
+use Database\PdoFactory;
 use Database\ShardHelper;
-use DataProvider\User\InstallGenerator;
+use DataProvider\User\InstallUidProvider;
 use Facade\WorkRoundGenerator;
 
 require __DIR__.'/../../bootstrap.php';
-
-spl_autoload_register(
-    function ($className) {
-        $classFile = str_replace('\\', '/', $className).'.php';
-        require $classFile;
-    }
-);
 
 $options = getopt('v', ['gv:', 'date:', 'interval:', 'round:']);
 
@@ -62,8 +56,15 @@ $logFileGetter = function ($gameVersion, $date) {
 
     return $filePath;
 };
+
 $myself = basename(__FILE__);
 $stepGenerator = WorkRoundGenerator::generate($now, $quitTimestamp, $interval, false);
+
+$installUidProvider = new InstallUidProvider(
+    $gameVersion,
+    PdoFactory::makePool($gameVersion)
+);
+
 foreach ($stepGenerator as $timestamp) {
     $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
     dump($msg);
@@ -72,7 +73,16 @@ foreach ($stepGenerator as $timestamp) {
     $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
     $date = $specifiedDate ? $specifiedDate : date('Y-m-d');
-    $groupedUidList = InstallGenerator::generate($gameVersion, $date, $verbose);
+    $groupedUidList = $installUidProvider->generate($date);
+
+    $deltaList = $installUidProvider->getDeltaList();
+    array_walk(
+        $deltaList,
+        function ($delta, $shardId) {
+            dump(sprintf('%s => %s', $shardId, PHP_Timer::secondsToTimeString($delta)));
+        }
+    );
+
     $installUser = [];
     array_map(
         function (array $uidList) use (&$installUser) {

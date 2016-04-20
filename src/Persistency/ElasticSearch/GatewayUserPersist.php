@@ -30,13 +30,11 @@ class GatewayUserPersist implements IPersistency
      */
     protected $snsid;
     /**
-     * @var array
-     */
-    protected $responses;
-    /**
      * @var Type
      */
     protected $type;
+    /** @var array */
+    protected $responses;
 
     /**
      * @param Client $client
@@ -107,13 +105,13 @@ class GatewayUserPersist implements IPersistency
             ];
         }
 
-        $this->responses = $this->client->bulk($this->bulk);
+        $responses = $this->client->bulk($this->bulk);
 
-        if ($this->responses['errors']) {
-            appendLog($this->responses['errors']);
-
-            return false;
+        if ($responses['errors']) {
+            throw new \RuntimeException(json_encode($responses));
         }
+
+        $this->responses = $responses;
 
         return true;
     }

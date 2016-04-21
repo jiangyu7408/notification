@@ -11,7 +11,10 @@ namespace unit\ES;
 use Elastica\Bulk\Action\UpdateDocument;
 use Elastica\Client;
 use Elastica\Document;
+use Elastica\Query;
+use Elastica\Query\Term;
 use Elastica\Request;
+use Elastica\Search;
 use Elastica\Type\Mapping;
 use ESGateway\DataModel\FieldMapping\MappingFactory;
 use ESGateway\Factory;
@@ -97,9 +100,12 @@ class MappingTest extends \PHPUnit_Framework_TestCase
 
         $this->addDocuments();
         $this->updateDocuments();
+
+        $this->getClient()->getIndex($this->getIndexName())->refresh();
+
         $this->getDocuments();
-        $this->searchDocuments();
-//        $this->deleteDocuments();
+//        $this->searchDocuments();
+        $this->deleteDocuments();
     }
 
     public function addAlias()
@@ -107,10 +113,8 @@ class MappingTest extends \PHPUnit_Framework_TestCase
         dump(__METHOD__);
         $client = $this->getClient();
         $index = $client->getIndex($this->getIndexName());
-        $type = $index->getType($this->getTypeName());
-
         $response = $index->addAlias('farm');
-        dump($response);
+        $this->assertTrue($response->isOk());
     }
 
     protected function searchDocuments()
@@ -120,18 +124,60 @@ class MappingTest extends \PHPUnit_Framework_TestCase
         $index = $client->getIndex($this->getIndexName());
         $type = $index->getType($this->getTypeName());
 
-        if (false) {
-            $query = json_decode('{"query":{"bool":{"must":[{"match":{"snsid":"825763410852946"}}]}}}', true);
+        if (true) {
+            $query = json_decode('{"query":{"bool":{"must":[{"term":{"uid":19246}},{"term":{"name":"XXXXXXXXXX"}},{"term":{"op":30}}],"filter":[{"range":{"level":{"from":10,"to":300}}},{"range":{"addtime":{"gte":"20150706T145200+0800","lte":"20150707T145203+0800"}}}]}}}', true);
             dump($query);
 
             $path = $index->getName().'/'.$type->getName().'/_search';
             $response = $client->request($path, Request::GET, $query);
             $this->assertTrue($response->isOk());
-            dump($response->getEngineTime());
-            dump($response->getQueryTime());
-            dump($response->getShardsStatistics());
-            dump($response->getStatus()); // http status code
-            dump($response->getTransferInfo());
+//            dump($response->getEngineTime());
+//            dump($response->getQueryTime());
+//            dump($response->getShardsStatistics());
+//            dump($response->getStatus()); // http status code
+//            dump($response->getTransferInfo());
+            dump($response->getData()['hits']['hits']);
+        }
+
+        if (false) {
+            $search = new Search($client);
+            $search->addIndex($index)
+                   ->addType($type);
+            $query = new Query\BoolQuery();
+//        $query->setFrom(0);
+//        $query->setSize(10);
+//        $query->setSort(['uid' => 'asc']);
+//        $query->setFields(['snsid', 'uid']);
+//        $query->setHighlight(['fields' => 'uid']);
+//        $query->setExplain(true);
+//        $term = new Query\Term(['name' => 'XXXXXXXXXX']);
+//        $query->setQuery($term);
+
+            $query->addMust(new Term(['uid' => 19246]));
+            $query->addMust(new Term(['name' => 'XXXXXXXXXX']));
+            $query->addMust(new Term(['op' => 30]));
+//        $query->addMustNot(new Term(['country' => 'CN']));
+
+            $range = new Query\Range('level', ['from' => 10, 'to' => 300]);
+            $query->addFilter($range);
+
+            $range = new Query\Range();
+            $range->addField(
+                'addtime',
+                [
+                    'gte' => '20150706T145200+0800',
+                    'lte' => '20150707T145203+0800',
+                ]
+            );
+            $query->addFilter($range);
+
+            $search->setQuery($query);
+            $resultSet = $search->search();
+            dump('Hit: '.$resultSet->count());
+            $queryArray = $resultSet->getQuery()->toArray();
+            dump(json_encode($queryArray));
+            dump($resultSet->getResponse()->getData()['hits']['hits']);
+            dump('query time: '.\PHP_Timer::secondsToTimeString($resultSet->getResponse()->getQueryTime()));
         }
     }
 
@@ -333,9 +379,9 @@ class MappingTest extends \PHPUnit_Framework_TestCase
     {
         static $name;
         if ($name === null) {
-//            $name = 'user:test:v'.time();
+            //            $name = 'user:test:v'.time();
             $name = 'user:test:v1461226876';
-            dump($name);
+//            dump($name);
         }
 
         return $name;

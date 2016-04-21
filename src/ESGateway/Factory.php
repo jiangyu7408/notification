@@ -8,9 +8,9 @@
  */
 namespace ESGateway;
 
-require __DIR__.'/../../library/ip2cc.php';
+use Elastica\Client;
 
-use Elasticsearch\Client;
+require __DIR__.'/../../library/ip2cc.php';
 
 /**
  * Class Factory.
@@ -94,11 +94,7 @@ class Factory
     {
         assert(is_string($dsn) && strlen($dsn) > 7);
 
-        return new Client(
-            [
-                'hosts' => [$dsn],
-            ]
-        );
+        return new Client(['hosts' => [$dsn]]);
     }
 
     /**
@@ -141,9 +137,7 @@ class Factory
         assert(is_string($index) && strlen($index) > 0);
         assert(is_string($typeName) && strlen($typeName) > 0);
 
-        $type = new Type();
-        $type->index = $index;
-        $type->type = $typeName;
+        $type = new Type($index, $typeName);
 
         return $type;
     }
@@ -156,7 +150,7 @@ class Factory
     public function makeUser(array $dbEntity)
     {
         $dbEntity['name'] = utf8_encode($dbEntity['name']);
-        $dbEntity['country'] = ip2cc($dbEntity['loginip']);
+        $dbEntity['country'] = isset($dbEntity['country']) ? $dbEntity['country'] : ip2cc($dbEntity['loginip']);
         $dbEntity['addtime'] = $this->sanityTimeString($dbEntity['addtime']);
         $dbEntity['logintime'] = $this->sanityTimeString($dbEntity['logintime']);
         if (array_key_exists('last_pay_time', $dbEntity)) {

@@ -50,6 +50,7 @@ abstract class AbstractFieldMapping
     public function toArray()
     {
         $ret = [
+            'include_in_all' => false,
             'type' => $this->dataType,
             'index' => $this->indexControl,
         ];

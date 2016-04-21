@@ -30,6 +30,6 @@ class MappingFactory
             $mapping = array_merge($mapping, $subFactory->make());
         }
 
-        return ['properties' => $mapping];
+        return $mapping;
     }
 }

@@ -22,4 +22,32 @@ class Type
      * @var string
      */
     public $type;
+
+    /**
+     * Type constructor.
+     *
+     * @param string $index
+     * @param string $type
+     */
+    public function __construct($index, $type)
+    {
+        $this->index = $index;
+        $this->type = $type;
+    }
+
+    /**
+     * @return array
+     */
+    public function toArray()
+    {
+        return get_object_vars($this);
+    }
+
+    /**
+     * @return string
+     */
+    public function toString()
+    {
+        return sprintf('index: %s, type: %s', $this->index, $this->type);
+    }
 }

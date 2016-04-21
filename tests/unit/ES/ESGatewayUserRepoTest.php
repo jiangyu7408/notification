@@ -7,7 +7,7 @@
  */
 namespace Repository;
 
-use Elasticsearch\Client;
+use Elastica\Client;
 use ESGateway\Factory;
 use ESGateway\Type;
 use ESGateway\User;
@@ -50,7 +50,7 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
         static::assertInstanceOf(User::class, $userObj);
 
         $this->esClient->shouldReceive('bulk')->times(1)->andReturn(true);
-        $this->userRepo->fire($userObj);
+        $this->userRepo->fire($userObj, $errorInfo);
 
         $this->userPersist->setSnsid($userObj->snsid);
         $this->esClient->shouldReceive('get')
@@ -80,7 +80,7 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
     {
         $userObjList = $this->userProvider();
         $this->esClient->shouldReceive('bulk')->times(1)->andReturn(true);
-        $this->userRepo->burst($userObjList);
+        $this->userRepo->burst($userObjList, $errorInfo);
 
         foreach ($userObjList as $userObj) {
             $this->userPersist->setSnsid($userObj->snsid);

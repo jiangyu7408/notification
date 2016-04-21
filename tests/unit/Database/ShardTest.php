@@ -34,10 +34,13 @@ class ShardTest extends \PHPUnit_Framework_TestCase
      */
     public function testFactory()
     {
-        if (!extension_loaded('xdebug')) {
-            $pdo = PdoFactory::makeGlobalPdo('tw');
-            static::assertInstanceOf(\PDO::class, $pdo);
+        if (extension_loaded('xdebug')) {
+            $this->assertTrue(true);
+
+            return;
         }
+        $pdo = PdoFactory::makeGlobalPdo('tw');
+        static::assertInstanceOf(\PDO::class, $pdo);
     }
 
     /**

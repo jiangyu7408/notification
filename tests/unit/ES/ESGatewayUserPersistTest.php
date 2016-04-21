@@ -7,7 +7,8 @@
  */
 namespace Persistency\ElasticSearch;
 
-use Elasticsearch\Client;
+use Elastica\Client;
+use Elastica\Index;
 use ESGateway\Factory;
 use ESGateway\Type;
 use ESGateway\User;
@@ -78,7 +79,21 @@ class ESGatewayUserPersistTest extends \PHPUnit_Framework_TestCase
                              '_source' => $dbEntity,
                          ]
                      );
+
+        $esIndex = Mockery::mock(Index::class);
+        $esType = Mockery::mock(\Elastica\Type::class);
+        $esType->shouldReceive('getDocument')
+               ->times(1)
+               ->andReturn($dbEntity);
+        $esIndex->shouldReceive('getType')
+                ->times(1)
+                ->andReturn($esType);
+
+        $this->client->shouldReceive('getIndex')
+                     ->times(1)
+                     ->andReturn($esIndex);
         $found = $this->persist->retrieve();
+        dump($found);
         $foundObj = $this->factory->makeUser($found);
         static::assertEquals($userArr, $this->factory->toArray($foundObj));
     }

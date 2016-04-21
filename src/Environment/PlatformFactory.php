@@ -24,7 +24,7 @@ class PlatformFactory extends Platform
     public static function make($gameVersion)
     {
         if (!isset(self::$instances[$gameVersion])) {
-            $base = CONFIG_DIR.'/../farm-server-conf/';
+            $base = __DIR__.'/../../../farm-server-conf/';
             assert(is_dir($base));
             self::$instances[$gameVersion] = new Platform($base, $gameVersion);
         }

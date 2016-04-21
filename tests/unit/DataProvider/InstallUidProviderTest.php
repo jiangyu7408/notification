@@ -22,6 +22,8 @@ class InstallUidProviderTest extends \PHPUnit_Framework_TestCase
     public function test()
     {
         if (extension_loaded('xdebug')) {
+            $this->assertTrue(true);
+
             return;
         }
         $gameVersion = 'tw';

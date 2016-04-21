@@ -23,6 +23,8 @@ class PaymentInfoProviderTest extends \PHPUnit_Framework_TestCase
     public function testReadUserInfo()
     {
         if (extension_loaded('xdebug')) {
+            $this->assertTrue(true);
+
             return;
         }
         $gameVersion = 'tw';

@@ -41,53 +41,11 @@ $msg = sprintf(
 );
 $verbose && dump($msg);
 
-$users = null;
-$groupedUsers = UserDetailProvider::find($gameVersion, [$uid]);
-foreach ($groupedUsers as $eachUserList) {
-    if (count($eachUserList) === 0) {
-        continue;
-    }
-    $users = $eachUserList;
-    break;
-}
-$verbose && dump($users);
-
-$uidList = [];
-foreach ($users as $uid => $user) {
-    $uidList[$user['snsid']] = $uid;
-}
-
-$configGenerator = \Database\ShardHelper::shardConfigGenerator($gameVersion);
-foreach ($configGenerator as $shardConfig) {
-    $shardId = $shardConfig['shardId'];
-    dump(sprintf('on shard %s', $shardId));
-    $pdo = PdoFactory::makePool($gameVersion)->getByShardId($shardId);
-
-    $common = \DataProvider\User\CommonInfoProvider::readUserInfo($pdo, $uidList);
-    if ($common) {
-        dump($common);
-        break;
-    }
-}
-
-$pdo = PdoFactory::makeGlobalPdo($gameVersion);
-$paymentDigestList = \DataProvider\User\PaymentInfoProvider::readUserInfo($pdo, $uidList);
-if ($paymentDigestList[$uid]) {
-    dump($paymentDigestList);
-}
-
-foreach ($common as $uid => $user) {
-    if (isset($paymentDigestList[$uid])) {
-        $common[$uid]['history_pay_amount'] = $paymentDigestList[$uid]->historyPayAmount;
-        $common[$uid]['last_pay_time'] = (int) $paymentDigestList[$uid]->lastPayTime;
-        $common[$uid]['last_pay_amount'] = $paymentDigestList[$uid]->lastPayAmount;
-    }
-}
-dump($common);
-
-foreach ($common as $user) {
-    $data = (new \ESGateway\Factory())->makeUser($user);
-    dump($data);
+$provider = new UserDetailProvider($gameVersion, PdoFactory::makePool($gameVersion));
+$groupedUserList = array_filter($provider->find([$uid]));
+if ($verbose) {
+    dump(__FILE__);
+    dump($groupedUserList);
 }
 
 $config = [
@@ -97,6 +55,21 @@ $config = [
     'type' => 'user:'.$gameVersion,
 ];
 $indexer = new \Facade\ES\Indexer($config, 1);
-$delta = $indexer->batchUpdate($users);
-dump($indexer->getLastRoundData());
-dump('cost '.PHP_Timer::secondsToTimeString($delta[0]));
+foreach ($groupedUserList as $shardId => $shardUserList) {
+    $delta = $indexer->batchUpdate($shardUserList);
+    $batchResult = $indexer->getBatchResult();
+    dump(__FILE__);
+    array_map(
+        function ($errorString) {
+            $decoded = json_decode($errorString, true);
+            if (is_array($decoded)) {
+                dump($decoded);
+            } else {
+                dump($errorString);
+            }
+        },
+        $batchResult
+    );
+//    dump($indexer->getLastRoundData());
+    dump('cost '.PHP_Timer::secondsToTimeString($delta[0]));
+}

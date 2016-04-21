@@ -8,7 +8,7 @@
  */
 namespace Persistency\ElasticSearch;
 
-use Elasticsearch\Client;
+use Elastica\Client;
 use ESGateway\Type;
 use Persistency\IPersistency;
 
@@ -66,13 +66,10 @@ class GatewayUserPersist implements IPersistency
      */
     public function retrieve()
     {
-        $ret = $this->client->get(
-            [
-                'index' => $this->type->index,
-                'type' => $this->type->type,
-                'id' => $this->snsid,
-            ]
-        );
+        $client = $this->client;
+        $index = $client->getIndex($this->type->index);
+        $type = $index->getType($this->type->type);
+        $ret = $type->getDocument($this->snsid);
 
         $this->responses = $ret;
 

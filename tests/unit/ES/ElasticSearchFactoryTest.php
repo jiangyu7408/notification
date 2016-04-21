@@ -7,7 +7,7 @@
  */
 namespace ESGateway;
 
-use Elasticsearch\Client;
+use Elastica\Client;
 
 /**
  * Class ElasticSearchFactoryTest.

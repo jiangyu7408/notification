@@ -7,7 +7,9 @@
  */
 namespace Persistency\ElasticSearch;
 
+use Elastica\Bulk\ResponseSet;
 use Elastica\Client;
+use Elastica\Document;
 use Elastica\Index;
 use ESGateway\Factory;
 use ESGateway\Type;
@@ -65,26 +67,29 @@ class ESGatewayUserPersistTest extends \PHPUnit_Framework_TestCase
         $userArr = $this->factory->toArray($userObj);
         static::assertArrayHasKey('snsid', $userArr);
 
-        $this->client->shouldReceive('bulk')->times(1)->andReturn(true);
+        $esIndex = Mockery::mock(Index::class);
+        $esIndex->shouldReceive('addDocuments')
+                ->times(1)
+                ->andReturn(Mockery::mock(ResponseSet::class));
+        $this->client->shouldReceive('getIndex')
+                     ->times(1)
+                     ->andReturn($esIndex);
         $success = $this->persist->persist([$userArr]);
         static::assertTrue($success);
 
         $this->persist->setSnsid($userObj->snsid);
 
-        $this->client->shouldReceive('get')
-                     ->times(1)
-                     ->andReturn(
-                         [
-                             'found' => true,
-                             '_source' => $dbEntity,
-                         ]
-                     );
-
         $esIndex = Mockery::mock(Index::class);
         $esType = Mockery::mock(\Elastica\Type::class);
+
+        $document = Mockery::mock(Document::class);
+        $document->shouldReceive('getData')
+                 ->times(1)
+                 ->andReturn($dbEntity);
+
         $esType->shouldReceive('getDocument')
                ->times(1)
-               ->andReturn($dbEntity);
+               ->andReturn($document);
         $esIndex->shouldReceive('getType')
                 ->times(1)
                 ->andReturn($esType);
@@ -93,7 +98,6 @@ class ESGatewayUserPersistTest extends \PHPUnit_Framework_TestCase
                      ->times(1)
                      ->andReturn($esIndex);
         $found = $this->persist->retrieve();
-        dump($found);
         $foundObj = $this->factory->makeUser($found);
         static::assertEquals($userArr, $this->factory->toArray($foundObj));
     }

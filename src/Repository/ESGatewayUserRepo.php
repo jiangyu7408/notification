@@ -9,7 +9,6 @@
 
 namespace Repository;
 
-use Elasticsearch\Common\Exceptions\Serializer\JsonErrorException;
 use ESGateway\Factory;
 use ESGateway\User;
 use Persistency\IPersistency;
@@ -45,9 +44,7 @@ class ESGatewayUserRepo
      */
     public function fire(User $user, &$errorInfo)
     {
-        $list = [$this->factory->toArray($user)];
-
-        return $this->burst($list, $errorInfo);
+        return $this->burst([$user], $errorInfo);
     }
 
     /**
@@ -66,8 +63,6 @@ class ESGatewayUserRepo
         $errorString = null;
         try {
             $this->persistency->persist($users);
-        } catch (JsonErrorException $e) {
-            $errorString = $e->getMessage();
         } catch (\RuntimeException $e) {
             $errorString = $e->getMessage();
         }

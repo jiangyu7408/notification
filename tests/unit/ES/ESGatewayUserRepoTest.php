@@ -7,7 +7,10 @@
  */
 namespace Repository;
 
+use Elastica\Bulk\ResponseSet;
 use Elastica\Client;
+use Elastica\Document;
+use Elastica\Index;
 use ESGateway\Factory;
 use ESGateway\Type;
 use ESGateway\User;
@@ -49,18 +52,36 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
 
         static::assertInstanceOf(User::class, $userObj);
 
-        $this->esClient->shouldReceive('bulk')->times(1)->andReturn(true);
+        $esIndex = Mockery::mock(Index::class);
+        $esIndex->shouldReceive('addDocuments')
+                ->times(1)
+                ->andReturn(Mockery::mock(ResponseSet::class));
+        $this->esClient->shouldReceive('getIndex')
+                       ->times(1)
+                       ->andReturn($esIndex);
         $this->userRepo->fire($userObj, $errorInfo);
 
         $this->userPersist->setSnsid($userObj->snsid);
-        $this->esClient->shouldReceive('get')
+
+        $esIndex = Mockery::mock(Index::class);
+        $esType = Mockery::mock(\Elastica\Type::class);
+
+        $document = Mockery::mock(Document::class);
+        $document->shouldReceive('getData')
+                 ->times(1)
+                 ->andReturn((new Factory())->toArray($userObj));
+
+        $esType->shouldReceive('getDocument')
+               ->times(1)
+               ->andReturn($document);
+        $esIndex->shouldReceive('getType')
+                ->times(1)
+                ->andReturn($esType);
+
+        $this->esClient->shouldReceive('getIndex')
                        ->times(1)
-                       ->andReturn(
-                           [
-                               'found' => true,
-                               '_source' => $this->factory->toArray($userObj),
-                           ]
-                       );
+                       ->andReturn($esIndex);
+
         $found = $this->userPersist->retrieve();
         $foundObj = $this->factory->makeUser($found);
         static::assertEquals($this->factory->toArray($userObj), $this->factory->toArray($foundObj));
@@ -74,31 +95,6 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
         require_once __DIR__.'/UserProvider.php';
 
         return \UserProvider::listUser();
-    }
-
-    public function testBulk()
-    {
-        $userObjList = $this->userProvider();
-        $this->esClient->shouldReceive('bulk')->times(1)->andReturn(true);
-        $this->userRepo->burst($userObjList, $errorInfo);
-
-        foreach ($userObjList as $userObj) {
-            $this->userPersist->setSnsid($userObj->snsid);
-            $this->esClient->shouldReceive('get')
-                           ->times(1)
-                           ->andReturn(
-                               [
-                                   'found' => true,
-                                   '_source' => $this->factory->toArray($userObj),
-                               ]
-                           );
-            $found = $this->userPersist->retrieve();
-            $foundObj = $this->factory->makeUser($found);
-            static::assertEquals(
-                $this->factory->toArray($userObj),
-                $this->factory->toArray($foundObj)
-            );
-        }
     }
 
     protected function setUp()

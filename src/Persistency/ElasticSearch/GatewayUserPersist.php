@@ -9,6 +9,8 @@
 namespace Persistency\ElasticSearch;
 
 use Elastica\Client;
+use Elastica\Document;
+use Elastica\Exception\NotFoundException;
 use ESGateway\Type;
 use Persistency\IPersistency;
 
@@ -17,48 +19,36 @@ use Persistency\IPersistency;
  */
 class GatewayUserPersist implements IPersistency
 {
-    /**
-     * @var Client
-     */
-    protected $client;
-    /**
-     * @var array
-     */
-    protected $bulk;
-    /**
-     * @var string
-     */
+    /** @var Client */
+    protected $elasticaClient;
+    /** @var Type */
+    protected $target;
+    /** @var string */
     protected $snsid;
-    /**
-     * @var Type
-     */
-    protected $type;
     /** @var array */
     protected $responses;
 
     /**
      * @param Client $client
-     * @param Type   $type
+     * @param Type   $target
      */
-    public function __construct(Client $client, Type $type)
+    public function __construct(Client $client, Type $target)
     {
-        $this->client = $client;
-        $this->type = $type;
-
-        $this->bulk = [
-            'index' => $type->index,
-            'type' => $type->type,
-            'body' => [],
-        ];
+        $this->elasticaClient = $client;
+        $this->target = $target;
     }
 
     /**
      * @param string $snsid
+     *
+     * @return static
      */
     public function setSnsid($snsid)
     {
         assert(is_string($snsid));
         $this->snsid = $snsid;
+
+        return $this;
     }
 
     /**
@@ -66,18 +56,19 @@ class GatewayUserPersist implements IPersistency
      */
     public function retrieve()
     {
-        $client = $this->client;
-        $index = $client->getIndex($this->type->index);
-        $type = $index->getType($this->type->type);
-        $ret = $type->getDocument($this->snsid);
+        $elastica = $this->elasticaClient;
+        $index = $elastica->getIndex($this->target->index);
+        $type = $index->getType($this->target->type);
 
-        $this->responses = $ret;
-
-        if ($ret['found'] !== true) {
+        try {
+            $document = $type->getDocument($this->snsid);
+        } catch (NotFoundException $e) {
             return [];
         }
 
-        return $ret['_source'];
+        $this->responses = $document;
+
+        return $document->getData();
     }
 
     /**
@@ -87,28 +78,15 @@ class GatewayUserPersist implements IPersistency
      */
     public function persist(array $payload)
     {
-        $this->bulk['body'] = [];
-
-        foreach ($payload as $user) {
-            $this->bulk['body'][] = [
-                'update' => [
-                    '_id' => $user['snsid'],
-                ],
-            ];
-
-            $this->bulk['body'][] = [
-                'doc_as_upsert' => 'true',
-                'doc' => $user,
-            ];
-        }
-
-        $responses = $this->client->bulk($this->bulk);
-
-        if ($responses['errors']) {
-            throw new \RuntimeException(json_encode($responses));
-        }
-
-        $this->responses = $responses;
+        $documents = array_map(
+            function (array $user) {
+                return $this->makeDocument($user);
+            },
+            $payload
+        );
+        $responseSet = $this->elasticaClient->getIndex($this->target->index)
+                                            ->addDocuments($documents);
+        $this->responses = $responseSet;
 
         return true;
     }
@@ -119,5 +97,20 @@ class GatewayUserPersist implements IPersistency
     public function getResponses()
     {
         return $this->responses;
+    }
+
+    /**
+     * @param array $user
+     *
+     * @return Document
+     */
+    protected function makeDocument(array $user)
+    {
+        $document = new Document($user['snsid'], $user);
+        $document->setDocAsUpsert(true)
+                 ->setIndex($this->target->index)
+                 ->setType($this->target->type);
+
+        return $document;
     }
 }

@@ -20,5 +20,5 @@ class FullIndexedBasicDate extends AbstractFieldMapping
     /** @var string */
     protected $indexControl = 'analyzed';
     /** @var string */
-    protected $format = 'basic_date_time_no_millis';
+    protected $format = 'basic_date_time_no_millis||epoch_second';
 }

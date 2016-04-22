@@ -35,11 +35,12 @@ class InstallUidProvider
     }
 
     /**
-     * @param string $date
+     * @param string   $date
+     * @param \Closure $callback
      *
      * @return array ['db1' => [uid, uid, 'db2' => [uid, uid]]
      */
-    public function generate($date)
+    public function generate($date, \Closure $callback = null)
     {
         if (!(is_string($date) && strlen($date) == strlen('2016-04-04'))) {
             throw new \InvalidArgumentException('date format should be like 2016-04-04');
@@ -48,8 +49,14 @@ class InstallUidProvider
         $this->deltaList = [];
         $groupedUidList = [];
         array_map(
-            function ($shardId) use (&$groupedUidList, $date) {
-                $groupedUidList[$shardId] = $this->onShard($shardId, $date);
+            function ($shardId) use (&$groupedUidList, $date, $callback) {
+                $start = microtime(true);
+                $uidList = $this->onShard($shardId, $date);
+                $delta = microtime(true) - $start;
+                $groupedUidList[$shardId] = $uidList;
+                if (is_callable($callback)) {
+                    call_user_func($callback, $shardId, count($uidList), $delta);
+                }
             },
             $this->pdoPool->listShardId()
         );

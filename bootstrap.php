@@ -12,6 +12,10 @@ ini_set('assert.active', '1');
 ini_set('assert.warning', '1');
 ini_set('assert.bail', '1');
 
+define('ELASTIC_SEARCH_PORT', 9200);
+define('ELASTIC_SEARCH_SCHEMA_VERSION', 2);
+define('ELASTIC_SEARCH_INDEX', 'farm_'.ELASTIC_SEARCH_SCHEMA_VERSION);
+
 require __DIR__.'/vendor/autoload.php';
 require __DIR__.'/library/dump.php';
 

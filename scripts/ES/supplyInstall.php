@@ -33,23 +33,36 @@ $batchUpdateES = function (Indexer $indexer, array $users) {
     );
 };
 
-$options = getopt('v', ['reset', 'gv:', 'from:', 'to:', 'magic:', 'safe:']);
+$options = getopt(
+    'v',
+    [
+        'reset',
+        'gv:',
+        'from:',
+        'to:',
+        'magic:',
+        'safe:',
+    ]
+);
 $verbose = isset($options['v']);
-$safeRound = isset($options['safe']) ? (int) $options['safe'] : 0;
+
+$safeRound = getenv('SAFE');
+//dump('safe round: '.$safeRound);
+if (!$safeRound) {
+    $safeRound = isset($options['safe']) ? (int) $options['safe'] : 0;
+}
 if ($safeRound < 1) {
     $safeRound = 30;
 }
 
-$gameVersion = null;
-if (defined('GAME_VERSION')) {
-    $gameVersion = GAME_VERSION;
-} else {
+$gameVersion = getenv('GV');
+//dump('game version: '.$gameVersion);
+if (!$gameVersion) {
     assert(isset($options['gv']), 'game version not defined');
     $gameVersion = trim($options['gv']);
 }
 
 $markerLocation = sprintf('%s/log/%s/marker', CONFIG_DIR, $gameVersion);
-appendLog($markerLocation);
 if (isset($options['reset'])) {
     $backup = sprintf('%s.%s', $markerLocation, date('Ymd'));
     rename($markerLocation, $backup);
@@ -59,7 +72,11 @@ if (isset($options['reset'])) {
 }
 $calendarMarker = new \Facade\CalendarDayMarker($markerLocation);
 
-$fromDay = isset($options['from']) ? $options['from'] : date('Ymd');
+$fromDay = getenv('FROM');
+//dump('from day = '.$fromDay);
+if (!$fromDay) {
+    $fromDay = isset($options['from']) ? $options['from'] : date('Ymd');
+}
 $toDay = isset($options['to']) ? $options['to'] : date('Ymd');
 
 $logFileGetter = function ($gameVersion, $date) {
@@ -90,6 +107,9 @@ $shardList = ShardHelper::listShardId($gameVersion);
 
 $totalUser = 0;
 $processedRound = 0;
+
+//dump(sprintf('version: %s, from: %s, safe: %d, magic: %d', $gameVersion, $fromDay, $safeRound, $magicNumber));
+
 foreach ($stepGenerator as $date) {
     $markerDate = new DateTimeImmutable($date);
     if ($calendarMarker->isMarked($markerDate)) {

@@ -41,11 +41,12 @@ class Indexer
     }
 
     /**
-     * @param array $users
+     * @param array    $users
+     * @param \Closure $callback
      *
-     * @return float[]
+     * @return \float[]
      */
-    public function batchUpdate(array $users)
+    public function batchUpdate(array $users, \Closure $callback = null)
     {
         $count = count($users);
         if ($count === 0) {
@@ -64,7 +65,11 @@ class Indexer
             if (!$success) {
                 $this->batchResult[] = $errorString;
             }
-            $deltaList[] = microtime(true) - $start;
+            $delta = microtime(true) - $start;
+            $deltaList[] = $delta;
+            if (is_callable($callback)) {
+                call_user_func($callback, count($batch), $delta);
+            }
         }
 
         return $deltaList;

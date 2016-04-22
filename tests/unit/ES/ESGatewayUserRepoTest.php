@@ -60,6 +60,7 @@ class ESGatewayUserRepoTest extends \PHPUnit_Framework_TestCase
                        ->times(1)
                        ->andReturn($esIndex);
         $this->userRepo->fire($userObj, $errorInfo);
+        $this->assertNull($errorInfo);
 
         $this->userPersist->setSnsid($userObj->snsid);
 

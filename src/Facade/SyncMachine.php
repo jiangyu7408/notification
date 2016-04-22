@@ -226,7 +226,7 @@ class SyncMachine
      */
     private function prepareLogDir($logFile)
     {
-        assert(strpos($logFile, '/mnt/htdocs/notification/log/') === 0);
+        assert(strpos($logFile, '/mnt/htdocs/notif') === 0);
         $dirName = dirname($logFile);
         if (!is_dir($dirName)) {
             $success = mkdir($dirName, 0755, true);

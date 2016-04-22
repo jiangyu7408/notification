@@ -6,7 +6,6 @@
  * Date: 2015/06/30
  * Time: 10:25 AM.
  */
-
 namespace Queue;
 
 /**
@@ -23,6 +22,7 @@ class FileQueue implements IQueue
 
     /**
      * @param string $location
+     *
      * @throw InvalidArgumentException
      */
     public function __construct($location)
@@ -33,6 +33,42 @@ class FileQueue implements IQueue
             // TODO: error handling
             throw $e;
         }
+    }
+
+    /**
+     * @param string $msg
+     *
+     * @return bool
+     */
+    public function push($msg)
+    {
+        $filename = $this->location.'/'.uniqid(date('His'), true);
+        if (is_string($msg)) {
+            return $this->writeFile($filename, $msg);
+        }
+
+        return $this->writeFile($filename, json_encode($msg));
+    }
+
+    /**
+     * @return string
+     */
+    public function pop()
+    {
+        $file = $this->firstFileInDir($this->location);
+        if ($file === null) {
+            // TODO: error handling
+            return '';
+        }
+
+        if ($file === '') {
+            return '';
+        }
+
+        $content = file_get_contents($file);
+        unlink($file);
+
+        return $content;
     }
 
     /**
@@ -59,52 +95,20 @@ class FileQueue implements IQueue
     }
 
     /**
-     * @param string $msg
-     *
-     * @return bool
-     */
-    public function push($msg)
-    {
-        $filename = $this->location.'/'.uniqid(date('His'), true);
-        if (is_string($msg)) {
-            return $this->writeFile($filename, $msg);
-        }
-
-        return $this->writeFile($filename, json_encode($msg));
-    }
-
-    /**
-     * @param $filename
-     * @param $msgString
+     * @param string $filename
+     * @param string $msgString
      *
      * @return bool
      */
     private function writeFile($filename, $msgString)
     {
-        $ret = file_put_contents($filename, $msgString);
+        if (strlen($msgString) === 0) {
+            return true;
+        }
+        $postAppend = $msgString[strlen($msgString) - 1] === PHP_EOL ? '' : PHP_EOL;
+        $ret = file_put_contents($filename, $msgString.$postAppend);
 
         return ($ret !== false);
-    }
-
-    /**
-     * @return string
-     */
-    public function pop()
-    {
-        $file = $this->firstFileInDir($this->location);
-        if ($file === null) {
-            // TODO: error handling
-            return '';
-        }
-
-        if ($file === '') {
-            return '';
-        }
-
-        $content = file_get_contents($file);
-        unlink($file);
-
-        return $content;
     }
 
     /**

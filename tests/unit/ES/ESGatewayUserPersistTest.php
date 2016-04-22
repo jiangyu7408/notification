@@ -42,7 +42,10 @@ class ESGatewayUserPersistTest extends \PHPUnit_Framework_TestCase
 
         $data = array_map(
             function ($json) {
-                return [json_decode($json, true)];
+                $array = json_decode($json, true);
+                $this->assertTrue(is_array($array));
+
+                return $array;
             },
             $jsonArr
         );
@@ -51,12 +54,11 @@ class ESGatewayUserPersistTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @dataProvider userProvider
-     *
-     * @param array $dbEntity
      */
-    public function test(array $dbEntity)
+    public function test()
     {
+        $users = $this->userProvider();
+        $dbEntity = $users[0];
         static::assertInstanceOf(GatewayUserPersist::class, $this->persist);
 
         $dbEntity['logintime'] = time();

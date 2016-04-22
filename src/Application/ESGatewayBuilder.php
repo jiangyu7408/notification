@@ -23,8 +23,10 @@ class ESGatewayBuilder
      *
      * @return ESGatewayUserRepo
      */
-    public function buildUserRepo(array $options)
+    public static function buildUserRepo(array $options)
     {
+        self::validateOptions($options);
+
         $factory = new Factory();
 
         $dsn = $factory->makeDsn($options['host'], $options['port']);
@@ -33,9 +35,24 @@ class ESGatewayBuilder
         $type = $factory->makeType($options['index'], $options['type']);
 
         $persist = new GatewayUserPersist($client, $type);
-
         $repo = new ESGatewayUserRepo($persist, $factory);
 
         return $repo;
+    }
+
+    /**
+     * @param array $options
+     */
+    protected static function validateOptions(array $options)
+    {
+        $expectedKeys = ['host', 'port', 'index', 'type'];
+        array_map(
+            function ($key) use ($options) {
+                if (!array_key_exists($key, $options)) {
+                    throw new \InvalidArgumentException(sprintf('key[%s] not found', $key));
+                }
+            },
+            $expectedKeys
+        );
     }
 }

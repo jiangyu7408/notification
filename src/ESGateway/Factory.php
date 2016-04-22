@@ -119,9 +119,7 @@ class Factory
         assert(is_string($ipAddress) && strlen($ipAddress) > 7);
         assert(is_int($port) && ($port > 1024 && $port < 65535));
 
-        $dsn = new DSN();
-        $dsn->port = $port;
-        $dsn->ip = $ipAddress;
+        $dsn = new DSN($ipAddress, $port);
 
         return $dsn;
     }

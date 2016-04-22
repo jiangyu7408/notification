@@ -6,7 +6,6 @@
  * Date: 2015/07/06
  * Time: 2:25 PM.
  */
-
 namespace ESGateway;
 
 /**

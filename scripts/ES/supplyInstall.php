@@ -33,8 +33,13 @@ $batchUpdateES = function (Indexer $indexer, array $users) {
     );
 };
 
-$options = getopt('v', ['reset', 'gv:', 'from:', 'to:', 'magic:']);
+$options = getopt('v', ['reset', 'gv:', 'from:', 'to:', 'magic:', 'safe:']);
 $verbose = isset($options['v']);
+$safeRound = isset($options['safe']) ? (int) $options['safe'] : 0;
+if ($safeRound < 1) {
+    $safeRound = 30;
+}
+
 $gameVersion = null;
 if (defined('GAME_VERSION')) {
     $gameVersion = GAME_VERSION;
@@ -84,10 +89,10 @@ $indexer = IndexerFactory::make(ELASTIC_SEARCH_HOST, $gameVersion, $magicNumber)
 $shardList = ShardHelper::listShardId($gameVersion);
 
 $totalUser = 0;
+$processedRound = 0;
 foreach ($stepGenerator as $date) {
     $markerDate = new DateTimeImmutable($date);
     if ($calendarMarker->isMarked($markerDate)) {
-        appendLog($date.' bypassed');
         continue;
     }
     $msg = basename(__FILE__).': process for '.$date.' run with ts '.time();
@@ -141,4 +146,9 @@ foreach ($stepGenerator as $date) {
     $calendarMarker->mark($markerDate);
 
     appendLog(sprintf('Total %d user processed, cost %s', $totalUser, PHP_Timer::resourceUsage()));
+    ++$processedRound;
+    if ($processedRound >= $safeRound) {
+        appendLog(sprintf('Safe round finished, cost %s', PHP_Timer::resourceUsage()));
+        break;
+    }
 }

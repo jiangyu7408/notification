@@ -86,42 +86,19 @@ class Factory
     }
 
     /**
-     * @param string $dsn
+     * @param string $host
+     * @param int    $port
      *
      * @return Client
      */
-    public function makeClient($dsn)
+    public function makeClient($host, $port)
     {
-        assert(is_string($dsn) && strlen($dsn) > 7);
-
-        return new Client(['hosts' => [$dsn]]);
-    }
-
-    /**
-     * @param string $ipAddress
-     * @param int    $port
-     *
-     * @return string
-     */
-    public function makeDsn($ipAddress, $port)
-    {
-        return $this->makeDsnObject($ipAddress, $port)->toString();
-    }
-
-    /**
-     * @param string $ipAddress
-     * @param int    $port
-     *
-     * @return DSN
-     */
-    public function makeDsnObject($ipAddress, $port)
-    {
-        assert(is_string($ipAddress) && strlen($ipAddress) > 7);
-        assert(is_int($port) && ($port > 1024 && $port < 65535));
-
-        $dsn = new DSN($ipAddress, $port);
-
-        return $dsn;
+        return new Client(
+            [
+                'host' => $host,
+                'port' => $port,
+            ]
+        );
     }
 
     /**

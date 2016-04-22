@@ -367,7 +367,7 @@ class MappingTest extends \PHPUnit_Framework_TestCase
 
     protected function getClient()
     {
-        return new Client(['hosts' => ['127.0.0.1']]);
+        return new Client();
     }
 
     protected function getIndexName()

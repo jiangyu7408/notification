@@ -29,8 +29,7 @@ class ESGatewayBuilder
 
         $factory = new Factory();
 
-        $dsn = $factory->makeDsn($options['host'], $options['port']);
-        $client = $factory->makeClient($dsn);
+        $client = $factory->makeClient($options['host'], $options['port']);
 
         $type = $factory->makeType($options['index'], $options['type']);
 

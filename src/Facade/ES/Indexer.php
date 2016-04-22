@@ -8,7 +8,6 @@
  */
 namespace Facade\ES;
 
-use Application\ESGatewayBuilder;
 use ESGateway\Factory;
 use Repository\ESGatewayUserRepo;
 
@@ -31,12 +30,12 @@ class Indexer
     /**
      * Indexer constructor.
      *
-     * @param array $config
-     * @param int   $batchSize
+     * @param ESGatewayUserRepo $repo
+     * @param int               $batchSize
      */
-    public function __construct(array $config, $batchSize = 200)
+    protected function __construct(ESGatewayUserRepo $repo, $batchSize = 200)
     {
-        $this->repo = (new ESGatewayBuilder())->buildUserRepo($config);
+        $this->repo = $repo;
         $this->userDataFactory = $this->repo->getFactory();
         $this->batchSize = $batchSize;
     }

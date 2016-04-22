@@ -49,7 +49,6 @@ $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
 foreach ($stepGenerator as $date) {
     $msg = basename(__FILE__).': process for '.$date.' run with ts '.time();
-    dump($msg);
     appendLog($msg);
 
     $groupedUidList = $installUidProvider->generate($date);

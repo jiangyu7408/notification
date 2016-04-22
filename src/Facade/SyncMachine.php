@@ -11,9 +11,10 @@ namespace Facade;
 use Buffer\AggregatorPersist;
 use Buffer\UidAggregator;
 use Buffer\UidQueue;
+use Database\PdoFactory;
 use Database\ShardHelper;
 use DataProvider\User\UserDetailProvider;
-use Facade\ES\Indexer;
+use Facade\ES\IndexerFactory;
 use PHP_Timer;
 
 /**
@@ -28,6 +29,8 @@ class SyncMachine
     protected $aggregator;
     /** @var array */
     protected $shardList;
+    /** @var UserDetailProvider */
+    protected $dataProvider;
 
     /**
      * SyncMachine constructor.
@@ -45,6 +48,8 @@ class SyncMachine
         $this->shardList = ShardHelper::listShardId($gameVersion);
         $this->logFile = LOG_DIR.'/'.$date.'/'.$gameVersion.'.machine';
         $this->prepareLogDir($this->logFile);
+
+        $this->dataProvider = new UserDetailProvider($gameVersion, PdoFactory::makePool($gameVersion));
     }
 
     /**
@@ -93,7 +98,7 @@ class SyncMachine
         }
 
         PHP_Timer::start();
-        $groupedUserList = UserDetailProvider::generate($this->gameVersion, $groupedUidList);
+        $groupedUserList = $this->dataProvider->generate($groupedUidList);
         $delta = PHP_Timer::stop();
         appendLog(
             sprintf(
@@ -146,13 +151,7 @@ class SyncMachine
         }
         appendLog(sprintf('%s have %d user to sync', __METHOD__, $count));
 
-        $config = [
-            'host' => $esHost,
-            'port' => 9200,
-            'index' => 'farm',
-            'type' => 'user:'.$gameVersion,
-        ];
-        $indexer = new Indexer($config);
+        $indexer = IndexerFactory::make($esHost, $gameVersion);
         $deltaList = $indexer->batchUpdate($users);
         $totalDelta = array_sum($deltaList);
         appendLog(

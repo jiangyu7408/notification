@@ -8,6 +8,7 @@
 
 use Database\PdoFactory;
 use DataProvider\User\UserDetailProvider;
+use Facade\ES\IndexerFactory;
 
 require __DIR__.'/../../bootstrap.php';
 
@@ -48,13 +49,7 @@ if ($verbose) {
     dump($groupedUserList);
 }
 
-$config = [
-    'host' => $esHost,
-    'port' => 9200,
-    'index' => 'farm',
-    'type' => 'user:'.$gameVersion,
-];
-$indexer = new \Facade\ES\Indexer($config, 1);
+$indexer = IndexerFactory::make($esHost, $gameVersion);
 foreach ($groupedUserList as $shardId => $shardUserList) {
     $delta = $indexer->batchUpdate($shardUserList);
     $batchResult = $indexer->getBatchResult();

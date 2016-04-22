@@ -68,14 +68,13 @@ class FileQueue implements IQueue
         $content = file_get_contents($file);
         unlink($file);
 
-        return $content;
+        return rtrim($content, PHP_EOL);
     }
 
     /**
      * @param string $baseDir
      *
      * @return string
-     *
      * @throws \InvalidArgumentException
      */
     private function prepareDir($baseDir)

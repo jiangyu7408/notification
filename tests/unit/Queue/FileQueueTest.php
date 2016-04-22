@@ -41,7 +41,7 @@ class FileQueueTest extends \PHPUnit_Framework_TestCase
     public function testSingle()
     {
         $queue = new FileQueue($this->dir);
-        $msg = 'test'.time().PHP_EOL;
+        $msg = 'test'.time();
         $success = $queue->push($msg);
         static::assertTrue($success);
 

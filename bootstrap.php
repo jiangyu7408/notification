@@ -6,6 +6,7 @@
  * Time: 2:13 PM.
  */
 error_reporting(E_ALL);
+ini_set('memory_limit', '4G');
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 ini_set('assert.active', '1');

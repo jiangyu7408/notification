@@ -151,9 +151,10 @@ foreach ($stepGenerator as $date) {
         if ($queueLength >= $magicNumber) {
             appendLog(
                 sprintf(
-                    '%s: flush ES update queue: %d user to sync %s',
+                    '%s: flush ES update queue: %d user on date %s to sync %s',
                     date('c'),
-                    $queueLength,
+					$queueLength,
+					$date,
                     PHP_Timer::resourceUsage()
                 )
             );

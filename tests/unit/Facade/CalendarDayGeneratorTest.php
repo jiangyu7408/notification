@@ -21,8 +21,7 @@ class CalendarDayGeneratorTest extends \PHPUnit_Framework_TestCase
     public function testGenerate()
     {
         $now = time();
-//        $fromTs = $now - 90 * 3600 * rand(10, 20);
-        $fromTs = $now - 3600;
+        $fromTs = $now - 90 * 3600 * rand(10, 20);
         $toTs = $now;
         $dayGenerator = CalendarDayGenerator::generate($fromTs, $toTs);
         $days = [];

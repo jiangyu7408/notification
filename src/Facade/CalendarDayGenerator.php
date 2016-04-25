@@ -24,10 +24,10 @@ class CalendarDayGenerator
         $firstDay = new \DateTimeImmutable(date('Y-m-d', $fromTs));
         $lastDay = new \DateTimeImmutable(date('Y-m-d', $toTs));
 
-        $cursor = new \DateTime($firstDay->format('Y-m-d'));
-        while ($cursor <= $lastDay) {
+        $cursor = new \DateTime($lastDay->format('Y-m-d'));
+        while ($cursor >= $firstDay) {
             yield $cursor->format('Y-m-d');
-            $cursor->add(new \DateInterval('P1D'));
+            $cursor->sub(new \DateInterval('P1D'));
         }
     }
 }

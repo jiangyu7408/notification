@@ -15,7 +15,7 @@ ini_set('assert.bail', '1');
 
 define('ELASTIC_SEARCH_HOST', '52.19.73.190');
 define('ELASTIC_SEARCH_PORT', 9200);
-define('ELASTIC_SEARCH_SCHEMA_VERSION', 2);
+define('ELASTIC_SEARCH_SCHEMA_VERSION', 3);
 define('ELASTIC_SEARCH_INDEX', 'farm_v'.ELASTIC_SEARCH_SCHEMA_VERSION);
 
 require __DIR__.'/vendor/autoload.php';

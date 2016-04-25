@@ -102,7 +102,7 @@ class InstallUidProvider
      */
     protected function fetchNewUser(\PDO $pdo, $date)
     {
-        $sql = 'SELECT uid FROM tbl_user WHERE DATE(addtime)=?';
+        $sql = 'SELECT uid FROM tbl_user WHERE DATE(addtime)=? AND logintime>=unix_timestamp("2012-01-01")';
         $statement = $pdo->prepare($sql);
         $statement->execute([$date]);
 

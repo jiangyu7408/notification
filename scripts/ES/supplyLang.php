@@ -63,12 +63,14 @@ function batchUpdateES($gameVersion, Client $esClient, $magicNumber, array $user
             }
         }
         $delta = microtime(true) - $start;
+
+        $docCount = count($documents);
         appendLog(
             sprintf(
                 'Sync %d users to ES cost %s with average cost %s',
-                count($documents),
+                $docCount,
                 PHP_Timer::secondsToTimeString($delta),
-                PHP_Timer::secondsToTimeString($delta / $count)
+                PHP_Timer::secondsToTimeString($delta / $docCount)
             )
         );
     }

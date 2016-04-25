@@ -110,9 +110,6 @@ $magicNumber = isset($options['magic']) ? (int) $options['magic'] : 500;
 assert($magicNumber > 10);
 $indexer = IndexerFactory::make(ELASTIC_SEARCH_HOST, $gameVersion, $magicNumber);
 
-$totalUser = 0;
-$processedRound = 0;
-
 if ($verbose) {
     dump(
         sprintf(
@@ -127,6 +124,8 @@ if ($verbose) {
 }
 
 $calendarDayGenerator = CalendarDayGenerator::generate($fromDate->getTimestamp(), $toDate->getTimestamp());
+$totalUser = 0;
+$processedRound = 0;
 foreach ($calendarDayGenerator as $calendarDay) {
     $markerDate = new DateTimeImmutable($calendarDay);
     if ($calendarMarker->isMarked($markerDate)) {
@@ -153,7 +152,17 @@ foreach ($calendarDayGenerator as $calendarDay) {
 
     $totalUser += $newInstallCount;
 
+    $start = microtime(true);
     $groupedDetail = $userDetailProvider->generate($groupedUidList);
+    $delta = microtime(true) - $start;
+    appendLog(
+        sprintf(
+            'Total %d new install on %s, read detail cost %s',
+            $newInstallCount,
+            $calendarDay,
+            PHP_Timer::secondsToTimeString($delta)
+        )
+    );
 
     $esUpdateQueue = [];
     foreach ($groupedDetail as $shardId => $shardUserList) {

@@ -33,6 +33,11 @@ if (!function_exists('appendLog')) {
          */
         function appendLog($var)
         {
+            if (extension_loaded('xdebug')) {
+                $fullFileName = xdebug_call_file();
+                $referenceName = substr($fullFileName, strlen(CONFIG_DIR) + 1);
+                dump(sprintf('%s:%d %s', $referenceName, xdebug_call_line(), xdebug_call_function()));
+            }
             foreach (func_get_args() as $var) {
                 VarDumper::dump($var);
             }

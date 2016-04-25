@@ -16,20 +16,21 @@ use PDO;
 class CommonInfoProvider
 {
     /**
-     * @param PDO   $pdo
-     * @param array $uidList
-     * @param int   $concurrentLevel
+     * @param PDO    $pdo
+     * @param array  $uidList
+     * @param int    $concurrentLevel
+     * @param string $columns
      *
      * @return array
      */
-    public static function readUserInfo(PDO $pdo, array $uidList, $concurrentLevel = 100)
+    public static function readUserInfo(PDO $pdo, array $uidList, $concurrentLevel = 100, $columns = '*')
     {
         $result = [];
 
         $offset = 0;
         while (($concurrent = array_splice($uidList, $offset, $concurrentLevel))) {
             $placeHolderList = array_pad([], count($concurrent), '?');
-            $sql = sprintf('SELECT * from tbl_user WHERE uid IN (%s)', implode(',', $placeHolderList));
+            $sql = sprintf('SELECT %s from tbl_user WHERE uid IN (%s)', $columns, implode(',', $placeHolderList));
             $statement = $pdo->prepare($sql);
             if ($statement === false) {
                 throw new \RuntimeException(json_encode($pdo->errorInfo()));

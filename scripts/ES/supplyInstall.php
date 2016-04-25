@@ -61,7 +61,7 @@ if (!$gameVersion) {
     $gameVersion = trim($options['gv']);
 }
 
-$markerLocation = sprintf('%s/log/%s/marker', CONFIG_DIR, $gameVersion);
+$markerLocation = sprintf('%s/log/marker_%d/%s', CONFIG_DIR, ELASTIC_SEARCH_SCHEMA_VERSION, $gameVersion);
 if (isset($options['reset'])) {
     $backup = sprintf('%s.%s', $markerLocation, date('Ymd'));
     rename($markerLocation, $backup);
@@ -101,7 +101,6 @@ if (!($toDate instanceof \DateTime)) {
 
     return;
 }
-$calendarDayGenerator = CalendarDayGenerator::generate($fromDate->getTimestamp(), $toDate->getTimestamp());
 
 $pdoPool = PdoFactory::makePool($gameVersion);
 $installUidProvider = new InstallUidProvider($gameVersion, $pdoPool);
@@ -127,12 +126,13 @@ if ($verbose) {
     );
 }
 
+$calendarDayGenerator = CalendarDayGenerator::generate($fromDate->getTimestamp(), $toDate->getTimestamp());
 foreach ($calendarDayGenerator as $calendarDay) {
     $markerDate = new DateTimeImmutable($calendarDay);
     if ($calendarMarker->isMarked($markerDate)) {
         continue;
     }
-    $msg = basename(__FILE__).': process for '.$calendarDay.' run with ts '.time();
+    $msg = basename(__FILE__).': process for '.$calendarDay.' run with ts '.date('c');
     appendLog($msg);
 
     $groupedUidList = $installUidProvider->generate(

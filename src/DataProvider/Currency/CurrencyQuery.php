@@ -24,6 +24,8 @@ class CurrencyQuery
      */
     public static function query($fromCurrency, $toCurrency = 'USD')
     {
+        $fromCurrency = strtoupper($fromCurrency);
+        $toCurrency = strtoupper($toCurrency);
         if ($fromCurrency === 'FBC') {
             return 1.0;
         }

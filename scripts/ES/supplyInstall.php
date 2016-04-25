@@ -6,14 +6,15 @@
  * Time: 14:07.
  */
 use Database\PdoFactory;
-use Database\ShardHelper;
 use DataProvider\User\InstallUidProvider;
+use DataProvider\User\UserDetailProvider;
+use Facade\CalendarDayGenerator;
 use Facade\ES\Indexer;
 use Facade\ES\IndexerFactory;
 
 require __DIR__.'/../../bootstrap.php';
 
-$batchUpdateES = function (Indexer $indexer, array $users) {
+$esUpdateHandler = function (Indexer $indexer, array $users) {
     $count = count($users);
     if ($count === 0) {
         return;
@@ -47,7 +48,6 @@ $options = getopt(
 $verbose = isset($options['v']);
 
 $safeRound = getenv('SAFE');
-//dump('safe round: '.$safeRound);
 if (!$safeRound) {
     $safeRound = isset($options['safe']) ? (int) $options['safe'] : 0;
 }
@@ -56,7 +56,6 @@ if ($safeRound < 1) {
 }
 
 $gameVersion = getenv('GV');
-//dump('game version: '.$gameVersion);
 if (!$gameVersion) {
     assert(isset($options['gv']), 'game version not defined');
     $gameVersion = trim($options['gv']);
@@ -73,7 +72,6 @@ if (isset($options['reset'])) {
 $calendarMarker = new \Facade\CalendarDayMarker($markerLocation);
 
 $fromDay = getenv('FROM');
-//dump('from day = '.$fromDay);
 if (!$fromDay) {
     $fromDay = isset($options['from']) ? $options['from'] : date('Ymd');
 }
@@ -92,48 +90,66 @@ $logFileGetter = function ($gameVersion, $date) {
 };
 
 $fromDate = date_create_from_format('Ymd', $fromDay);
+if (!($fromDate instanceof \DateTime)) {
+    appendLog(sprintf('from [%s] not valid', $fromDay));
+
+    return;
+}
 $toDate = date_create_from_format('Ymd', $toDay);
-$stepGenerator = \Facade\CalendarDayGenerator::generate($fromDate->getTimestamp(), $toDate->getTimestamp());
+if (!($toDate instanceof \DateTime)) {
+    appendLog(sprintf('to [%s] not valid', $toDay));
+
+    return;
+}
+$calendarDayGenerator = CalendarDayGenerator::generate($fromDate->getTimestamp(), $toDate->getTimestamp());
 
 $pdoPool = PdoFactory::makePool($gameVersion);
 $installUidProvider = new InstallUidProvider($gameVersion, $pdoPool);
-$userDetailProvider = new \DataProvider\User\UserDetailProvider($gameVersion, $pdoPool);
+$userDetailProvider = new UserDetailProvider($gameVersion, $pdoPool);
 
 $magicNumber = isset($options['magic']) ? (int) $options['magic'] : 500;
 assert($magicNumber > 10);
 $indexer = IndexerFactory::make(ELASTIC_SEARCH_HOST, $gameVersion, $magicNumber);
 
-$shardList = ShardHelper::listShardId($gameVersion);
-
 $totalUser = 0;
 $processedRound = 0;
 
-//dump(sprintf('version: %s, from: %s, safe: %d, magic: %d', $gameVersion, $fromDay, $safeRound, $magicNumber));
+if ($verbose) {
+    dump(
+        sprintf(
+            'version: %s, from: %s, to: %s, safe: %d, magic: %d',
+            $gameVersion,
+            $fromDay,
+            $toDay,
+            $safeRound,
+            $magicNumber
+        )
+    );
+}
 
-foreach ($stepGenerator as $date) {
-    $markerDate = new DateTimeImmutable($date);
+foreach ($calendarDayGenerator as $calendarDay) {
+    $markerDate = new DateTimeImmutable($calendarDay);
     if ($calendarMarker->isMarked($markerDate)) {
         continue;
     }
-    $msg = basename(__FILE__).': process for '.$date.' run with ts '.time();
+    $msg = basename(__FILE__).': process for '.$calendarDay.' run with ts '.time();
     appendLog($msg);
 
-    $groupedUidList = $installUidProvider->generate($date, function ($shardId, $userCount, $delta) {
-        if ($userCount === 0) {
-            return;
+    $groupedUidList = $installUidProvider->generate(
+        $calendarDay,
+        function ($shardId, $userCount, $delta) {
+            if ($userCount === 0) {
+                return;
+            }
+            appendLog(sprintf('%s install(%d) cost %s', $shardId, $userCount, PHP_Timer::secondsToTimeString($delta)));
         }
-        appendLog(sprintf('%s install(%d) cost %s', $shardId, $userCount, PHP_Timer::secondsToTimeString($delta)));
-    });
-
-    $installUser = [];
-    array_map(
-        function (array $uidList) use (&$installUser) {
-            $installUser = array_merge($installUser, $uidList);
-        },
-        $groupedUidList
     );
-    $newInstallCount = count($installUser);
-    appendLog(sprintf('Total %d new install on %s', $newInstallCount, $date));
+
+    $distribution = array_map(function (array $uidList) {
+        return count($uidList);
+    }, $groupedUidList);
+    $newInstallCount = array_sum($distribution);
+    appendLog(sprintf('Total %d new install on %s', $newInstallCount, $calendarDay));
 
     $totalUser += $newInstallCount;
 
@@ -153,16 +169,16 @@ foreach ($stepGenerator as $date) {
                 sprintf(
                     '%s: flush ES update queue: %d user on date %s to sync %s',
                     date('c'),
-					$queueLength,
-					$date,
+                    $queueLength,
+                    $calendarDay,
                     PHP_Timer::resourceUsage()
                 )
             );
-            call_user_func($batchUpdateES, $indexer, $esUpdateQueue);
+            call_user_func($esUpdateHandler, $indexer, $esUpdateQueue);
             $esUpdateQueue = [];
         }
     }
-    call_user_func($batchUpdateES, $indexer, $esUpdateQueue);
+    call_user_func($esUpdateHandler, $indexer, $esUpdateQueue);
 
     $calendarMarker->mark($markerDate);
 

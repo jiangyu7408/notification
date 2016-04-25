@@ -58,47 +58,54 @@ $logFileGetter = function ($gameVersion, $date) {
 };
 
 $myself = basename(__FILE__);
+
+$installUidProvider = new InstallUidProvider($gameVersion, PdoFactory::makePool($gameVersion));
+
+$shardList = ShardHelper::listShardId($gameVersion);
+$queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
+
 $stepGenerator = WorkRoundGenerator::generate($now, $quitTimestamp, $interval, false);
-
-$installUidProvider = new InstallUidProvider(
-    $gameVersion,
-    PdoFactory::makePool($gameVersion)
-);
-
 foreach ($stepGenerator as $timestamp) {
-    $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
-    dump($msg);
+    $msg = $myself.': '.date('c', $timestamp).' run with ts '.date('c', $timestamp);
     appendLog($msg);
-    $shardList = ShardHelper::listShardId($gameVersion);
-    $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
     $date = $specifiedDate ? $specifiedDate : date('Y-m-d');
-    $groupedUidList = $installUidProvider->generate($date);
-
-    $deltaList = $installUidProvider->getDeltaList();
-    array_walk(
-        $deltaList,
-        function ($delta, $shardId) {
-            dump(sprintf('%s => %s', $shardId, PHP_Timer::secondsToTimeString($delta)));
+    $groupedUidList = $installUidProvider->generate(
+        $date,
+        function ($shardId, $userCount, $delta) {
+            if ($userCount === 0) {
+                return;
+            }
+            appendLog(sprintf('%s install(%d) cost %s', $shardId, $userCount, PHP_Timer::secondsToTimeString($delta)));
         }
     );
+    $queue->push($groupedUidList);
+    $deltaList = $installUidProvider->getDeltaList();
 
-    $installUser = [];
-    array_map(
-        function (array $uidList) use (&$installUser) {
-            $installUser = array_merge($installUser, $uidList);
-        },
-        $groupedUidList
+    $totalCount = 0;
+    foreach ($groupedUidList as $shardId => $shardUidList) {
+        $shardCount = count($shardUidList);
+        if ($shardCount === 0) {
+            continue;
+        }
+        $totalCount += $shardCount;
+    }
+    appendLog(
+        sprintf(
+            '%s: %s found %d install user, cost %s',
+            $myself,
+            date('c'),
+            $totalCount,
+            PHP_Timer::secondsToTimeString(array_sum($deltaList))
+        )
     );
-    $data = date('c').' have '.count($installUser).PHP_EOL.print_r($installUser, true);
 
     $logFile = call_user_func($logFileGetter, $gameVersion, $date);
-    file_put_contents($logFile, $data);
-    $queue->push($groupedUidList);
+    file_put_contents($logFile, date('c').' have '.$totalCount.PHP_EOL.print_r($groupedUidList, true));
 
     if ($specifiedDate) {
         dump(date('c'));
-        dump($installUser);
+        dump($groupedUidList);
         dump($myself.': quit');
         break;
     }

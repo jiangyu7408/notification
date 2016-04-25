@@ -10,40 +10,56 @@ use ESGateway\DataModel\FieldMapping\MappingFactory;
 
 require __DIR__.'/../../bootstrap.php';
 
-$options = getopt('v', ['gv:']);
-$verbose = isset($options['v']);
-
-$gameVersion = null;
-if (defined('GAME_VERSION')) {
-    $gameVersion = GAME_VERSION;
-} else {
-    assert(isset($options['gv']), 'game version not defined');
-    $gameVersion = trim($options['gv']);
-}
-
-$indexName = ELASTIC_SEARCH_INDEX;
-
-$clientFactory = new \ESGateway\Factory();
-$client = $clientFactory->makeClient(ELASTIC_SEARCH_HOST, ELASTIC_SEARCH_PORT);
-
-$index = $client->getIndex($indexName);
-$exists = $index->exists();
-if (!$exists) {
-    $response = $index->create();
-    dump($response);
-}
-
-$type = $index->getType('user:'.$gameVersion);
-
-$currentMapping = $type->getMapping();
-dump('current mapping:');
-dump($currentMapping);
-if (!$currentMapping) {
+$createMappingHandler = function (\Elastica\Type $type) {
     $mapping = new Mapping();
     $mapping->setType($type);
 
     $mappingProperties = (new MappingFactory())->make();
     $mapping->setProperties($mappingProperties);
     $response = $mapping->send();
+    dump('create default mapping');
     dump($response);
+};
+
+$options = getopt('', ['gv:', 'index:', 'createIndex:']);
+
+$client = new \Elastica\Client(['host' => ELASTIC_SEARCH_HOST, 'port' => ELASTIC_SEARCH_PORT]);
+if (isset($options['createIndex'])) {
+    $indexName = trim($options['createIndex']);
+    assert(is_string($indexName) && strlen($indexName) > 0 && strpos($indexName, 'farm_v') === 0, 'bad index name');
+    $index = $client->getIndex($indexName);
+    $exists = $index->exists();
+    if (!$exists) {
+        $response = $index->create();
+        dump('create index');
+        dump($response);
+    }
+    $type = $index->getType('_default_');
+    call_user_func($createMappingHandler, $type);
+
+    $gameVersionList = ['tw', 'th', 'us', 'de', 'fr', 'it', 'pl', 'nl', 'br'];
+    foreach ($gameVersionList as $gameVersion) {
+        $type = $index->getType('user:'.$gameVersion);
+        $currentMapping = $type->getMapping();
+        dump('current mapping:');
+        dump($currentMapping);
+        if (!$currentMapping) {
+            call_user_func($createMappingHandler, $type);
+        }
+    }
+}
+
+if (isset($options['gv'])) {
+    $gameVersion = trim($options['gv']);
+
+    assert(isset($options['index']), 'index name not found');
+    $indexName = $options['index'];
+    $index = $client->getIndex($indexName);
+    $type = $index->getType('user:'.$gameVersion);
+    $currentMapping = $type->getMapping();
+    dump('current mapping:');
+    dump($currentMapping);
+    if (!$currentMapping) {
+        call_user_func($createMappingHandler, $type);
+    }
 }

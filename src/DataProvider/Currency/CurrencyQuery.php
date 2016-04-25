@@ -26,7 +26,7 @@ class CurrencyQuery
     {
         $fromCurrency = strtoupper($fromCurrency);
         $toCurrency = strtoupper($toCurrency);
-        if ($fromCurrency === 'FBC') {
+        if ($fromCurrency === 'FBC' || $fromCurrency === 'USD') {
             return 1.0;
         }
 

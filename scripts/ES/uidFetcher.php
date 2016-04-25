@@ -31,8 +31,8 @@ if (defined('GAME_VERSION')) {
     $gameVersion = trim($options['gv']);
 }
 
-$backStep = isset($options['bs']) ? $options['bs'] : 1;
 $interval = isset($options['interval']) ? $options['interval'] : 20;
+$backStep = isset($options['bs']) ? $options['bs'] : $interval;
 $round = isset($options['round']) ? $options['round'] : 100;
 
 $lastActiveTimestamp = time() - $backStep;
@@ -52,15 +52,43 @@ if ($verbose) {
 }
 
 $myself = basename(__FILE__);
+$uidProvider = new ActiveUidProvider($gameVersion, \Database\PdoFactory::makePool($gameVersion));
+$shardList = ShardHelper::listShardId($gameVersion);
+$queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
+
 $stepGenerator = WorkRoundGenerator::generate($lastActiveTimestamp, $quitTimestamp, $interval, $verbose);
 foreach ($stepGenerator as $timestamp) {
-    $msg = $myself.': '.date('c', $timestamp).' run with ts '.$timestamp;
-    dump($msg);
+    $msg = $myself.': '.date('c', $timestamp).' run with ts '.date('c', $timestamp);
     appendLog($msg);
-    $shardList = ShardHelper::listShardId($gameVersion);
-    $queue = new UidQueue(UID_QUEUE_DIR, $gameVersion, $shardList);
 
-    $groupedUidList = ActiveUidProvider::generate($gameVersion, $lastActiveTimestamp, $verbose);
-    $verbose && dump($groupedUidList);
+    $groupedUidList = $uidProvider->generate($lastActiveTimestamp);
+    $deltaList = $uidProvider->getDeltaList();
+    $totalCount = 0;
+    foreach ($groupedUidList as $shardId => $shardUidList) {
+        $shardCount = count($shardUidList);
+        if ($shardCount === 0) {
+            continue;
+        }
+        $verbose
+        && appendLog(
+            sprintf(
+                '%s: %s found %d active user, cost %s',
+                $myself,
+                $shardId,
+                $shardCount,
+                PHP_Timer::secondsToTimeString($deltaList[$shardId])
+            )
+        );
+        $totalCount += $shardCount;
+    }
+    appendLog(
+        sprintf(
+            '%s: %s found %d active user, cost %s',
+            $myself,
+            date('c'),
+            $totalCount,
+            PHP_Timer::secondsToTimeString(array_sum($deltaList))
+        )
+    );
     $queue->push($groupedUidList);
 }

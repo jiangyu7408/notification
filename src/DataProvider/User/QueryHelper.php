@@ -19,15 +19,19 @@ class QueryHelper
     protected $pdo;
     /** @var int[] */
     protected $uninstalledUidList;
+    /** @var bool */
+    protected $verbose;
 
     /**
      * QueryHelper constructor.
      *
-     * @param PDO $pdo
+     * @param PDO  $pdo
+     * @param bool $verbose
      */
-    public function __construct(PDO $pdo)
+    public function __construct(PDO $pdo, $verbose = false)
     {
         $this->pdo = $pdo;
+        $this->verbose = $verbose;
     }
 
     /**
@@ -92,7 +96,9 @@ class QueryHelper
             $uid = (int) $row['uid'];
             if (array_key_exists($uid, $uninstalledUidList)) {
                 $row['status'] = 0;
-                appendLog($uid.' => uninstalled');
+                if ($this->verbose) {
+                    appendLog(sprintf('%s(%d) => uninstalled', $row['snsid'], $uid));
+                }
             }
             $resultSet[$uid] = $row;
         }
@@ -141,7 +147,10 @@ class QueryHelper
         $pairs = [];
         array_map(
             function (array $user) use (&$pairs) {
-                $pairs[(int) $user['uid']] = strtoupper($user['locale']);
+                $locale = strtoupper($user['locale']);
+                if ($locale !== '-') {
+                    $pairs[(int) $user['uid']] = $locale;
+                }
             },
             $resultSet
         );

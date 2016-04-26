@@ -62,7 +62,7 @@ class CommonInfoProvider
      */
     protected static function fetchUninstalled(PDO $pdo)
     {
-        $sql = 'SELECT uid FROM tbl_user_remove_log where uid>0 limit 4';
+        $sql = 'SELECT uid FROM tbl_user_remove_log where uid>0';
         $statement = $pdo->prepare($sql);
         $statement->execute();
 

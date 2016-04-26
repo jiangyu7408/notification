@@ -34,12 +34,21 @@ class UserDetailProviderTest extends \PHPUnit_Framework_TestCase
             'db3' => [474000, 474001, 474002],
         ];
 
+        $payload = [];
         $provider = new UserDetailProvider($gameVersion, $pool);
-        $payload = array_filter($provider->generate($groupedUidList));
+        $batchReader = $provider->generate($groupedUidList);
+        foreach ($batchReader as $batch) {
+            $shardId = $batch['shardId'];
+            $this->assertStringStartsWith('db', $shardId);
+            $shardDataSet = $batch['dataSet'];
+            $this->assertTrue(is_array($shardDataSet));
+            foreach ($shardDataSet as $uid => $userInfo) {
+                $payload[$shardId][$uid] = $userInfo;
+            }
+        }
 
         $foundUidList = [];
         foreach ($payload as $shardId => $userList) {
-            static::assertStringStartsWith('db', $shardId);
             $foundUidList[$shardId] = array_keys($userList);
             foreach ($userList as $user) {
                 static::assertTrue(is_array($user));

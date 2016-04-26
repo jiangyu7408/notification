@@ -36,24 +36,22 @@ class UserDetailProvider
     /**
      * @param array $groupedUidList
      *
-     * @return array
+     * @return \Generator
      */
     public function generate(array $groupedUidList)
     {
-        $userList = [];
-        $snsidUidPairs = [];
-
-        foreach ($groupedUidList as $shardId => $uidList) {
+        foreach ($groupedUidList as $shardId => $shardUidList) {
             $pdo = $this->pdoPool->getByShardId($shardId);
             if ($pdo === false) {
                 continue;
             }
-            $shardUserList = CommonInfoProvider::readUserInfo($pdo, $uidList);
-            $userList[$shardId] = $shardUserList;
-            $this->makeSnsidUidPairs($shardUserList, $snsidUidPairs);
-        }
 
-        return $this->appendPaymentDigest($userList, $snsidUidPairs);
+            $batchReader = CommonInfoProvider::readUserInfo($pdo, $shardUidList, 500);
+            foreach ($batchReader as $batchUserList) {
+                $dataSet = $this->appendPaymentDigest($batchUserList);
+                yield ['shardId' => $shardId, 'dataSet' => $dataSet];
+            }
+        }
     }
 
     /**
@@ -63,70 +61,71 @@ class UserDetailProvider
      */
     public function find(array $uidList)
     {
-        $userList = [];
-        $snsidUidPairs = [];
+        if (count($uidList) > 500) {
+            trigger_error('Max 500 users as input args');
+        }
 
+        $userList = [];
         $shardIdList = $this->pdoPool->listShardId();
         foreach ($shardIdList as $shardId) {
             $pdo = $this->pdoPool->getByShardId($shardId);
             if ($pdo === false) {
                 continue;
             }
-            $shardUserList = CommonInfoProvider::readUserInfo($pdo, $uidList);
-            $userList[$shardId] = $shardUserList;
-            $this->makeSnsidUidPairs($shardUserList, $snsidUidPairs);
-        }
 
-        return $this->appendPaymentDigest($userList, $snsidUidPairs);
-    }
-
-    /**
-     * @param array $userList
-     * @param array $snsidUidPairs
-     *
-     * @return array
-     */
-    protected function appendPaymentDigest(array $userList, $snsidUidPairs)
-    {
-        $paymentDigestList = PaymentInfoProvider::readUserInfo(
-            PdoFactory::makeGlobalPdo($this->gameVersion),
-            $snsidUidPairs
-        );
-
-        $emptyPaymentDigest = new PaymentDigest();
-        foreach ($userList as &$shardUserList) {
-            foreach (array_keys($shardUserList) as $uid) {
-                $paymentDigest = isset($paymentDigestList[$uid])
-                    ? $paymentDigestList[$uid]
-                    : $emptyPaymentDigest;
-                $this->injectPaymentDigest($shardUserList[$uid], $paymentDigest);
+            $shardUserList = [];
+            $batchReader = CommonInfoProvider::readUserInfo($pdo, $uidList);
+            foreach ($batchReader as $batchUserList) {
+                $batchDataSet = $this->appendPaymentDigest($batchUserList);
+                foreach ($batchDataSet as $uid => $userInfo) {
+                    $shardUserList[$uid] = $userInfo;
+                }
             }
+            $userList[$shardId] = $shardUserList;
         }
 
         return $userList;
     }
 
     /**
-     * @param array $shardUserList
-     * @param array $snsidUidPairs
+     * @param array $userList
      *
      * @return array
      */
-    protected function makeSnsidUidPairs(array $shardUserList, array &$snsidUidPairs)
+    protected function appendPaymentDigest(array $userList)
     {
-        foreach ($shardUserList as $user) {
-            $snsidUidPairs[$user['snsid']] = $user['uid'];
+        $snsidUidPairs = [];
+        foreach ($userList as $uid => $userInfo) {
+            assert((int) $uid === (int) $userInfo['uid']);
+            $snsidUidPairs[$userInfo['snsid']] = $userInfo['uid'];
         }
+
+        $paymentDigestList = PaymentInfoProvider::readUserInfo(
+            PdoFactory::makeGlobalPdo($this->gameVersion),
+            $snsidUidPairs
+        );
+        $emptyPaymentDigest = new PaymentDigest();
+
+        $dataSet = [];
+        foreach ($userList as $uid => $userInfo) {
+            $paymentDigest = isset($paymentDigestList[$uid]) ? $paymentDigestList[$uid] : $emptyPaymentDigest;
+            $dataSet[$uid] = array_merge($userInfo, $this->injectPaymentDigest($paymentDigest));
+        }
+
+        return $dataSet;
     }
 
     /**
-     * @param array         $user
      * @param PaymentDigest $paymentDigest
+     *
+     * @return array
      */
-    protected function injectPaymentDigest(array &$user, PaymentDigest $paymentDigest)
+    protected function injectPaymentDigest(PaymentDigest $paymentDigest)
     {
-        $user['history_pay_amount'] = $paymentDigest->historyPayAmount;
-        $user['last_pay_time'] = (int) $paymentDigest->lastPayTime;
-        $user['last_pay_amount'] = $paymentDigest->lastPayAmount;
+        return [
+            'history_pay_amount' => $paymentDigest->historyPayAmount,
+            'last_pay_time' => (int) $paymentDigest->lastPayTime,
+            'last_pay_amount' => $paymentDigest->lastPayAmount,
+        ];
     }
 }

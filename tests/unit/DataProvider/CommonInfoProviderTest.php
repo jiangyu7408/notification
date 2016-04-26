@@ -34,18 +34,25 @@ class CommonInfoProviderTest extends \PHPUnit_Framework_TestCase
 
         $uidList = [474000, 474001, 474002];
 
+        $userList = [];
         foreach ($shardIdList as $shardId) {
             $pdo = $pool->getByShardId($shardId);
-            $userList = CommonInfoProvider::readUserInfo($pdo, $uidList, 1);
-            if (empty($userList)) {
-                continue;
+            $generator = CommonInfoProvider::readUserInfo($pdo, $uidList, 1);
+            foreach ($generator as $batchUserList) {
+                array_walk(
+                    $batchUserList,
+                    function (array $userInfo, $uid) use (&$userList) {
+                        $userList[$uid] = $userInfo;
+                    }
+                );
             }
-            static::assertEquals($uidList, array_keys($userList));
-            foreach ($userList as $user) {
-                static::assertTrue(is_array($user));
-                static::assertArrayHasKey('uid', $user);
-                static::assertArrayHasKey('snsid', $user);
-            }
+        }
+
+        static::assertEquals($uidList, array_keys($userList));
+        foreach ($userList as $user) {
+            static::assertTrue(is_array($user));
+            static::assertArrayHasKey('uid', $user);
+            static::assertArrayHasKey('snsid', $user);
         }
     }
 }

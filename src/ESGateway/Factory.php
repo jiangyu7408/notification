@@ -124,15 +124,27 @@ class Factory
      */
     public function makeUser(array $dbEntity)
     {
-        $dbEntity['name'] = utf8_encode($dbEntity['name']);
-        $dbEntity['country'] = isset($dbEntity['country']) ? $dbEntity['country'] : ip2cc($dbEntity['loginip']);
-        $dbEntity['addtime'] = $this->sanityTimeString($dbEntity['addtime']);
-        $dbEntity['logintime'] = $this->sanityTimeString($dbEntity['logintime']);
+        if (array_key_exists('name', $dbEntity)) {
+            $dbEntity['name'] = utf8_encode($dbEntity['name']);
+        }
+        if (array_key_exists('country', $dbEntity)) {
+            $dbEntity['country'] = isset($dbEntity['country']) ? $dbEntity['country'] : ip2cc($dbEntity['loginip']);
+        }
+        if (array_key_exists('addtime', $dbEntity)) {
+            $dbEntity['addtime'] = $this->sanityTimeString($dbEntity['addtime']);
+        }
+        if (array_key_exists('logintime', $dbEntity)) {
+            $dbEntity['logintime'] = $this->sanityTimeString($dbEntity['logintime']);
+        }
         if (array_key_exists('last_pay_time', $dbEntity)) {
             $dbEntity['last_pay_time'] = $this->sanityTimeString($dbEntity['last_pay_time']);
         }
-        $dbEntity['chef_level'] = 0;
-        $dbEntity['picture'] = '';
+        if (array_key_exists('chef_level', $dbEntity)) {
+            $dbEntity['chef_level'] = 0;
+        }
+        if (array_key_exists('picture', $dbEntity)) {
+            $dbEntity['picture'] = '';
+        }
 
         $user = new User();
         $keys = array_keys(get_object_vars($user));

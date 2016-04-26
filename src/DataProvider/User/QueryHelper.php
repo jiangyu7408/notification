@@ -21,6 +21,8 @@ class QueryHelper
     protected $uninstalledUidList;
     /** @var bool */
     protected $verbose;
+    /** @var string */
+    protected $dbName;
 
     /**
      * QueryHelper constructor.
@@ -28,10 +30,11 @@ class QueryHelper
      * @param PDO  $pdo
      * @param bool $verbose
      */
-    public function __construct(PDO $pdo, $verbose = false)
+    protected function __construct(PDO $pdo, $verbose = false)
     {
         $this->pdo = $pdo;
         $this->verbose = $verbose;
+        $this->dbName = $pdo->query('SELECT DATABASE()')->fetchColumn();
     }
 
     /**
@@ -71,7 +74,7 @@ class QueryHelper
      * @param int[]  $uninstalledUidList [uid => value, uid => value]
      * @param string $columns
      *
-     * @return array
+     * @return array[]
      */
     public function readUserInfo(array $uidList, array $uninstalledUidList, $columns = '*')
     {
@@ -188,8 +191,6 @@ class QueryHelper
      */
     public function getDatabaseName()
     {
-        $pdo = $this->pdo;
-
-        return $pdo->query('SELECT DATABASE()')->fetchColumn();
+        return $this->dbName;
     }
 }

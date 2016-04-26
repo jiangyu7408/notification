@@ -88,4 +88,6 @@ class User
     public $last_pay_time = 0;
     /** @var int */
     public $last_pay_amount = 0;
+    /** @var string */
+    public $language = '';
 }

@@ -6,7 +6,7 @@
  * Time: 17:58.
  */
 use Database\PdoFactory;
-use DataProvider\User\QueryHelper;
+use DataProvider\User\QueryHelperFactory;
 use Elastica\Type;
 use Facade\ElasticSearch\ElasticaHelper;
 
@@ -46,23 +46,27 @@ $logFileGetter = function ($gameVersion, $shardId) {
 };
 
 $pdoPool = PdoFactory::makePool($gameVersion);
-$shardIdList = $pdoPool->listShardId();
 
 $elasticaHelper = new ElasticaHelper($gameVersion, ELASTIC_SEARCH_INDEX, $magicNumber);
 $elasticaHelper->setVerbose($verbose);
 
-$uninstallCount = 0;
+$localeCount = 0;
 $processedCount = 0;
+
+QueryHelperFactory::setVerbose($verbose);
+
+$userDetailProvider = new \DataProvider\User\UserDetailProvider($gameVersion, $pdoPool);
+$shardIdList = $pdoPool->listShardId();
 foreach ($shardIdList as $shardId) {
     $pdo = $pdoPool->getByShardId($shardId);
-    $queryHelper = new QueryHelper($pdo, $verbose);
-    $uninstalledUidSnsidPairs = $queryHelper->listUninstalledUid();
+    $queryHelper = QueryHelperFactory::make($pdo);
 
     PHP_Timer::start();
     $uidLocalePairs = $queryHelper->listLocale();
+    $localeCount += count($uidLocalePairs);
     appendLog(
         sprintf(
-            '%s have %d uninstalled users cost %s',
+            '%s have %d locale users cost %s',
             $shardId,
             count($uidLocalePairs),
             PHP_Timer::secondsToTimeString(PHP_Timer::stop())
@@ -71,28 +75,18 @@ foreach ($shardIdList as $shardId) {
 
     file_put_contents(call_user_func($logFileGetter, $gameVersion, $shardId), print_r($uidLocalePairs, true));
 
-    $uninstallCount += count($uidLocalePairs);
-    $uidList = array_keys($uidLocalePairs);
-    while (($batchUidList = array_splice($uidList, 0, $magicNumber))) {
-        appendLog(sprintf('%s read user info for %d users', $shardId, count($batchUidList)));
-
-        PHP_Timer::start();
-        $userInfoList = $queryHelper->readUserInfo($batchUidList, $uninstalledUidSnsidPairs);
+    $userDetailGenerator = $userDetailProvider->generate([$shardId => array_keys($uidLocalePairs)]);
+    foreach ($userDetailGenerator as $payload) {
+        $userInfoList = $payload['dataSet'];
         $syncCount = count($userInfoList);
         $processedCount += $syncCount;
         appendLog(
             sprintf(
-                'read user info get %d users cost %s, %s',
+                'read user info get %d users cost %s',
                 $syncCount,
-                PHP_Timer::secondsToTimeString(PHP_Timer::stop()),
                 PHP_Timer::resourceUsage()
             )
         );
-
-        array_walk($userInfoList, function (array &$userInfo) use ($uidLocalePairs) {
-            $uid = $userInfo['uid'];
-            $userInfo['language'] = $uidLocalePairs[$uid];
-        });
 
         PHP_Timer::start();
         $elasticaHelper->update(
@@ -115,8 +109,8 @@ foreach ($shardIdList as $shardId) {
 
 appendLog(
     sprintf(
-        'Total %d uninstall, %d user processed, cost %s',
-        $uninstallCount,
+        'Total %d locale, %d user processed, cost %s',
+        $localeCount,
         $processedCount,
         PHP_Timer::resourceUsage()
     )

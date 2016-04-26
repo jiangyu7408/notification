@@ -6,7 +6,7 @@
  * Time: 14:36.
  */
 use Database\PdoFactory;
-use DataProvider\User\QueryHelper;
+use DataProvider\User\QueryHelperFactory;
 use Elastica\Type;
 use Facade\ElasticSearch\ElasticaHelper;
 
@@ -52,9 +52,10 @@ $elasticaHelper = new ElasticaHelper($gameVersion, ELASTIC_SEARCH_INDEX, $magicN
 
 $uninstallCount = 0;
 $processedCount = 0;
+QueryHelperFactory::setVerbose($verbose);
 foreach ($shardIdList as $shardId) {
     $pdo = $pdoPool->getByShardId($shardId);
-    $queryHelper = new QueryHelper($pdo);
+    $queryHelper = QueryHelperFactory::make($pdo);
     $uidSnsidPairs = $queryHelper->listUninstalledUid();
     appendLog(sprintf('%s have %d uninstalled users', $shardId, count($uidSnsidPairs)));
 

@@ -69,6 +69,7 @@ if (isset($options['reset'])) {
 
     return;
 }
+dump($markerLocation);
 $calendarMarker = new \Facade\CalendarDayMarker($markerLocation);
 
 $fromDay = getenv('FROM');
@@ -129,6 +130,7 @@ $processedRound = 0;
 foreach ($calendarDayGenerator as $calendarDay) {
     $markerDate = new DateTimeImmutable($calendarDay);
     if ($calendarMarker->isMarked($markerDate)) {
+        appendLog('bypass '.$markerDate->format('Y-m-d'));
         continue;
     }
     $msg = basename(__FILE__).': process for '.$calendarDay.' run with ts '.date('c');
@@ -165,7 +167,10 @@ foreach ($calendarDayGenerator as $calendarDay) {
     );
 
     $esUpdateQueue = [];
-    foreach ($groupedDetail as $shardId => $shardUserList) {
+    foreach ($groupedDetail as $payload) {
+        $shardId = $payload['shardId'];
+        $shardUserList = $payload['dataSet'];
+//        error_log(print_r($shardUserList, true), 3, CONFIG_DIR.'/aaa');
         $count = count($shardUserList);
         if ($count === 0) {
             continue;

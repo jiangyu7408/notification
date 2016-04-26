@@ -37,12 +37,7 @@ class ElasticaHelper
     public function __construct($gameVersion, $indexName, $magicNumber = 500)
     {
         $this->documentFactory = new DocumentFactory($indexName, 'user:'.$gameVersion);
-        $this->elastica = new Client(
-            [
-                'host' => ELASTIC_SEARCH_HOST,
-                'port' => ELASTIC_SEARCH_PORT,
-            ]
-        );
+        $this->elastica = $this->makeElastica();
         $this->magicNumber = $magicNumber;
     }
 
@@ -68,6 +63,19 @@ class ElasticaHelper
         foreach ($documentsGenerator as $documents) {
             $this->batchUpdate($documents, $errorHandler);
         }
+    }
+
+    /**
+     * @return Client
+     */
+    protected function makeElastica()
+    {
+        return new Client(
+            [
+                'host' => ELASTIC_SEARCH_HOST,
+                'port' => ELASTIC_SEARCH_PORT,
+            ]
+        );
     }
 
     /**
@@ -111,18 +119,23 @@ class ElasticaHelper
             );
         }
 
-        $responseSet = $this->elastica->updateDocuments($documents);
+        try {
+            $responseSet = $this->elastica->updateDocuments($documents);
 
-        $snsidList = [];
-        foreach ($responseSet as $response) {
-            if (!$response->isOk()) {
-                $metaData = $response->getAction()->getMetadata();
-                $snsid = $metaData['_id'];
-                $snsidList[] = $snsid;
+            $snsidList = [];
+            foreach ($responseSet as $response) {
+                if (!$response->isOk()) {
+                    $metaData = $response->getAction()->getMetadata();
+                    $snsid = $metaData['_id'];
+                    $snsidList[] = $snsid;
+                }
             }
-        }
-        if ($snsidList) {
-            call_user_func($errorHandler, $snsidList);
+            if ($snsidList) {
+                call_user_func($errorHandler, $snsidList);
+            }
+        } catch (\Exception $e) {
+            error_log(print_r($e->getMessage(), true), 3, CONFIG_DIR.'/elastica.error');
+            $this->elastica = $this->makeElastica();
         }
     }
 }

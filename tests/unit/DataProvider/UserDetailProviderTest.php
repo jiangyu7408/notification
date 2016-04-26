@@ -43,6 +43,7 @@ class UserDetailProviderTest extends \PHPUnit_Framework_TestCase
             $shardDataSet = $batch['dataSet'];
             $this->assertTrue(is_array($shardDataSet));
             foreach ($shardDataSet as $uid => $userInfo) {
+                $this->assertArrayHasKey('language', $userInfo);
                 $payload[$shardId][$uid] = $userInfo;
             }
         }

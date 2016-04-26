@@ -49,6 +49,10 @@ class UserDetailProvider
             $batchReader = CommonInfoProvider::readUserInfo($pdo, $shardUidList, 500);
             foreach ($batchReader as $batchUserList) {
                 $dataSet = $this->appendPaymentDigest($batchUserList);
+                $uidLocalePairs = QueryHelperFactory::make($pdo)->listLocale(array_keys($batchUserList));
+                foreach ($uidLocalePairs as $uid => $locale) {
+                    $dataSet[$uid]['language'] = $locale;
+                }
                 yield ['shardId' => $shardId, 'dataSet' => $dataSet];
             }
         }

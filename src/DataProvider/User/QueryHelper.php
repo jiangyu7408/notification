@@ -133,17 +133,31 @@ class QueryHelper
     }
 
     /**
+     * @param int[] $uidList
+     *
      * @return array [uid => locale, uid => locale]
      */
-    public function listLocale()
+    public function listLocale(array $uidList = [])
     {
         $pdo = $this->pdo;
-        $sql = sprintf(
-            '/* %s */SELECT uid,locale FROM tbl_user_locale',
-            __METHOD__
-        );
-        $statement = $pdo->prepare($sql);
-        $statement->execute();
+
+        if ($uidList) {
+            $placeHolderList = array_pad([], count($uidList), '?');
+            $sql = sprintf(
+                '/* %s */SELECT uid,locale FROM tbl_user_locale WHERE uid IN (%s)',
+                __METHOD__,
+                implode(',', $placeHolderList)
+            );
+            $statement = $pdo->prepare($sql);
+            $statement->execute($uidList);
+        } else {
+            $sql = sprintf(
+                '/* %s */SELECT uid,locale FROM tbl_user_locale',
+                __METHOD__
+            );
+            $statement = $pdo->prepare($sql);
+            $statement->execute();
+        }
 
         $resultSet = $statement->fetchAll(PDO::FETCH_ASSOC);
 

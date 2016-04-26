@@ -24,6 +24,8 @@ class ElasticaHelper
     protected $elastica;
     /** @var int */
     protected $magicNumber;
+    /** @var bool */
+    protected $verbose = false;
 
     /**
      * ElasticaHelper constructor.
@@ -42,6 +44,18 @@ class ElasticaHelper
             ]
         );
         $this->magicNumber = $magicNumber;
+    }
+
+    /**
+     * @param boolean $verbose
+     *
+     * @return static
+     */
+    public function setVerbose($verbose)
+    {
+        $this->verbose = $verbose;
+
+        return $this;
     }
 
     /**
@@ -83,6 +97,18 @@ class ElasticaHelper
         $count = count($documents);
         if ($count === 0) {
             return;
+        }
+
+        if ($this->verbose) {
+            array_map(
+                function (Document $document) {
+                    $data = $document->getData();
+                    $snsid = $data['snsid'];
+                    $language = $data['language'];
+                    dump($snsid.' => '.$language);
+                },
+                $documents
+            );
         }
 
         $responseSet = $this->elastica->updateDocuments($documents);

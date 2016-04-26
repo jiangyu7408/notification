@@ -146,6 +146,9 @@ class Factory
             }
             $user->{$key} = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);
         }
+        if ($user->loginip === '') {
+            $user->loginip = '127.0.0.1';
+        }
 
         return $user;
     }

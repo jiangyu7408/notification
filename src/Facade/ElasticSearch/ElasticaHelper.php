@@ -36,7 +36,9 @@ class ElasticaHelper
      */
     public function __construct($gameVersion, $indexName, $magicNumber = 500)
     {
-        $this->documentFactory = new DocumentFactory($indexName, 'user:'.$gameVersion);
+        $docPrototype = new Document();
+        $docPrototype->setIndex($indexName)->setType('user:'.$gameVersion);
+        $this->documentFactory = new DocumentFactory($docPrototype);
         $this->elastica = $this->makeElastica();
         $this->magicNumber = $magicNumber;
     }

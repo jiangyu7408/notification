@@ -144,9 +144,6 @@ class Factory
         if (array_key_exists('chef_level', $dbEntity)) {
             $dbEntity['chef_level'] = 0;
         }
-        if (array_key_exists('picture', $dbEntity)) {
-            unset($dbEntity['picture']);
-        }
 
         $user = new User();
         $keys = array_keys(get_object_vars($user));
@@ -172,11 +169,14 @@ class Factory
     public function toArray(User $user)
     {
         $array = get_object_vars($user);
-        if (array_key_exists('loginip', $array) && strlen($array['loginip'] === 0)) {
-            unset($array['loginip']);
+        $noUsedFieldsList = ['picture', 'loginip', 'track_ref', 'email'];
+        foreach ($noUsedFieldsList as $field) {
+            if (array_key_exists($field, $array)) {
+                unset($array[$field]);
+            }
         }
 
-        return $array;
+        return array_filter($array);
     }
 
     /**

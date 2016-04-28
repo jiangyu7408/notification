@@ -55,6 +55,8 @@ class Factory
             'addtime',
             'logintime',
             'last_pay_time',
+            'name',
+            'country',
         ],
     ];
 
@@ -143,7 +145,7 @@ class Factory
             $dbEntity['chef_level'] = 0;
         }
         if (array_key_exists('picture', $dbEntity)) {
-            $dbEntity['picture'] = '';
+            unset($dbEntity['picture']);
         }
 
         $user = new User();
@@ -158,9 +160,6 @@ class Factory
             }
             $user->{$key} = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);
         }
-        if ($user->loginip === '') {
-            $user->loginip = '127.0.0.1';
-        }
 
         return $user;
     }
@@ -173,7 +172,9 @@ class Factory
     public function toArray(User $user)
     {
         $array = get_object_vars($user);
-        ksort($array, SORT_STRING);
+        if (array_key_exists('loginip', $array) && strlen($array['loginip'] === 0)) {
+            unset($array['loginip']);
+        }
 
         return $array;
     }
@@ -183,7 +184,7 @@ class Factory
      *
      * @return string
      */
-    private function sanityTimeString($input)
+    protected function sanityTimeString($input)
     {
         if (is_numeric($input)) {
             return (string) date('Ymd\\THisO', $input);

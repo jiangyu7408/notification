@@ -129,8 +129,7 @@ if ($verbose) {
 }
 
 $calendarDayGenerator = CalendarDayGenerator::generate($fromDate->getTimestamp(), $toDate->getTimestamp());
-$totalUser = 0;
-$processedRound = 0;
+$loginDistribution = [];
 
 $today = new DateTimeImmutable(date('Y-m-d'));
 foreach ($calendarDayGenerator as $calendarDay) {
@@ -158,7 +157,7 @@ foreach ($calendarDayGenerator as $calendarDay) {
     $newInstallCount = array_sum($distribution);
     appendLog(sprintf('Total %d new install on %s', $newInstallCount, $calendarDay));
 
-    $totalUser += $newInstallCount;
+    $loginDistribution[$calendarDay] = $newInstallCount;
 
     $start = microtime(true);
     $groupedDetail = $userDetailProvider->generate($groupedUidList);
@@ -201,11 +200,14 @@ foreach ($calendarDayGenerator as $calendarDay) {
     call_user_func($esUpdateHandler, $indexer, $esUpdateQueue);
 
     $calendarMarker->mark($markerDate);
-
-    appendLog(sprintf('Total %d user processed, cost %s', $totalUser, PHP_Timer::resourceUsage()));
-    ++$processedRound;
-    if ($processedRound >= $safeRound) {
-        appendLog(sprintf('Safe round finished, cost %s', PHP_Timer::resourceUsage()));
-        break;
-    }
 }
+appendLog(
+    sprintf(
+        '%s Total %d user processed, cost %s',
+        date('c'),
+        $loginDistribution,
+        PHP_Timer::resourceUsage()
+    )
+);
+appendLog($loginDistribution);
+sleep(3600 * 10);

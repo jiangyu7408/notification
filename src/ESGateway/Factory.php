@@ -176,7 +176,12 @@ class Factory
             }
         }
 
-        return array_filter($array);
+        $status = (int) $user->status;
+
+        $simplified = array_filter($array);
+        $simplified['status'] = $status;
+
+        return $simplified;
     }
 
     /**

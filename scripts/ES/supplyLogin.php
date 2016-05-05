@@ -131,10 +131,10 @@ if ($verbose) {
 $calendarDayGenerator = CalendarDayGenerator::generate($fromDate->getTimestamp(), $toDate->getTimestamp());
 $loginDistribution = [];
 
-$today = new DateTimeImmutable(date('Y-m-d'));
+$today = date('Y-m-d');
 foreach ($calendarDayGenerator as $calendarDay) {
     $markerDate = new DateTimeImmutable($calendarDay);
-    if ($markerDate != $today && $calendarMarker->isMarked($markerDate)) {
+    if ($calendarDay != $today && $calendarMarker->isMarked($markerDate)) {
         appendLog('bypass '.$markerDate->format('Y-m-d'));
         continue;
     }

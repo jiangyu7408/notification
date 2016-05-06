@@ -75,6 +75,7 @@ class DocumentFactory
         $status = array_key_exists('status', $userInfo) ? (int) $userInfo['status'] : 1;
         $simplified = array_filter($userInfo);
         $simplified['status'] = $status;
+        $simplified['country'] = $this->parseCountry($rawUserInfo);
 
         return $simplified;
     }
@@ -136,5 +137,33 @@ class DocumentFactory
         }
 
         return $input;
+    }
+
+    /**
+     * @param array $dbEntity
+     *
+     * @return string
+     */
+    private function parseCountry(array $dbEntity)
+    {
+        if (isset($dbEntity['country'])) {
+            $sanitized = trim($dbEntity['country']);
+            if ($sanitized) {
+                return $sanitized;
+            }
+        }
+
+        $unknown = 'UNKNOWN';
+        if (!isset($dbEntity['loginip'])) {
+            return $unknown;
+        }
+
+        if (!function_exists('ip2cc')) {
+            require CONFIG_DIR.'/library/ip2cc.php';
+        }
+
+        $possibleCountry = ip2cc($dbEntity['loginip']);
+
+        return is_string($possibleCountry) && strlen($possibleCountry) > 0 ? $possibleCountry : $unknown;
     }
 }

@@ -52,6 +52,7 @@ class ElasticSearchDocumentFactoryTest extends \PHPUnit_Framework_TestCase
             $this->assertArrayNotHasKey('email', $payload, print_r($payload, true));
             $this->assertArrayNotHasKey('track_ref', $payload, print_r($payload, true));
             $this->assertArrayNotHasKey('loginip', $payload, print_r($payload, true));
+            $this->assertArrayHasKey('country', $payload, print_r($payload, true));
 
             foreach ($payload as $field => $value) {
                 if ($field === 'status') {
@@ -60,6 +61,12 @@ class ElasticSearchDocumentFactoryTest extends \PHPUnit_Framework_TestCase
                 }
                 $this->assertNotEmpty($value, sprintf('field [%s] should not be empty', $field));
             }
+
+            $document = $docFactory->buildDocument($payload['snsid'], $payload);
+            $this->assertEquals($payload, $document->getData());
+
+            $document2 = $docFactory->make($payload['snsid'], $rawUserInfo);
+            $this->assertEquals($payload, $document2->getData());
         }
     }
 

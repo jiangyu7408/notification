@@ -114,13 +114,16 @@ class SyncMachine
         );
 
         $esUpdateQueue = [];
-        foreach ($groupedUserList as $shardId => $userList) {
-            $count = count($userList);
+        foreach ($groupedUserList as $payload) {
+            $shardId = $payload['shardId'];
+            $shardUserList = $payload['dataSet'];
+
+            $count = count($shardUserList);
             if ($count === 0) {
                 continue;
             }
             appendLog(sprintf('%s: %s have %d user to sync', __METHOD__, $shardId, $count));
-            $esUpdateQueue = array_merge($esUpdateQueue, $userList);
+            $esUpdateQueue = array_merge($esUpdateQueue, $shardUserList);
             $queueLength = count($esUpdateQueue);
             if ($queueLength >= self::FLUSH_MAGIC_NUMBER) {
                 appendLog(

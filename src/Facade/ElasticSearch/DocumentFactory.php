@@ -72,7 +72,7 @@ class DocumentFactory
             $userInfo[$field] = $this->sanitizeTime($field, $value);
         }
 
-        $status = (int) $userInfo['status'];
+        $status = array_key_exists('status', $userInfo) ? (int) $userInfo['status'] : 1;
         $simplified = array_filter($userInfo);
         $simplified['status'] = $status;
 

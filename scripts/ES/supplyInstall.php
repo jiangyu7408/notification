@@ -14,7 +14,25 @@ use Facade\ES\IndexerFactory;
 
 require __DIR__.'/../../bootstrap.php';
 
-$esUpdateHandler = function (Indexer $indexer, array $users) {
+$options = getopt(
+    'v',
+    [
+        'reset',
+        'debug',
+        'gv:',
+        'from:',
+        'to:',
+        'magic:',
+        'safe:',
+    ]
+);
+$gameVersion = getenv('GV');
+if (!$gameVersion) {
+    assert(isset($options['gv']), 'game version not defined');
+    $gameVersion = trim($options['gv']);
+}
+
+$esUpdateHandler = function (Indexer $indexer, array $users) use ($options, $gameVersion) {
     $count = count($users);
     if ($count === 0) {
         return;
@@ -23,6 +41,10 @@ $esUpdateHandler = function (Indexer $indexer, array $users) {
     $deltaList = $indexer->batchUpdate($users, function ($userCount, $delta) {
         appendLog(sprintf('on ES batch update of %d users cost %s', $userCount, PHP_Timer::secondsToTimeString($delta)));
     });
+    if (isset($options['debug'])) {
+        error_log(print_r($indexer->getLastRoundData(), true), 3, CONFIG_DIR.'/debug.'.$gameVersion);
+        error_log(print_r($indexer->getBatchResult(), true), 3, CONFIG_DIR.'/error.'.$gameVersion);
+    }
     $totalDelta = array_sum($deltaList);
     appendLog(
         sprintf(
@@ -34,17 +56,6 @@ $esUpdateHandler = function (Indexer $indexer, array $users) {
     );
 };
 
-$options = getopt(
-    'v',
-    [
-        'reset',
-        'gv:',
-        'from:',
-        'to:',
-        'magic:',
-        'safe:',
-    ]
-);
 $verbose = isset($options['v']);
 
 $safeRound = getenv('SAFE');
@@ -53,12 +64,6 @@ if (!$safeRound) {
 }
 if ($safeRound < 1) {
     $safeRound = 30;
-}
-
-$gameVersion = getenv('GV');
-if (!$gameVersion) {
-    assert(isset($options['gv']), 'game version not defined');
-    $gameVersion = trim($options['gv']);
 }
 
 $markerLocation = sprintf('%s/log/marker_%d/%s', CONFIG_DIR, ELASTIC_SEARCH_SCHEMA_VERSION, $gameVersion);
@@ -170,7 +175,7 @@ foreach ($calendarDayGenerator as $calendarDay) {
     foreach ($groupedDetail as $payload) {
         $shardId = $payload['shardId'];
         $shardUserList = $payload['dataSet'];
-//        error_log(print_r($shardUserList, true), 3, CONFIG_DIR.'/aaa');
+
         $count = count($shardUserList);
         if ($count === 0) {
             continue;

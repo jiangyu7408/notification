@@ -58,50 +58,54 @@ class ESGatewayUserPersistTest extends \PHPUnit_Framework_TestCase
     public function test()
     {
         $users = $this->userProvider();
-        $dbEntity = $users[0];
-        static::assertInstanceOf(GatewayUserPersist::class, $this->persist);
 
-        $dbEntity['logintime'] = time();
+        foreach ($users as $dbEntity) {
+            static::assertInstanceOf(GatewayUserPersist::class, $this->persist);
 
-        static::assertArrayHasKey('snsid', $dbEntity);
-        $userObj = $this->factory->makeUser($dbEntity);
-        static::assertInstanceOf(User::class, $userObj);
-        $userArr = $this->factory->toArray($userObj);
-        static::assertArrayHasKey('snsid', $userArr);
+            $dbEntity['logintime'] = time();
 
-        $esIndex = Mockery::mock(Index::class);
-        $esIndex->shouldReceive('addDocuments')
-                ->times(1)
-                ->andReturn(Mockery::mock(ResponseSet::class));
-        $this->client->shouldReceive('getIndex')
+            static::assertArrayHasKey('snsid', $dbEntity);
+            $userObj = $this->factory->makeUser($dbEntity);
+//            dump($userObj);
+            static::assertInstanceOf(User::class, $userObj);
+            $userArr = $this->factory->toArray($userObj);
+//            dump($userArr);
+            static::assertArrayHasKey('snsid', $userArr);
+
+            $esIndex = Mockery::mock(Index::class);
+            $esIndex->shouldReceive('addDocuments')
+                    ->times(1)
+                    ->andReturn(Mockery::mock(ResponseSet::class));
+            $this->client->shouldReceive('getIndex')
+                         ->times(1)
+                         ->andReturn($esIndex);
+            $success = $this->persist->persist([$userArr]);
+            static::assertTrue($success);
+
+            $this->persist->setSnsid($userObj->snsid);
+
+            $esIndex = Mockery::mock(Index::class);
+            $esType = Mockery::mock(\Elastica\Type::class);
+
+            $document = Mockery::mock(Document::class);
+            $document->shouldReceive('getData')
                      ->times(1)
-                     ->andReturn($esIndex);
-        $success = $this->persist->persist([$userArr]);
-        static::assertTrue($success);
+                     ->andReturn($dbEntity);
 
-        $this->persist->setSnsid($userObj->snsid);
+            $esType->shouldReceive('getDocument')
+                   ->times(1)
+                   ->andReturn($document);
+            $esIndex->shouldReceive('getType')
+                    ->times(1)
+                    ->andReturn($esType);
 
-        $esIndex = Mockery::mock(Index::class);
-        $esType = Mockery::mock(\Elastica\Type::class);
-
-        $document = Mockery::mock(Document::class);
-        $document->shouldReceive('getData')
-                 ->times(1)
-                 ->andReturn($dbEntity);
-
-        $esType->shouldReceive('getDocument')
-               ->times(1)
-               ->andReturn($document);
-        $esIndex->shouldReceive('getType')
-                ->times(1)
-                ->andReturn($esType);
-
-        $this->client->shouldReceive('getIndex')
-                     ->times(1)
-                     ->andReturn($esIndex);
-        $found = $this->persist->retrieve();
-        $foundObj = $this->factory->makeUser($found);
-        static::assertEquals($userArr, $this->factory->toArray($foundObj));
+            $this->client->shouldReceive('getIndex')
+                         ->times(1)
+                         ->andReturn($esIndex);
+            $found = $this->persist->retrieve();
+            $foundObj = $this->factory->makeUser($found);
+            static::assertEquals($userArr, $this->factory->toArray($foundObj));
+        }
     }
 
     protected function setUp()

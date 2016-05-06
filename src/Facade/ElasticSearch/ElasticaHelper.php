@@ -9,6 +9,7 @@
 namespace Facade\ElasticSearch;
 
 use Closure;
+use Elastica\Bulk\Response;
 use Elastica\Client;
 use Elastica\Document;
 use Generator;
@@ -26,6 +27,10 @@ class ElasticaHelper
     protected $magicNumber;
     /** @var bool */
     protected $verbose = false;
+    /** @var Closure */
+    protected $versionHandler;
+    /** @var Closure */
+    protected $errorHandler;
 
     /**
      * ElasticaHelper constructor.
@@ -41,6 +46,10 @@ class ElasticaHelper
         $this->documentFactory = new DocumentFactory($docPrototype);
         $this->elastica = $this->makeElastica();
         $this->magicNumber = $magicNumber;
+
+        $this->errorHandler = function (\Exception $exception) {
+            error_log(print_r($exception->getMessage(), true), 3, CONFIG_DIR.'/elastica.error');
+        };
     }
 
     /**
@@ -51,6 +60,12 @@ class ElasticaHelper
     public function setVerbose($verbose)
     {
         $this->verbose = $verbose;
+        if ($this->verbose) {
+            unlink(CONFIG_DIR.'/elastica.update.version');
+            $this->versionHandler = function (array $versionList) {
+                error_log(print_r($versionList, true), 3, CONFIG_DIR.'/elastica.update.version');
+            };
+        }
 
         return $this;
     }
@@ -113,9 +128,7 @@ class ElasticaHelper
             array_map(
                 function (Document $document) {
                     $data = $document->getData();
-                    $snsid = $data['snsid'];
-                    $language = $data['language'];
-                    dump($snsid.' => '.$language);
+                    dump($data);
                 },
                 $documents
             );
@@ -124,20 +137,46 @@ class ElasticaHelper
         try {
             $responseSet = $this->elastica->updateDocuments($documents);
 
-            $snsidList = [];
+            $failedSnsidList = [];
+            $versionList = [];
             foreach ($responseSet as $response) {
-                if (!$response->isOk()) {
-                    $metaData = $response->getAction()->getMetadata();
-                    $snsid = $metaData['_id'];
-                    $snsidList[] = $snsid;
-                }
+                $this->parseResponse($response, $failedSnsidList, $versionList);
             }
-            if ($snsidList) {
-                call_user_func($errorHandler, $snsidList);
+            if ($failedSnsidList) {
+                call_user_func($errorHandler, $failedSnsidList);
             }
-        } catch (\Exception $e) {
-            error_log(print_r($e->getMessage(), true), 3, CONFIG_DIR.'/elastica.error');
-            $this->elastica = $this->makeElastica();
+            if (is_callable($this->versionHandler)) {
+                call_user_func($this->versionHandler, $versionList);
+            }
+        } catch (\Exception $exception) {
+            if (is_callable($this->errorHandler)) {
+                call_user_func($this->errorHandler, $exception);
+            }
+            $this->elastica = $this->makeElastica(); // Try to keep going on updating
         }
+    }
+
+    /**
+     * @param Response $response
+     * @param array    $failedSnsidList
+     * @param array    $versionList
+     *
+     * @return array
+     */
+    protected function parseResponse(Response $response, array &$failedSnsidList, array &$versionList)
+    {
+        $action = $response->getAction();
+        if (!$response->isOk()) {
+            $metaData = $action->getMetadata();
+            $snsid = $metaData['_id'];
+            $failedSnsidList[] = $snsid;
+
+            return;
+        }
+
+        $responseData = $response->getData();
+        $snsid = $responseData['_id'];
+        $version = $responseData['_version'];
+        $versionList[$snsid] = ['doc' => $action->getSource(), 'version' => $version];
     }
 }

@@ -54,18 +54,17 @@ class ElasticSearchFactoryTest extends \PHPUnit_Framework_TestCase
     {
         require_once __DIR__.'/UserProvider.php';
         $jsonArr = \UserProvider::getJsonData();
-        $json = array_shift($jsonArr);
-        $dbEntity = json_decode($json, true);
-        static::assertArrayHasKey('snsid', $dbEntity);
-        $userObj = $this->factory->makeUser($dbEntity);
-        static::assertInstanceOf(User::class, $userObj);
 
-        $userArr = $this->factory->toArray($userObj);
-        static::assertArrayHasKey('snsid', $userArr);
+        foreach ($jsonArr as $json) {
+            $dbEntity = json_decode($json, true);
+            static::assertArrayHasKey('snsid', $dbEntity);
+            $userObj = $this->factory->makeUser($dbEntity);
+            static::assertInstanceOf(User::class, $userObj);
 
-        $sortedArray = $userArr;
-        ksort($sortedArray, SORT_STRING);
-        static::assertSame($sortedArray, $userArr);
+            $userArr = $this->factory->toArray($userObj);
+            static::assertArrayHasKey('snsid', $userArr);
+            static::assertArrayHasKey('status', $userArr, print_r($userArr, true));
+        }
     }
 
     protected function setup()

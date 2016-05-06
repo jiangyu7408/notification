@@ -72,30 +72,30 @@ class FBGatewayPersistTest extends \PHPUnit_Framework_TestCase
         static::assertTrue(is_array($package));
     }
 
-    public function testGoodPersist()
-    {
-        $snsid   = $this->config['good']['snsid'];
-        $payload = [
-            'snsid'    => $snsid,
-            'template' => "@[{$snsid}] your submarine has arrived!",
-            'trackRef' => 'sub_back',
-        ];
-
-        $persistInstance = $this->getPersistInstance('good');
-
-        $auditStorage = $persistInstance->getAuditStorage();
-        static::assertInstanceOf(IPersistency::class, $auditStorage);
-
-        $success = $persistInstance->persist($payload);
-        static::assertTrue($success, 'persist failed');
-
-        $auditItems = $auditStorage->retrieve();
-        static::assertTrue(is_array($auditItems));
-        static::assertCount(1, $auditItems);
-        $auditItem = array_pop($auditItems);
-        static::assertArrayHasKey('success', $auditItem);
-        static::assertTrue($auditItem['success']);
-    }
+//    public function testGoodPersist()
+//    {
+//        $snsid   = $this->config['good']['snsid'];
+//        $payload = [
+//            'snsid'    => $snsid,
+//            'template' => "@[{$snsid}] your submarine has arrived!",
+//            'trackRef' => 'sub_back',
+//        ];
+//
+//        $persistInstance = $this->getPersistInstance('good');
+//
+//        $auditStorage = $persistInstance->getAuditStorage();
+//        static::assertInstanceOf(IPersistency::class, $auditStorage);
+//
+//        $success = $persistInstance->persist($payload);
+//        static::assertTrue($success, 'persist failed');
+//
+//        $auditItems = $auditStorage->retrieve();
+//        static::assertTrue(is_array($auditItems));
+//        static::assertCount(1, $auditItems);
+//        $auditItem = array_pop($auditItems);
+//        static::assertArrayHasKey('success', $auditItem);
+//        static::assertTrue($auditItem['success']);
+//    }
 
     public function testBadPersist()
     {

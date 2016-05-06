@@ -134,6 +134,8 @@ class ElasticaHelper
             );
         }
 
+        $this->validateFields($documents);
+
         try {
             $responseSet = $this->elastica->updateDocuments($documents);
 
@@ -178,5 +180,25 @@ class ElasticaHelper
         $snsid = $responseData['_id'];
         $version = $responseData['_version'];
         $versionList[$snsid] = ['doc' => $action->getSource(), 'version' => $version];
+    }
+
+    /**
+     * @param Document[] $documents
+     */
+    private function validateFields(array $documents)
+    {
+        $elementaryFieldList = ['country', 'locale', 'snsid', 'uid'];
+        array_map(
+            function (Document $document) use ($elementaryFieldList) {
+                $data = $document->getData();
+                foreach ($elementaryFieldList as $elementaryField) {
+                    assert(
+                        array_key_exists($elementaryField, $data),
+                        'No '.$elementaryField.' field: '.print_r($data, true)
+                    );
+                }
+            },
+            $documents
+        );
     }
 }

@@ -9,6 +9,8 @@
 namespace ESGateway;
 
 use Elastica\Client;
+use Elastica\Document;
+use Facade\ElasticSearch\DocumentFactory;
 
 require CONFIG_DIR.'/library/ip2cc.php';
 
@@ -17,74 +19,17 @@ require CONFIG_DIR.'/library/ip2cc.php';
  */
 class Factory
 {
-    /**
-     * @var callable
-     */
-    protected $intValidator;
-    protected $fieldMapping = [
-        'int' => [
-            'uid',
-            'loginnum',
-            'continuous_day',
-            'experience',
-            'gas',
-            'greenery',
-            'level',
-            'coins',
-            'new_cash1',
-            'new_cash2',
-            'new_cash3',
-            'op',
-            'reward_points',
-            'sign_points',
-            'size_x',
-            'status',
-            'top_map_size',
-            'water_exp',
-            'water_level',
-            'silver_coins',
-            'reputation',
-            'reputation_level',
-            'vip_level',
-            'vip_points',
-            'pay_times',
-            'history_pay_amount',
-            'last_pay_amount',
-        ],
-        'string' => [
-            'addtime',
-            'logintime',
-            'last_pay_time',
-            'name',
-            'country',
-        ],
-    ];
+    /** @var DocumentFactory */
+    protected $documentFactory;
 
     /**
      * Factory constructor.
      */
     public function __construct()
     {
-        $intValidator = function ($input) {
-            if ($input > 2147483647) {
-                return 2147483647;
-            }
-
-            return (int) $input;
-        };
-        $stringValidator = function ($input) {
-            return trim($input);
-        };
-
-        foreach ($this->fieldMapping['int'] as $field) {
-            $this->fieldMapping[$field] = $intValidator;
-        }
-        foreach ($this->fieldMapping['string'] as $field) {
-            if (isset($this->fieldMapping[$field])) {
-                throw new \LogicException('bad logic setting found on field: '.$field);
-            }
-            $this->fieldMapping[$field] = $stringValidator;
-        }
+        $docPrototype = new Document();
+        $docPrototype->setIndex(ELASTIC_SEARCH_INDEX)->setType('user:unknown');
+        $this->documentFactory = new DocumentFactory($docPrototype);
     }
 
     /**
@@ -126,34 +71,10 @@ class Factory
      */
     public function makeUser(array $dbEntity)
     {
-        if (array_key_exists('name', $dbEntity)) {
-            $dbEntity['name'] = utf8_encode($dbEntity['name']);
-        }
-        $dbEntity['country'] = $this->parseCountry($dbEntity);
-        if (array_key_exists('addtime', $dbEntity)) {
-            $dbEntity['addtime'] = $this->sanityTimeString($dbEntity['addtime']);
-        }
-        if (array_key_exists('logintime', $dbEntity)) {
-            $dbEntity['logintime'] = $this->sanityTimeString($dbEntity['logintime']);
-        }
-        if (array_key_exists('last_pay_time', $dbEntity)) {
-            $dbEntity['last_pay_time'] = $this->sanityTimeString($dbEntity['last_pay_time']);
-        }
-        if (array_key_exists('chef_level', $dbEntity)) {
-            $dbEntity['chef_level'] = 0;
-        }
-
+        $payload = $this->documentFactory->buildPayload($dbEntity);
         $user = new User();
-        $keys = array_keys(get_object_vars($user));
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $dbEntity)) {
-                continue;
-            }
-            if (!isset($this->fieldMapping[$key])) {
-                $user->{$key} = $dbEntity[$key];
-                continue;
-            }
-            $user->{$key} = call_user_func($this->fieldMapping[$key], $dbEntity[$key]);
+        foreach ($payload as $field => $value) {
+            $user->{$field} = $value;
         }
 
         return $user;
@@ -166,60 +87,6 @@ class Factory
      */
     public function toArray(User $user)
     {
-        $array = get_object_vars($user);
-        $noUsedFieldsList = ['picture', 'loginip', 'track_ref', 'email'];
-        foreach ($noUsedFieldsList as $field) {
-            if (array_key_exists($field, $array)) {
-                unset($array[$field]);
-            }
-        }
-
-        $status = (int) $user->status;
-
-        $simplified = array_filter($array);
-        $simplified['status'] = $status;
-
-        return $simplified;
-    }
-
-    /**
-     * @param string $input
-     *
-     * @return string
-     */
-    protected function sanityTimeString($input)
-    {
-        if (is_numeric($input)) {
-            return (string) date('Ymd\\THisO', $input);
-        }
-        if (is_string($input) && strpos($input, '+') === false) {
-            return date_create($input)->format('Ymd\\THisO');
-        }
-
-        return $input;
-    }
-
-    /**
-     * @param array $dbEntity
-     *
-     * @return string
-     */
-    private function parseCountry(array $dbEntity)
-    {
-        if (isset($dbEntity['country'])) {
-            $sanitized = trim($dbEntity['country']);
-            if ($sanitized) {
-                return $sanitized;
-            }
-        }
-
-        $unknown = 'UNKNOWN';
-        if (!isset($dbEntity['loginip'])) {
-            return $unknown;
-        }
-
-        $possibleCountry = ip2cc($dbEntity['loginip']);
-
-        return is_string($possibleCountry) && strlen($possibleCountry) > 0 ? $possibleCountry : $unknown;
+        return $this->documentFactory->buildPayload(get_object_vars($user));
     }
 }

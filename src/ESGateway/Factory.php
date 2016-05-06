@@ -10,7 +10,7 @@ namespace ESGateway;
 
 use Elastica\Client;
 
-require __DIR__.'/../../library/ip2cc.php';
+require CONFIG_DIR.'/library/ip2cc.php';
 
 /**
  * Class Factory.
@@ -129,9 +129,7 @@ class Factory
         if (array_key_exists('name', $dbEntity)) {
             $dbEntity['name'] = utf8_encode($dbEntity['name']);
         }
-        if (array_key_exists('country', $dbEntity)) {
-            $dbEntity['country'] = isset($dbEntity['country']) ? $dbEntity['country'] : ip2cc($dbEntity['loginip']);
-        }
+        $dbEntity['country'] = $this->parseCountry($dbEntity);
         if (array_key_exists('addtime', $dbEntity)) {
             $dbEntity['addtime'] = $this->sanityTimeString($dbEntity['addtime']);
         }
@@ -199,5 +197,29 @@ class Factory
         }
 
         return $input;
+    }
+
+    /**
+     * @param array $dbEntity
+     *
+     * @return string
+     */
+    private function parseCountry(array $dbEntity)
+    {
+        if (isset($dbEntity['country'])) {
+            $sanitized = trim($dbEntity['country']);
+            if ($sanitized) {
+                return $sanitized;
+            }
+        }
+
+        $unknown = 'UNKNOWN';
+        if (!isset($dbEntity['loginip'])) {
+            return $unknown;
+        }
+
+        $possibleCountry = ip2cc($dbEntity['loginip']);
+
+        return is_string($possibleCountry) && strlen($possibleCountry) > 0 ? $possibleCountry : $unknown;
     }
 }

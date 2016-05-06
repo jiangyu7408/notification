@@ -54,6 +54,10 @@ class ElasticSearchDocumentFactoryTest extends \PHPUnit_Framework_TestCase
             $this->assertArrayNotHasKey('loginip', $payload, print_r($payload, true));
 
             foreach ($payload as $field => $value) {
+                if ($field === 'status') {
+                    $this->assertTrue(is_int($value) && $value >= 0);
+                    continue;
+                }
                 $this->assertNotEmpty($value, sprintf('field [%s] should not be empty', $field));
             }
         }

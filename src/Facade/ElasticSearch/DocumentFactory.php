@@ -73,7 +73,8 @@ class DocumentFactory
         }
 
         $status = array_key_exists('status', $userInfo) ? (int) $userInfo['status'] : 1;
-        $simplified = array_filter($userInfo);
+//        $simplified = array_filter($userInfo);
+        $simplified = $userInfo;
         $simplified['status'] = $status;
         $simplified['country'] = $this->parseCountry($rawUserInfo);
 

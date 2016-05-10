@@ -15,14 +15,14 @@ use Database\PdoFactory;
 use Database\ShardHelper;
 use DataProvider\User\UserDetailProvider;
 use Facade\ES\IndexerFactory;
-use PHP_Timer;
+use Facade\ES\Manager;
 
 /**
  * Class SyncMachine.
  */
 class SyncMachine
 {
-    const FLUSH_MAGIC_NUMBER = 1000;
+    const FLUSH_MAGIC_NUMBER = 500;
     /** @var string */
     protected $gameVersion;
     /** @var UidAggregator */
@@ -31,6 +31,8 @@ class SyncMachine
     protected $shardList;
     /** @var UserDetailProvider */
     protected $dataProvider;
+    /** @var ES\Indexer */
+    protected $indexer;
 
     /**
      * SyncMachine constructor.
@@ -50,6 +52,7 @@ class SyncMachine
         $this->prepareLogDir($this->logFile);
 
         $this->dataProvider = new UserDetailProvider($gameVersion, PdoFactory::makePool($gameVersion));
+        $this->indexer = IndexerFactory::make($esHost, $gameVersion, self::FLUSH_MAGIC_NUMBER);
     }
 
     /**
@@ -81,105 +84,7 @@ class SyncMachine
             );
         });
 
-        $this->updateES($afterAggregate);
-    }
-
-    /**
-     * @param array $groupedUidList
-     */
-    private function updateES(array $groupedUidList)
-    {
-        appendLog(sprintf('%s start with memory usage %s', __METHOD__, PHP_Timer::resourceUsage()));
-        $count = $this->countUidList($groupedUidList);
-        if ($count === 0) {
-            appendLog(sprintf('%s: have 0 user to sync', __METHOD__));
-
-            return;
-        }
-
-        PHP_Timer::start();
-        $groupedUserList = $this->dataProvider->generate($groupedUidList);
-        $delta = PHP_Timer::stop();
-        appendLog(
-            sprintf(
-                '%s Fetch %d user detail cost %s with average cost %s',
-                __METHOD__,
-                $count,
-                PHP_Timer::secondsToTimeString($delta),
-                PHP_Timer::secondsToTimeString($delta / $count)
-            )
-        );
-        appendLog(
-            sprintf('%s after user detail generated with memory usage %s', __METHOD__, PHP_Timer::resourceUsage())
-        );
-
-        $esUpdateQueue = [];
-        foreach ($groupedUserList as $payload) {
-            $shardId = $payload['shardId'];
-            $shardUserList = $payload['dataSet'];
-
-            $count = count($shardUserList);
-            if ($count === 0) {
-                continue;
-            }
-            appendLog(sprintf('%s: %s have %d user to sync', __METHOD__, $shardId, $count));
-            $esUpdateQueue = array_merge($esUpdateQueue, $shardUserList);
-            $queueLength = count($esUpdateQueue);
-            if ($queueLength >= self::FLUSH_MAGIC_NUMBER) {
-                appendLog(
-                    sprintf(
-                        '%s: flush ES update queue: %d user to sync %s',
-                        date('c'),
-                        $queueLength,
-                        PHP_Timer::resourceUsage()
-                    )
-                );
-                $this->batchUpdateES($this->esHost, $this->gameVersion, $esUpdateQueue);
-                $esUpdateQueue = [];
-            }
-        }
-        $this->batchUpdateES($this->esHost, $this->gameVersion, $esUpdateQueue);
-    }
-
-    /**
-     * @param string $esHost
-     * @param string $gameVersion
-     * @param array  $users
-     */
-    private function batchUpdateES($esHost, $gameVersion, array $users)
-    {
-        $count = count($users);
-        if ($count === 0) {
-            return;
-        }
-        appendLog(sprintf('%s have %d user to sync', __METHOD__, $count));
-
-        $indexer = IndexerFactory::make($esHost, $gameVersion);
-        $deltaList = $indexer->batchUpdate($users);
-        $totalDelta = array_sum($deltaList);
-        appendLog(
-            sprintf(
-                'Sync %d users to ES cost %s with average cost %s',
-                $count,
-                PHP_Timer::secondsToTimeString($totalDelta),
-                PHP_Timer::secondsToTimeString($totalDelta / $count)
-            )
-        );
-    }
-
-    /**
-     * @param array $groupedUidList
-     *
-     * @return int
-     */
-    private function countUidList(array $groupedUidList)
-    {
-        $count = 0;
-        array_map(function (array $list) use (&$count) {
-            $count += count($list);
-        }, $groupedUidList);
-
-        return $count;
+        (new Manager($this->dataProvider, $this->indexer))->updateES($afterAggregate);
     }
 
     /**

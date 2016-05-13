@@ -38,7 +38,7 @@ class QueryHelper
     }
 
     /**
-     * @return array uid snsid pairs [uid => snsid, uid => snsid]
+     * @return array uid snsid pairs [uid => ['snsid' => $snsid, 'uninstallTime' => $uninstallTime],]
      */
     public function listUninstalledUid()
     {
@@ -47,7 +47,10 @@ class QueryHelper
         }
 
         $pdo = $this->pdo;
-        $sql = sprintf('/* %s */SELECT uid,snsid FROM tbl_user_remove_log WHERE uid>0', __METHOD__);
+        $sql = sprintf(
+            '/* %s */SELECT uid,snsid,log_time as uninstallTime FROM tbl_user_remove_log WHERE uid>0',
+            __METHOD__
+        );
         $statement = $pdo->prepare($sql);
         if ($statement === false) {
             throw new \RuntimeException(json_encode($pdo->errorInfo()));
@@ -61,7 +64,16 @@ class QueryHelper
             function (array $row) {
                 $uid = (int) $row['uid'];
                 $snsid = $row['snsid'];
-                $this->uninstalledUidList[$uid] = $snsid;
+                $uninstallTime = (int) $row['uninstallTime'];
+                if (!isset($this->uninstalledUidList[$uid])) {
+                    $this->uninstalledUidList[$uid] = ['snsid' => $snsid, 'uninstallTime' => $uninstallTime];
+
+                    return;
+                }
+                $savedUninstallTime = $this->uninstalledUidList[$uid]['uninstallTime'];
+                if ($uninstallTime > $savedUninstallTime) {
+                    $this->uninstalledUidList[$uid]['uninstallTime'] = $uninstallTime;
+                }
             },
             $dataSet
         );
@@ -98,9 +110,13 @@ class QueryHelper
         foreach ($allRows as $row) {
             $uid = (int) $row['uid'];
             if (array_key_exists($uid, $uninstalledUidList)) {
-                $row['status'] = 0;
-                if ($this->verbose) {
-                    appendLog(sprintf('%s(%d) => uninstalled', $row['snsid'], $uid));
+                $activeLoginTime = (int) $row['logintime'];
+                $uninstallTime = $uninstalledUidList[$uid]['uninstallTime'];
+                if ($activeLoginTime <= $uninstallTime) {
+                    $row['status'] = 0;
+                    if ($this->verbose) {
+                        appendLog(sprintf('%s(%d) => uninstalled', $row['snsid'], $uid));
+                    }
                 }
             }
             $resultSet[$uid] = $row;
